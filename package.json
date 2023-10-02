@@ -1,14 +1,13 @@
 {
   "name": "mindspace",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "An experiment in spatial notes",
   "scripts": {
-    "dev": "sirv ."
+    "dev": "sirv --dev ."
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Duane Johnson <duane.johnson@gmail.com>",
+  "license": "MIT",
   "dependencies": {
     "@b9g/crank": "^0.5.4"
   },

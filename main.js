@@ -2,11 +2,14 @@
 import { renderer } from "@b9g/crank/dom";
 import { jsx as html } from "@b9g/crank/standalone";
 
-function* Svg({ enabled = true }) {
+function* Svg() {
   let r = 0.05;
-  while (enabled) {
-    r += 0.05;
+
+  while (true) {
     requestAnimationFrame(() => this.refresh());
+
+    r += 0.05;
+
     yield html`
       <svg viewBox="0 0 100 100">
         <circle cx="50" cy="50" r=${r} stroke />
@@ -16,4 +19,3 @@ function* Svg({ enabled = true }) {
 }
 
 renderer.render(html`<${Svg} />`, document.body);
-// renderer.render(html`<${Svg} />`, document.body);
