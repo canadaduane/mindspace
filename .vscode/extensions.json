@@ -1,5 +1,3 @@
 {
-  "recommendations": [
-    "razio.es6-string-jsx"
-  ]
+  "recommendations": ["bierner.lit-html"]
 }

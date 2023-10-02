@@ -1,8 +1,15 @@
 import { renderer } from "crank/dom";
-import { jsx } from "crank/standalone";
+import { jsx as html } from "crank/standalone";
 
-function Greeting({ name = "World" }) {
-  return jsx`<div>Hello ${name}</div>`;
+function* Svg({ name = "World" }) {
+  let count = 0;
+  while (true) {
+    count++;
+    yield html`<svg viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="20" />
+    </svg>`;
+  }
 }
 
-renderer.render(jsx`<${Greeting} />`, document.body);
+renderer.render(html`<${Svg} />`, document.body);
+renderer.render(html`<${Svg} />`, document.body);
