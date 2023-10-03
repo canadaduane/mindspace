@@ -75,20 +75,46 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   });
 
-  // const createOrb = ({ clientX: x, clientY: y }) => {
-  //   if (globalIsDragging) return;
-  //   const orb1 = html`<${Orb} x=${x} y=${y} />`;
-  //   const lines = [];
-  //   for (let shape of shapes) {
-  //     if (shape.tag === Orb) {
-  //       lines.push(html`<${Line} x1=${x} y1=${y} orb2=${shape} />`);
-  //     }
-  //   }
-  //   for (let line of lines) shapes.unshift(line);
-  //   shapes.push(orb1);
-  // };
+  const createNode = ({ clientX: x, clientY: y }) => {
+    if (globalIsDragging) return;
 
-  // window.addEventListener("pointerup", createOrb);
+    const nodeId = ++maxNodeId;
+    const shapeId = ++maxShapeId;
+
+    // Create a circle that controls the node
+    const controllerShape = {
+      type: "circle",
+      cx: x,
+      cy: y,
+      controlsNodeId: nodeId,
+    };
+    shapes.set(shapeId, controllerShape);
+    console.log("create controllerShape", shapeId, controllerShape);
+
+    const dependents = [];
+    // Create lines from this node to all other nodes
+    for (let otherNode of nodes.values()) {
+      const shapeId = ++maxShapeId;
+      const connectShape = { type: "line" };
+
+      console.log("create connectShape", shapeId, connectShape);
+      shapes.set(shapeId, connectShape);
+      dependents.push({ shapeId, attrs: { x: "x2", y: "y2" } });
+      otherNode.dependents.push({ shapeId, attrs: { x: "x1", y: "y1" } });
+    }
+
+    // Create the new node that all shapes depend on for position updates
+    const node = {
+      x,
+      y,
+      text: `n${nodeId}`,
+      dependents: [{ shapeId, attrs: { x: "cx", y: "cy" } }, ...dependents],
+    };
+    console.log("create node", nodeId, node);
+    nodes.set(nodeId, node);
+  };
+
+  window.addEventListener("pointerup", createNode);
 
   while (true) {
     requestAnimationFrame(() => this.refresh());
@@ -104,7 +130,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         }
       }
     }
-    // console.log("shapes", [...shapes.values()]);
 
     const defs = [];
     // const defs = new Set();
