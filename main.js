@@ -47,6 +47,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let { nodes, maxNodeId } = makeNodesMap(initNodes);
   let { shapes, maxShapeId } = makeShapesMap(initShapes);
 
+  let showColorGuide = false;
+
   let w = window.innerWidth,
     h = window.innerHeight;
 
@@ -126,10 +128,20 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   // window.addEventListener("pointerdown", createNode);
 
   let recentlyCreatedNode;
+  let createdNodeTimer;
   const pos = { x: 0, y: 0 };
   const { start, end, move, touchStart } = makeDraggable(pos, {
     onStart: (x, y) => {
       recentlyCreatedNode = createNode(x, y);
+      createdNodeTimer = setTimeout(() => {
+        showColorGuide = true;
+        this.refresh();
+      }, 200);
+    },
+    onEnd: (x, y) => {
+      clearTimeout(createdNodeTimer);
+      showColorGuide = false;
+      this.refresh();
     },
     onMove: (x, y) => {
       recentlyCreatedNode.x = x;
@@ -169,7 +181,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         onpointermove=${move}
         ontouchstart=${touchStart}
       >
-        <${ColorWheel} w=${w} h=${h} />
+        ${showColorGuide && svg`<${ColorWheel} w=${w} h=${h} />`}
         ${svgShapes.map(([shapeId, shape]) => {
           return html`<${Line}
             crank-key=${shapeId}
