@@ -1,8 +1,19 @@
 <!DOCTYPE html>
 <style>
+  :root {
+    --defaultOrbColor: rgba(93, 103, 111, 1);
+  }
   body {
     margin: 0;
     background-color: rgb(17, 36, 53);
+  }
+  .orb {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background-color: var(--defaultOrbColor);
+    border-width: 3px;
+    border-radius: 100%;
+    border-style: solid;
   }
 </style>
 <script type="importmap">

@@ -7,7 +7,7 @@ import { shapeSortOrder, applyNodeToShapes } from "./shape.js";
 let globalIsDragging = false;
 const lineMaxDistance = 200;
 const lineTransition = 5;
-const defaultColor = "rgba(93, 103, 111, 1)";
+
 /**
  * nodeId: number
  * Node
@@ -148,34 +148,40 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   window.addEventListener("pointerdown", createNode);
 
+  let svgShapes = [],
+    htmlShapes = [];
+
   while (true) {
     for (let node of nodes.values()) {
       applyNodeToShapes(node, shapes);
     }
 
-    const defs = [];
-    // const defs = new Set();
-    // shapes.forEach((c) => {
-    //   if (c.tag.defs) {
-    //     defs.add(c.tag.defs);
-    //   }
-    // });
-
-    const sortedShapes = [...shapes.entries()].sort(
-      ([, a], [, b]) => shapeSortOrder(a) - shapeSortOrder(b)
-    );
+    svgShapes.length = 0;
+    htmlShapes.length = 0;
+    for (let [shapeId, shape] of shapes.entries()) {
+      if (shape.type === "line") svgShapes.push([shapeId, shape]);
+      if (shape.type === "circle") htmlShapes.push([shapeId, shape]);
+    }
 
     yield html`<svg
-      viewBox="0 0 ${w} ${h}"
-      style="width: ${w}px; height: ${h}px;"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>${[...defs]}</defs>
-      <${ColorWheel} w=${w} h=${h} />
-      ${sortedShapes.map(([shapeId, shape]) => {
-        switch (shape.type) {
-          case "circle":
-            return svg`
+        viewBox="0 0 ${w} ${h}"
+        style="width: ${w}px; height: ${h}px;"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <${ColorWheel} w=${w} h=${h} />
+        ${svgShapes.map(([shapeId, shape]) => {
+          return html`<${Line}
+            crank-key=${shapeId}
+            x1=${shape.x1}
+            y1=${shape.y1}
+            x2=${shape.x2}
+            y2=${shape.y2}
+          /> `;
+        })}
+      </svg>
+
+      ${htmlShapes.map(([shapeId, shape]) => {
+        return svg`
               <${Orb} 
                 crank-key=${shapeId}
                 nodeId=${shape.controlsNodeId} 
@@ -184,20 +190,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                 y=${shape.cy}
               /> 
             `;
-
-          case "line":
-            return svg`
-              <${Line}
-                crank-key=${shapeId}
-                x1=${shape.x1}
-                y1=${shape.y1}
-                x2=${shape.x2}
-                y2=${shape.y2}
-              />
-            `;
-        }
-      })}
-    </svg>`;
+      })} `;
   }
 }
 
@@ -236,19 +229,16 @@ function* Orb({ nodeId, x = 0, y = 0, r = 50, color }) {
   const preventDefault = (e) => e.preventDefault();
 
   while (true) {
-    yield svg`<circle
+    yield html`<div
       onpointerdown=${start}
       onpointerup=${end}
-      onpointercancel=${end} 
+      onpointercancel=${end}
       onpointermove=${move}
       ontouchstart=${preventDefault}
-      cx=${pos.x}
-      cy=${pos.y}
-      r=${r}
-      fill=${defaultColor}
-      stroke=${color ?? "rgba(200, 200, 200, 1)"}
-      stroke-width="2"
-    />`;
+      class="orb"
+      style="left: ${pos.x}px; top: ${pos.y}px; width: ${r * 2}px; height: ${r *
+      2}px; border-color: ${color ?? "rgba(200, 200, 200, 1)"}"
+    ></div>`;
   }
 }
 
