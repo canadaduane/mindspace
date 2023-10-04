@@ -207,17 +207,29 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   }
 }
 
-function* Orb({ nodeId, x = 0, y = 0, r = 50, color }) {
+function* Orb({ nodeId, x = 0, y = 0, color }) {
   const pos = { x, y };
 
+  let editEl;
+  let editMode = false;
+  let rectShape = false;
+  let didDrag = false;
   const { start, end, move, touchStart } = makeDraggable(pos, {
     onStart: () => {
       globalIsDragging = true;
+      didDrag = false;
     },
     onEnd: () => {
       setTimeout(() => (globalIsDragging = false), 50);
+      if (!didDrag) {
+        setTimeout(() => editEl?.focus(), 100);
+        editMode = true;
+        rectShape = true;
+        this.refresh();
+      }
     },
     onMove: () => {
+      didDrag = true;
       this.dispatchEvent(
         new CustomEvent("nodeMoved", {
           bubbles: true,
@@ -236,10 +248,15 @@ function* Orb({ nodeId, x = 0, y = 0, r = 50, color }) {
       onpointercancel=${end}
       onpointermove=${move}
       ontouchstart=${touchStart}
-      class="orb"
-      style="left: ${pos.x}px; top: ${pos.y}px; width: ${r * 2}px; height: ${r *
-      2}px; border-color: ${color ?? "rgba(200, 200, 200, 1)"}"
-    ></div>`;
+      class="orb ${rectShape && "to-rect"}"
+      style="left: ${pos.x}px; top: ${pos.y}px; border-color: ${color}; outline-color: ${color}"
+    >
+      <div
+        class="edit"
+        contenteditable=${editMode}
+        c-ref=${(el) => (editEl = el)}
+      ></div>
+    </div>`;
   }
 }
 
