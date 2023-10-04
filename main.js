@@ -14,6 +14,7 @@ const lineTransition = 5;
  * {
  *   x: number
  *   y: number
+ *   color: string
  *   text: string
  *   dependents: Dependent[]
  * }
@@ -44,7 +45,7 @@ const lineTransition = 5;
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let { nodes, maxNodeId } = makeNodesMap(initNodes);
-  let { shapes, maxShapeId } = makeShapesMap(initNodes);
+  let { shapes, maxShapeId } = makeShapesMap(initShapes);
 
   let w = window.innerWidth,
     h = window.innerHeight;
@@ -80,12 +81,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       window.innerWidth,
       window.innerHeight
     );
-    console.log("create color", color);
 
     // Create a circle that controls the node
     const controllerShape = {
       type: "circle",
-      color,
       cx: x,
       cy: y,
       controlsNodeId: nodeId,
@@ -109,8 +108,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const node = {
       x,
       y,
+      color,
       text: `n${nodeId}`,
-      dependents: [{ shapeId, attrs: { x: "cx", y: "cy" } }, ...dependents],
+      dependents: [
+        { shapeId, attrs: { x: "cx", y: "cy", color: "color" } },
+        ...dependents,
+      ],
     };
     console.log("create node", nodeId, node);
     nodes.set(nodeId, node);
@@ -131,6 +134,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     onMove: (x, y) => {
       recentlyCreatedNode.x = x;
       recentlyCreatedNode.y = y;
+      recentlyCreatedNode.color = getColorFromCoord(
+        x,
+        y,
+        window.innerWidth,
+        window.innerHeight
+      );
       this.refresh();
     },
   });
@@ -206,7 +215,7 @@ function* Orb({ nodeId, x = 0, y = 0, r = 50, color }) {
     },
   });
 
-  for ({ x, y } of this) {
+  for ({ x, y, color } of this) {
     pos.x = x;
     pos.y = y;
     yield html`<div
