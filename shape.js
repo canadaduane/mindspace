@@ -1,8 +1,3 @@
-export function shapeSortOrder(shape) {
-  if (shape.type === "line") return 0;
-  if (shape.type === "circle") return 1;
-}
-
 export function applyNodeToShapes(
   node /*: Node */,
   shapes /*: Map<number, Shape> */

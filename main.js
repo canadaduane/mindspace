@@ -2,7 +2,8 @@ import { renderer } from "@b9g/crank/dom";
 import Color from "colorjs.io";
 import { html, svg } from "./utils.js";
 import { ColorWheel } from "./colorwheel.js";
-import { shapeSortOrder, applyNodeToShapes } from "./shape.js";
+import { applyNodeToShapes } from "./shape.js";
+import { makeDraggable } from "./drag.js";
 
 let globalIsDragging = false;
 const lineMaxDistance = 200;
@@ -196,35 +197,23 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
 function* Orb({ nodeId, x = 0, y = 0, r = 50, color }) {
   const pos = { x, y };
-  let dragging = null;
 
-  const start = ({ target, clientX: x, clientY: y, pointerId, button }) => {
-    if (button !== 0) return; // left button only
-    dragging = { dx: pos.x - x, dy: pos.y - y };
-    globalIsDragging = true;
-    target.setPointerCapture(pointerId);
-  };
-
-  const end = (_event) => {
-    dragging = null;
-    setTimeout(() => (globalIsDragging = false), 50);
-  };
-
-  const move = ({ clientX: x, clientY: y }) => {
-    if (!dragging) return;
-
-    pos.x = x + dragging.dx;
-    pos.y = y + dragging.dy;
-
-    // this.refresh();
-
-    this.dispatchEvent(
-      new CustomEvent("nodeMoved", {
-        bubbles: true,
-        detail: { nodeId, ...pos },
-      })
-    );
-  };
+  const { start, end, move } = makeDraggable(pos, {
+    onStart: () => {
+      globalIsDragging = true;
+    },
+    onEnd: () => {
+      setTimeout(() => (globalIsDragging = false), 50);
+    },
+    onMove: () => {
+      this.dispatchEvent(
+        new CustomEvent("nodeMoved", {
+          bubbles: true,
+          detail: { nodeId, ...pos },
+        })
+      );
+    },
+  });
 
   const preventDefault = (e) => e.preventDefault();
 
