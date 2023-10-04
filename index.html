@@ -7,6 +7,7 @@
   body {
     margin: 0;
     background-color: rgb(17, 36, 53);
+    overflow: hidden;
   }
   .orb {
     position: absolute;
@@ -15,6 +16,17 @@
     border-width: 3px;
     border-radius: 100%;
     border-style: solid;
+  }
+  .fade {
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 1.2s;
+  }
+  .fade-in {
+    opacity: 0.4;
+  }
+  .fade-out {
+    opacity: 0;
   }
 </style>
 <script type="importmap">

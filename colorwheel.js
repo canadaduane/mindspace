@@ -20,10 +20,25 @@ export function* ColorWheel({ w, h }) {
         })
       );
     };
+  let classNames = ["fade"];
+
+  // Fade-in transition
+  this.schedule(() => {
+    setTimeout(() => {
+      if (!classNames.includes("fade-in")) {
+        classNames.push("fade-in");
+        this.refresh();
+      }
+    }, 100);
+  });
   for ({ w, h } of this) {
     const size = w > h ? h : w;
     yield svg`
-      <g transform="translate(${w / 2},${h / 2})" style="pointer-events: none">
+      <g
+        transform="translate(${w / 2},${h / 2})"
+        style="pointer-events: none"
+        class=${classNames.join(" ")}
+      >
         ${Array.from({ length: 60 }, (_, i) => {
           const C = 0.3;
           const hue = ((i * 6) / 360) * Math.PI * 2 + Math.PI / 2;
