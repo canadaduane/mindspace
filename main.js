@@ -2,6 +2,7 @@ import { renderer } from "@b9g/crank/dom";
 import Color from "colorjs.io";
 import { html, svg } from "./utils.js";
 import { ColorWheel } from "./colorwheel.js";
+import { shapeSortOrder, applyNodeToShapes } from "./shape.js";
 
 let globalIsDragging = false;
 const lineMaxDistance = 200;
@@ -148,18 +149,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   window.addEventListener("pointerdown", createNode);
 
   while (true) {
-    // requestAnimationFrame(() => this.refresh());
-
     for (let node of nodes.values()) {
-      for (let { shapeId, attrs } of node.dependents) {
-        const shape = shapes.get(shapeId);
-        if (shape) {
-          for (let fromAttr in attrs) {
-            let toAttr = attrs[fromAttr];
-            shape[toAttr] = node[fromAttr];
-          }
-        }
-      }
+      applyNodeToShapes(node, shapes);
     }
 
     const defs = [];
@@ -170,8 +161,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     //   }
     // });
 
-    const sortedShapes = [...shapes.entries()].sort((a, b) =>
-      a.type === "line" && b.type === "circle" ? -1 : 1
+    const sortedShapes = [...shapes.entries()].sort(
+      ([, a], [, b]) => shapeSortOrder(a) - shapeSortOrder(b)
     );
 
     yield html`<svg
