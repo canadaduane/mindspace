@@ -6,14 +6,16 @@ export function makeDraggable(
 
   const start = ({ target, clientX: x, clientY: y, pointerId, button }) => {
     if (button !== 0) return; // left button only
-    dragging = { dx: pos.x - x, dy: pos.y - y };
-    target.setPointerCapture(pointerId);
-    onStart?.(x, y);
+    const allow = onStart?.(x, y);
+    if (allow === true || allow === undefined) {
+      dragging = { dx: pos.x - x, dy: pos.y - y };
+      target.setPointerCapture(pointerId);
+    }
   };
 
   const end = ({ clientX: x, clientY: y }) => {
+    onEnd?.(x, y, dragging);
     dragging = null;
-    onEnd?.(x, y);
   };
 
   const move = ({ clientX: x, clientY: y }) => {

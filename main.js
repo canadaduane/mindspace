@@ -125,13 +125,16 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     return node;
   };
 
-  // window.addEventListener("pointerdown", createNode);
-
   let recentlyCreatedNode;
   let createdNodeTimer;
   const pos = { x: 0, y: 0 };
   const { start, end, move, touchStart } = makeDraggable(pos, {
     onStart: (x, y) => {
+      // If a div is actively focused, first blur it
+      if (document.activeElement.tagName === "DIV") {
+        return false;
+      }
+      console.log("activeEl", document.activeElement);
       recentlyCreatedNode = createNode(x, y);
       createdNodeTimer = setTimeout(() => {
         showColorGuide = true;
