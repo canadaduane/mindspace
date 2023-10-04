@@ -42,10 +42,45 @@
     padding: 8px;
     flex-grow: 1;
     margin: auto;
+    text-align: center;
   }
   .orb .edit:focus-visible {
     outline: 0;
   }
+  .orb .edit:empty {
+    content: "&nbsp;";
+    /* line-height: 100px; */
+  }
+
+  /* CSS hackery to get around bug where contenteditable with
+     centered text does not show caret in correct position */ 
+  .orb .edit:empty:not(:focus)::before {
+    content: attr(data-ph);
+    font-style: italic;
+    font-weight: bold;
+    color: #ccc;
+    letter-spacing: 0.2em;
+    word-wrap: break-word;
+  }
+  .orb .edit:focus::before {
+    display: none;
+  }
+  .orb .edit:focus:empty {
+    caret-color: transparent;
+  }
+  .orb .edit:focus:empty::after {
+    content: "";
+    display: inline-block;
+    width: 0.2ch;
+    height: 2rem;
+    vertical-align: text-bottom;
+    background: #ccc;
+    animation: blink 0.85s steps(2) infinite;
+  }
+  .orb .edit:focus::after {
+    display: none;
+  }
+
   .fade {
     opacity: 0;
     transition-property: opacity;

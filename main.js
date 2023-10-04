@@ -5,7 +5,7 @@ import { applyNodeToShapes, makeNodesMap, makeShapesMap } from "./shape.js";
 import { makeDraggable } from "./drag.js";
 
 let globalIsDragging = false;
-const lineMaxDistance = 200;
+const lineMaxDistance = 250;
 const lineTransition = 5;
 
 /**
@@ -227,7 +227,6 @@ function* Orb({ nodeId, x = 0, y = 0, color }) {
       if (!didDrag) {
         setTimeout(() => editEl?.focus(), 100);
         editMode = true;
-        rectShape = true;
         this.refresh();
       }
     },
@@ -241,6 +240,17 @@ function* Orb({ nodeId, x = 0, y = 0, color }) {
       );
     },
   });
+
+  let content = "";
+
+  const onKey = (event) => {
+    console.log({ target: event.target });
+    content = event.target.innerText.trim();
+    rectShape = content.length > 1;
+    this.refresh();
+  };
+
+  // let content = "&#8203;";
 
   for ({ x, y, color } of this) {
     pos.x = x;
@@ -257,6 +267,7 @@ function* Orb({ nodeId, x = 0, y = 0, color }) {
       <div
         class="edit"
         contenteditable=${editMode}
+        onkeyup=${onKey}
         c-ref=${(el) => (editEl = el)}
       ></div>
     </div>`;
@@ -302,7 +313,7 @@ function* FirstTime() {
             .firsttime--big-center {
               position: absolute;
               top: 0px;
-              left: 50%;
+              left: 50vw;
               transform: translateX(-50%);
               z-index: 2;
               display: flex;
