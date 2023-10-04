@@ -44,8 +44,6 @@ const lineTransition = 5;
  */
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
-  console.log({ initNodes, initShapes });
-
   let maxNodeId = 0;
   const nodes = new Map(
     initNodes.map(({ nodeId, ...node }) => {
@@ -53,7 +51,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       return [nodeId, node];
     })
   );
-  console.log({ nodes: [...nodes.values()] });
 
   let maxShapeId = 0;
   const shapes = new Map(
@@ -63,7 +60,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     })
   );
 
-  let w, h;
+  let w = window.innerWidth,
+    h = window.innerHeight;
 
   const matchWindowSize = () => {
     w = window.innerWidth;
@@ -71,7 +69,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     this.refresh();
   };
 
-  matchWindowSize();
   window.addEventListener("resize", matchWindowSize);
 
   this.addEventListener("nodeMoved", ({ detail: { nodeId, x, y } }) => {
@@ -92,9 +89,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     console.log("colorSelected", color);
   });
 
-  const createNode = ({ target, clientX: x, clientY: y }) => {
+  const createNode = (x, y) => {
     if (globalIsDragging) return;
-    if (target.tagName !== "svg") return;
 
     const nodeId = ++maxNodeId;
     const shapeId = ++maxShapeId;
@@ -145,9 +141,24 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     nodes.set(nodeId, node);
 
     this.refresh();
+
+    return node;
   };
 
-  window.addEventListener("pointerdown", createNode);
+  // window.addEventListener("pointerdown", createNode);
+
+  let recentlyCreatedNode;
+  const pos = { x: 0, y: 0 };
+  const { start, end, move, touchStart } = makeDraggable(pos, {
+    onStart: (x, y) => {
+      recentlyCreatedNode = createNode(x, y);
+    },
+    onMove: (x, y) => {
+      recentlyCreatedNode.x = x;
+      recentlyCreatedNode.y = y;
+      this.refresh();
+    },
+  });
 
   let svgShapes = [],
     htmlShapes = [];
@@ -168,6 +179,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         viewBox="0 0 ${w} ${h}"
         style="width: ${w}px; height: ${h}px;"
         xmlns="http://www.w3.org/2000/svg"
+        onpointerdown=${start}
+        onpointerup=${end}
+        onpointercancel=${end}
+        onpointermove=${move}
+        ontouchstart=${touchStart}
       >
         <${ColorWheel} w=${w} h=${h} />
         ${svgShapes.map(([shapeId, shape]) => {
@@ -198,7 +214,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 function* Orb({ nodeId, x = 0, y = 0, r = 50, color }) {
   const pos = { x, y };
 
-  const { start, end, move } = makeDraggable(pos, {
+  const { start, end, move, touchStart } = makeDraggable(pos, {
     onStart: () => {
       globalIsDragging = true;
     },
@@ -215,15 +231,15 @@ function* Orb({ nodeId, x = 0, y = 0, r = 50, color }) {
     },
   });
 
-  const preventDefault = (e) => e.preventDefault();
-
-  while (true) {
+  for ({ x, y } of this) {
+    pos.x = x;
+    pos.y = y;
     yield html`<div
       onpointerdown=${start}
       onpointerup=${end}
       onpointercancel=${end}
       onpointermove=${move}
-      ontouchstart=${preventDefault}
+      ontouchstart=${touchStart}
       class="orb"
       style="left: ${pos.x}px; top: ${pos.y}px; width: ${r * 2}px; height: ${r *
       2}px; border-color: ${color ?? "rgba(200, 200, 200, 1)"}"
@@ -250,17 +266,4 @@ function* Line({ x1, y1, x2, y2 }) {
   }
 }
 
-const n0 = {
-  nodeId: 0,
-  x: window.innerWidth / 2,
-  y: window.innerHeight / 2,
-  text: "n0",
-  dependents: [
-    { shapeId: 0, attrs: { x: "cx", y: "cy" } },
-    { shapeId: 2, attrs: { x: "x1", y: "y1" } },
-  ],
-};
-
-const s0 = { shapeId: 0, type: "circle", controlsNodeId: 0 };
-
-renderer.render(html` <${Svg} nodes=${[n0]} shapes=${[s0]} /> `, document.body);
+renderer.render(html` <${Svg} /> `, document.body);
