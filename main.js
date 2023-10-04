@@ -1,8 +1,7 @@
 import { renderer } from "@b9g/crank/dom";
-import Color from "colorjs.io";
 import { html, svg } from "./utils.js";
-import { ColorWheel } from "./colorwheel.js";
-import { applyNodeToShapes } from "./shape.js";
+import { ColorWheel, getColorFromCoord } from "./colorwheel.js";
+import { applyNodeToShapes, makeNodesMap, makeShapesMap } from "./shape.js";
 import { makeDraggable } from "./drag.js";
 
 let globalIsDragging = false;
@@ -44,21 +43,8 @@ const lineTransition = 5;
  */
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
-  let maxNodeId = 0;
-  const nodes = new Map(
-    initNodes.map(({ nodeId, ...node }) => {
-      if (maxNodeId < nodeId) maxNodeId = nodeId;
-      return [nodeId, node];
-    })
-  );
-
-  let maxShapeId = 0;
-  const shapes = new Map(
-    initShapes.map(({ shapeId, ...shape }) => {
-      if (maxShapeId < shapeId) maxShapeId = shapeId;
-      return [shapeId, shape];
-    })
-  );
+  let { nodes, maxNodeId } = makeNodesMap(initNodes);
+  let { shapes, maxShapeId } = makeShapesMap(initNodes);
 
   let w = window.innerWidth,
     h = window.innerHeight;
@@ -82,29 +68,18 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   });
 
-  let explicitlySelectedColor = null;
-
-  this.addEventListener("colorSelected", ({ detail: { color } }) => {
-    explicitlySelectedColor = color;
-    console.log("colorSelected", color);
-  });
-
   const createNode = (x, y) => {
     if (globalIsDragging) return;
 
     const nodeId = ++maxNodeId;
     const shapeId = ++maxShapeId;
 
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    // const size = w > h ? h : w;
-    const a = (x / w - 0.5) * 0.8;
-    const b = (y / h - 0.5) * 0.8;
-    const color =
-      explicitlySelectedColor ??
-      new Color("oklab", [1, a, b]).toString({
-        format: "rgba",
-      });
+    const color = getColorFromCoord(
+      x,
+      y,
+      window.innerWidth,
+      window.innerHeight
+    );
     console.log("create color", color);
 
     // Create a circle that controls the node

@@ -1,6 +1,14 @@
 import Color from "colorjs.io";
 import { svg } from "./utils.js";
 
+export function getColorFromCoord(x, y, w, h) {
+  const a = (x / w - 0.5) * 0.8;
+  const b = (y / h - 0.5) * 0.8;
+  return new Color("oklab", [1, a, b]).toString({
+    format: "rgba",
+  });
+}
+
 export function* ColorWheel({ w, h }) {
   const selectColor =
     (color) =>
