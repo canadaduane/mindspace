@@ -25,6 +25,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     this.refresh();
   };
 
+  /** Event Listeners */
+
   window.addEventListener("resize", matchWindowSize);
 
   this.addEventListener("nodeActive", ({ detail: { nodeId } }) => {
@@ -72,19 +74,45 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   });
 
-  let newNodeAngle = 0;
-  const createNodeAroundNode = (node) => {
-    const { x: cx, y: cy } = node;
-    const x = cx + Math.cos(newNodeAngle) * 180;
-    const y = cy + Math.sin(newNodeAngle) * 180;
-    newNodeAngle += Math.PI / 4;
-    createNode(x, y, false);
-  };
+  this.addEventListener("undeleteLine", ({ detail: { shapeId } }) => {
+    const shape = shapes.get(shapeId);
+    if (shape) {
+      shape.deleted = false;
+      // shape.selected = true;
+      // selectedLineId = shapeId;
+      // this.refresh();
+    } else {
+      console.log("can't undelete line, none found");
+    }
+  });
 
   this.addEventListener("createNode", ({ detail: { nodeId } }) => {
     const node = nodes.get(nodeId);
     if (node) createNodeAroundNode(node);
   });
+
+  const onKeyDown = (event) => {
+    console.log("onKeyDown", event.key);
+    if (event.key === "Enter") {
+      const node = nodes.get(mostRecentlyActiveNodeId);
+      if (node) createNodeAroundNode(node);
+      else createNode(window.innerWidth / 2, window.innerHeight / 2);
+    } else if (event.key === "Backspace" || event.key === "Delete") {
+      if (selectedLineId) {
+        const shape = shapes.get(selectedLineId);
+        if (shape) {
+          shape.deleted = true;
+          shape.selected = false;
+          selectedLineId = undefined;
+          this.refresh();
+        } else {
+          console.log("can't delete line, none selected");
+        }
+      }
+    }
+  };
+
+  /** Create Functions */
 
   const createLine = (nodeDependents1, nodeDependents2) => {
     const shapeId = ++maxShapeId;
@@ -154,24 +182,13 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     return node;
   };
 
-  const onKeyDown = (event) => {
-    console.log("onKeyDown", event.key);
-    if (event.key === "Enter") {
-      const node = nodes.get(mostRecentlyActiveNodeId);
-      if (node) createNodeAroundNode(node);
-      else createNode(window.innerWidth / 2, window.innerHeight / 2);
-    } else if (event.key === "Backspace" || event.key === "Delete") {
-      if (selectedLineId) {
-        const shape = shapes.get(selectedLineId);
-        if (shape) {
-          shape.deleted = true;
-          selectedLineId = undefined;
-          this.refresh();
-        } else {
-          console.log("can't delete line, none selected");
-        }
-      }
-    }
+  let newNodeAngle = 0;
+  const createNodeAroundNode = (node) => {
+    const { x: cx, y: cy } = node;
+    const x = cx + Math.cos(newNodeAngle) * 180;
+    const y = cy + Math.sin(newNodeAngle) * 180;
+    newNodeAngle += Math.PI / 4;
+    createNode(x, y, false);
   };
 
   let recentlyCreatedNode;

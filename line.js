@@ -22,15 +22,30 @@ export function* Line({
 
   for ({ x1, y1, x2, y2, selected, deleted } of this) {
     const distance = calcDistance(x1, y1, x2, y2);
+    if (deleted && distance < 110) {
+      this.dispatchEvent(
+        new CustomEvent("undeleteLine", {
+          bubbles: true,
+          detail: { shapeId },
+        })
+      );
+    }
 
     // Sigmoid function determines line visibility, based on line length (distance)
     const opacity =
       1 -
-      1 / (1 + Math.pow(Math.E, (lineMaxDistance - distance) / lineTransition));
+      1 /
+        (1 +
+          Math.pow(
+            Math.E,
+            ((deleted ? 120 : lineMaxDistance) - distance) / lineTransition
+          ));
 
     const selectedLineWidth = opacity * 15;
 
-    const connected = !deleted && opacity >= 0.001;
+    const innerLineWidth = deleted ? opacity * 30 : 3;
+
+    const connected = opacity >= 0.001;
 
     yield connected
       ? svg`
@@ -49,8 +64,10 @@ export function* Line({
           y1=${y1}
           x2=${x2}
           y2=${y2}
-          stroke="rgba(240, 240, 240, ${opacity})"
-          stroke-width="3"
+          stroke="rgba(${
+            deleted ? `240, 100, 40, ${opacity}` : `240, 240, 240, ${opacity}`
+          })"
+          stroke-width=${innerLineWidth}
         />
       `
       : null;
