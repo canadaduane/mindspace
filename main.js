@@ -1,15 +1,12 @@
 import { renderer } from "@b9g/crank/dom";
 import { html, svg } from "./utils.js";
-import {
-  globalIsDragging,
-  lineMaxDistance,
-  lineTransition,
-} from "./constants.js";
+import { globalIsDragging } from "./constants.js";
 import { ColorWheel, getColorFromCoord } from "./colorwheel.js";
 import { applyNodeToShapes, makeNodesMap, makeShapesMap } from "./shape.js";
 import { makeDraggable } from "./drag.js";
 import { FirstTime } from "./firsttime.js";
 import { Orb } from "./orb.js";
+import { Line } from "./line.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let { nodes, maxNodeId } = makeNodesMap(initNodes);
@@ -226,25 +223,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   } finally {
     document.body.removeEventListener("keydown", onKeyDown);
-  }
-}
-
-function* Line({ x1, y1, x2, y2 }) {
-  for ({ x1, y1, x2, y2 } of this) {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const opacity =
-      1 -
-      1 / (1 + Math.pow(Math.E, (lineMaxDistance - distance) / lineTransition));
-    yield svg`<line
-      x1=${x1}
-      y1=${y1}
-      x2=${x2}
-      y2=${y2}
-      stroke="rgba(240, 240, 240, ${opacity})"
-      stroke-width="3"
-    />`;
   }
 }
 
