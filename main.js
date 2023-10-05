@@ -130,7 +130,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let createdNodeTimer;
   const pos = { x: 0, y: 0 };
   const { start, end, move, touchStart } = makeDraggable(pos, {
-    onStart: (x, y) => {
+    onStart: ({ x, y }) => {
       // If a div is actively focused, first blur it
       if (document.activeElement.tagName === "DIV") {
         return false;
@@ -142,12 +142,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         this.refresh();
       }, 200);
     },
-    onEnd: (x, y) => {
+    onEnd: () => {
       clearTimeout(createdNodeTimer);
       showColorGuide = false;
       this.refresh();
     },
-    onMove: (x, y) => {
+    onMove: ({ x, y }) => {
       recentlyCreatedNode.x = x;
       recentlyCreatedNode.y = y;
       recentlyCreatedNode.color = getColorFromCoord(
@@ -215,9 +215,9 @@ function* Orb({ nodeId, x = 0, y = 0, color }) {
   const pos = { x, y };
 
   let editEl;
-  let editMode = false;
   let rectShape = false;
   let didDrag = false;
+
   const { start, end, move, touchStart } = makeDraggable(pos, {
     onStart: () => {
       globalIsDragging = true;
@@ -227,11 +227,10 @@ function* Orb({ nodeId, x = 0, y = 0, color }) {
       setTimeout(() => (globalIsDragging = false), 50);
       if (!didDrag) {
         setTimeout(() => editEl?.focus(), 100);
-        editMode = true;
-        this.refresh();
       }
     },
-    onMove: () => {
+    onMove: ({ event }) => {
+      event.preventDefault();
       didDrag = true;
       this.dispatchEvent(
         new CustomEvent("nodeMoved", {
@@ -251,6 +250,8 @@ function* Orb({ nodeId, x = 0, y = 0, color }) {
     this.refresh();
   };
 
+  this.schedule(() => setTimeout(() => editEl?.focus(), 50));
+
   for ({ x, y, color } of this) {
     pos.x = x;
     pos.y = y;
@@ -269,12 +270,14 @@ function* Orb({ nodeId, x = 0, y = 0, color }) {
           justify-content: center;
           align-items: center;
           overflow-y: auto;
+          user-select: none;
         }
         .orb:focus-within {
           outline-width: 3px;
           outline-style: solid;
         }
         .orb .edit {
+          background-color: rgba(0, 0, 0, 0.1);
           padding: 8px;
           flex-grow: 1;
           margin: auto;
@@ -285,8 +288,10 @@ function* Orb({ nodeId, x = 0, y = 0, color }) {
         }
         .orb .edit.circle {
           font-size: 48px;
-          line-height: 48px; 
+          line-height: 48px;
           margin-bottom: 14px;
+          overflow: hidden;
+          white-space: nowrap;
         }
 
         /* CSS hackery to get around bug where contenteditable with
@@ -321,7 +326,8 @@ function* Orb({ nodeId, x = 0, y = 0, color }) {
       >
         <div
           class="edit ${rectShape || "circle"}"
-          contenteditable=${editMode}
+          spellcheck=${rectShape ? "true" : "false"}
+          contenteditable="true"
           onkeyup=${onKey}
           c-ref=${(el) => (editEl = el)}
         ></div>
