@@ -283,35 +283,25 @@ function* Orb({ nodeId, x = 0, y = 0, color }) {
         .orb .edit:focus-visible {
           outline: 0;
         }
-        .orb .edit:empty {
-          content: "&nbsp;";
-          /* line-height: 100px; */
+        .orb .edit.circle {
+          font-size: 48px;
+          line-height: 48px; 
+          margin-bottom: 14px;
         }
 
         /* CSS hackery to get around bug where contenteditable with
            centered text does not show caret in correct position */
-        .orb .edit:empty:not(:focus)::before {
-          content: attr(data-ph);
-          font-style: italic;
-          font-weight: bold;
-          color: #ccc;
-          letter-spacing: 0.2em;
-          word-wrap: break-word;
-        }
-        .orb .edit:focus::before {
-          display: none;
-        }
         .orb .edit:focus:empty {
           caret-color: transparent;
         }
         .orb .edit:focus:empty::after {
           content: "";
           display: inline-block;
-          width: 0.2ch;
-          height: 2rem;
+          width: 3px;
+          height: 48px;
           vertical-align: text-bottom;
           background: #ccc;
-          animation: blink 0.85s steps(2) infinite;
+          animation: blink 1.2s steps(2) infinite;
         }
         .orb .edit:focus::after {
           display: none;
@@ -330,7 +320,7 @@ function* Orb({ nodeId, x = 0, y = 0, color }) {
         `outline-color: ${color};`}
       >
         <div
-          class="edit"
+          class="edit ${rectShape || "circle"}"
           contenteditable=${editMode}
           onkeyup=${onKey}
           c-ref=${(el) => (editEl = el)}
@@ -389,9 +379,9 @@ function* FirstTime() {
               height: 100vh;
               color: var(--dullText);
               font-family: sans-serif;
-              font-size: 2rem;
+              font-size: 28px;
               text-align: center;
-              line-height: 1.8rem;
+              line-height: 24px;
 
               pointer-events: none;
 
