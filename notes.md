@@ -15,3 +15,40 @@ const n0 = {
 
 const s0 = { shapeId: 0, type: "circle", controlsNodeId: 0 };
 ```
+
+
+/**
+ * nodeId: number
+ * Node
+ * {
+ *   x: number
+ *   y: number
+ *   color: string
+ *   text: string
+ *   dependents: Dependent[]
+ * }
+ *
+ * Dependent
+ * {
+ *   shapeId: number
+ *   attrs: Record<string, string>
+ * }
+ *
+ * shapeId: number
+ * Shape
+ * {
+ *   type: "circle"
+ *   controlsNodeId: number
+ *   color: string
+ *   cx: number
+ *   cy: number
+ * } | {
+ *   type: "line"
+ *   color: string
+ *   x1: number
+ *   y1: number
+ *   x2: number
+ *   y2: number
+ * }
+ */
+

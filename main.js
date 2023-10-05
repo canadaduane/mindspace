@@ -1,48 +1,15 @@
 import { renderer } from "@b9g/crank/dom";
 import { html, svg } from "./utils.js";
+import {
+  globalIsDragging,
+  lineMaxDistance,
+  lineTransition,
+} from "./constants.js";
 import { ColorWheel, getColorFromCoord } from "./colorwheel.js";
 import { applyNodeToShapes, makeNodesMap, makeShapesMap } from "./shape.js";
 import { makeDraggable } from "./drag.js";
-
-let globalIsDragging = false;
-const lineMaxDistance = 250;
-const lineTransition = 5;
-const stringLengthTransition = 3;
-
-/**
- * nodeId: number
- * Node
- * {
- *   x: number
- *   y: number
- *   color: string
- *   text: string
- *   dependents: Dependent[]
- * }
- *
- * Dependent
- * {
- *   shapeId: number
- *   attrs: Record<string, string>
- * }
- *
- * shapeId: number
- * Shape
- * {
- *   type: "circle"
- *   controlsNodeId: number
- *   color: string
- *   cx: number
- *   cy: number
- * } | {
- *   type: "line"
- *   color: string
- *   x1: number
- *   y1: number
- *   x2: number
- *   y2: number
- * }
- */
+import { FirstTime } from "./firsttime.js";
+import { Orb } from "./orb.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let { nodes, maxNodeId } = makeNodesMap(initNodes);
@@ -211,130 +178,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   }
 }
 
-function* Orb({ nodeId, x = 0, y = 0, color }) {
-  const pos = { x, y };
-
-  let editEl;
-  let rectShape = false;
-  let didDrag = false;
-
-  const { start, end, move, touchStart } = makeDraggable(pos, {
-    onStart: () => {
-      globalIsDragging = true;
-      didDrag = false;
-    },
-    onEnd: () => {
-      setTimeout(() => (globalIsDragging = false), 50);
-      if (!didDrag) {
-        setTimeout(() => editEl?.focus(), 100);
-      }
-    },
-    onMove: ({ event }) => {
-      event.preventDefault();
-      didDrag = true;
-      this.dispatchEvent(
-        new CustomEvent("nodeMoved", {
-          bubbles: true,
-          detail: { nodeId, ...pos },
-        })
-      );
-    },
-  });
-
-  let content = "";
-
-  const onKey = (event) => {
-    console.log({ target: event.target });
-    content = event.target.innerText.trim();
-    rectShape = content.length > stringLengthTransition;
-    this.refresh();
-  };
-
-  this.schedule(() => setTimeout(() => editEl?.focus(), 50));
-
-  for ({ x, y, color } of this) {
-    pos.x = x;
-    pos.y = y;
-    yield html` <style>
-        .orb {
-          position: absolute;
-          transform: translate(-50%, -50%);
-          background-color: var(--defaultOrbFill);
-          border-width: 3px;
-          border-radius: 100%;
-          border-style: solid;
-          width: 100px;
-          height: 100px;
-          color: var(--brightText);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          overflow-y: auto;
-          user-select: none;
-        }
-        .orb:focus-within {
-          outline-width: 3px;
-          outline-style: solid;
-        }
-        .orb .edit {
-          background-color: rgba(0, 0, 0, 0.1);
-          padding: 8px;
-          flex-grow: 1;
-          margin: auto;
-          text-align: center;
-        }
-        .orb .edit:focus-visible {
-          outline: 0;
-        }
-        .orb .edit.circle {
-          font-size: 48px;
-          line-height: 48px;
-          margin-bottom: 14px;
-          overflow: hidden;
-          white-space: nowrap;
-        }
-
-        /* CSS hackery to get around bug where contenteditable with
-           centered text does not show caret in correct position */
-        .orb .edit:focus:empty {
-          caret-color: transparent;
-        }
-        .orb .edit:focus:empty::after {
-          content: "";
-          display: inline-block;
-          width: 3px;
-          height: 48px;
-          vertical-align: text-bottom;
-          background: #ccc;
-          animation: blink 1.2s steps(2) infinite;
-        }
-        .orb .edit:focus::after {
-          display: none;
-        }
-      </style>
-      <div
-        onpointerdown=${start}
-        onpointerup=${end}
-        onpointercancel=${end}
-        onpointermove=${move}
-        ontouchstart=${touchStart}
-        class="orb ${rectShape && "to-rect"}"
-        style=${`left: ${pos.x}px;` +
-        `top: ${pos.y}px;` +
-        `border-color: ${color};` +
-        `outline-color: ${color};`}
-      >
-        <div
-          class="edit ${rectShape || "circle"}"
-          spellcheck=${rectShape ? "true" : "false"}
-          contenteditable="true"
-          onkeyup=${onKey}
-          c-ref=${(el) => (editEl = el)}
-        ></div>
-      </div>`;
-  }
-}
-
 function* Line({ x1, y1, x2, y2 }) {
   for ({ x1, y1, x2, y2 } of this) {
     const dx = x2 - x1;
@@ -351,58 +194,6 @@ function* Line({ x1, y1, x2, y2 }) {
       stroke="rgba(240, 240, 240, ${opacity})"
       stroke-width="3"
     />`;
-  }
-}
-
-function* FirstTime() {
-  let fade = false;
-  let firsttime = true;
-
-  setTimeout(() => {
-    fade = true;
-    this.refresh();
-  }, 1800);
-
-  setTimeout(() => {
-    firsttime = false;
-    this.refresh();
-  }, 3000);
-
-  for ({} of this) {
-    yield firsttime
-      ? html` <style>
-            .firsttime--big-center {
-              position: absolute;
-              top: 0px;
-              left: 50vw;
-              transform: translateX(-50%);
-              z-index: 2;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-
-              width: 50vw;
-              height: 100vh;
-              color: var(--dullText);
-              font-family: sans-serif;
-              font-size: 28px;
-              text-align: center;
-              line-height: 24px;
-
-              pointer-events: none;
-
-              opacity: 1;
-              transition-property: opacity;
-              transition-duration: 1.2s;
-            }
-            .firsttime--fade-out {
-              opacity: 0;
-            }
-          </style>
-          <div class="firsttime--big-center ${fade && "firsttime--fade-out"}">
-            tap and drag to start
-          </div>`
-      : null;
   }
 }
 
