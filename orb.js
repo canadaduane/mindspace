@@ -2,6 +2,10 @@ import { html } from "./utils.js";
 import { makeDraggable } from "./drag.js";
 import { setGlobalIsDragging, stringLengthTransition } from "./constants.js";
 
+function isFirefox() {
+  return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
+}
+
 export function* Orb({ nodeId, x = 0, y = 0, color, initialFocus }) {
   const pos = { x, y };
 
@@ -119,25 +123,29 @@ export function* Orb({ nodeId, x = 0, y = 0, color, initialFocus }) {
           overflow: hidden;
           white-space: nowrap;
         }
-
-        /* CSS hackery to get around bug where contenteditable with
-           centered text does not show caret in correct position */
-        .orb .edit:focus:empty {
-          caret-color: transparent;
-        }
-        .orb .edit:focus:empty::after {
-          content: "";
-          display: inline-block;
-          width: 3px;
-          height: 48px;
-          vertical-align: text-bottom;
-          background: #ccc;
-          animation: blink 1.2s steps(2) infinite;
-        }
-        .orb .edit:focus::after {
-          display: none;
-        }
       </style>
+      ${isFirefox() &&
+      html`
+        <style>
+          /* CSS hackery to get around bug where contenteditable with
+           centered text does not show caret in correct position */
+          .orb .edit:focus:empty {
+            caret-color: transparent;
+          }
+          .orb .edit:focus:empty::after {
+            content: "";
+            display: inline-block;
+            width: 3px;
+            height: 48px;
+            vertical-align: text-bottom;
+            background: #ccc;
+            animation: blink 1.2s steps(2) infinite;
+          }
+          .orb .edit:focus::after {
+            display: none;
+          }
+        </style>
+      `}
       <div
         onpointerdown=${start}
         onpointerup=${end}

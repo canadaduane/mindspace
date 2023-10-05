@@ -1,6 +1,6 @@
 import { renderer } from "@b9g/crank/dom";
 import { html, svg } from "./utils.js";
-import { globalIsDragging } from "./constants.js";
+import { globalIsDragging, scrollbarThickness } from "./constants.js";
 import { ColorWheel, getColorFromCoord } from "./colorwheel.js";
 import { applyNodeToShapes, makeNodesMap, makeShapesMap } from "./shape.js";
 import { getScroll, makeDraggable } from "./drag.js";
@@ -23,8 +23,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   // Scroll to center of area after first render
   setTimeout(() => {
     document.documentElement.scrollLeft = window.innerWidth / 2;
+    console.log("scrollTop =", window.innerHeight / 2);
     document.documentElement.scrollTop = window.innerHeight / 2;
-  }, 0);
+  }, 100);
 
   const matchWorkAreaSizesWithoutRefresh = () => {
     winW = window.innerWidth;
@@ -50,16 +51,16 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   window.addEventListener("resize", matchWorkAreaSizes);
 
   let prevWidth, prevHeight;
-  const resizeObserverInterval = setInterval(() => {
-    const w = document.documentElement.scrollWidth,
-      h = document.documentElement.scrollHeight;
+  // const resizeObserverInterval = setInterval(() => {
+  //   const w = document.documentElement.scrollWidth,
+  //     h = document.documentElement.scrollHeight;
 
-    if (w !== prevWidth || h !== prevHeight) {
-      prevWidth = w;
-      prevHeight = h;
-      matchWorkAreaSizes();
-    }
-  }, 100);
+  //   if (w !== prevWidth || h !== prevHeight) {
+  //     prevWidth = w;
+  //     prevHeight = h;
+  //     matchWorkAreaSizes();
+  //   }
+  // }, 1000);
 
   this.addEventListener("nodeActive", ({ detail: { nodeId } }) => {
     mostRecentlyActiveNodeId = nodeId;
@@ -272,8 +273,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       }
 
       yield html`<svg
-          viewBox="0 0 ${docW} ${docH - 10}"
-          style="width: ${docW}px; height: ${docH - 10}px;"
+          viewBox="0 0 ${docW} ${docH - scrollbarThickness}"
+          style="width: ${docW}px; height: ${docH - scrollbarThickness}px;"
           xmlns="http://www.w3.org/2000/svg"
           onpointerdown=${start}
           onpointerup=${end}
