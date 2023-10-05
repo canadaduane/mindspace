@@ -86,6 +86,17 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     if (node) createNodeAroundNode(node);
   });
 
+  const createLine = (nodeDependents1, nodeDependents2) => {
+    const shapeId = ++maxShapeId;
+    const lineShape = { type: "line" };
+
+    shapes.set(shapeId, lineShape);
+    nodeDependents1.push({ shapeId, attrs: { x: "x2", y: "y2" } });
+    nodeDependents2.push({ shapeId, attrs: { x: "x1", y: "y1" } });
+
+    return { shape: lineShape, shapeId };
+  };
+
   const createNode = (x, y, initialFocus = true) => {
     if (globalIsDragging) return;
 
@@ -112,13 +123,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const dependents = [];
     // Create lines from this node to all other nodes
     for (let otherNode of nodes.values()) {
-      const shapeId = ++maxShapeId;
-      const connectShape = { type: "line" };
-
-      console.log("create connectShape", shapeId, connectShape);
-      shapes.set(shapeId, connectShape);
-      dependents.push({ shapeId, attrs: { x: "x2", y: "y2" } });
-      otherNode.dependents.push({ shapeId, attrs: { x: "x1", y: "y1" } });
+      createLine(dependents, otherNode.dependents);
     }
 
     // Create the new node that all shapes depend on for position updates
