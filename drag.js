@@ -1,3 +1,10 @@
+export function getScroll() {
+  const doc = document.documentElement;
+  const left = doc.scrollLeft - (doc.clientLeft || 0);
+  const top = doc.scrollTop - (doc.clientTop || 0);
+
+  return { left, top };
+}
 export function makeDraggable(
   pos /*: {x: number, y: number} */,
   { onStart, onEnd, onMove }
@@ -5,8 +12,14 @@ export function makeDraggable(
   let dragging = null;
 
   const start = (event) => {
-    const { target, clientX: x, clientY: y, pointerId, button } = event;
+    const { target, clientX, clientY, pointerId, button } = event;
+
     if (button !== 0) return; // left button only
+
+    const { left, top } = getScroll();
+    const x = clientX + left;
+    const y = clientY + top;
+
     const allow = onStart?.({ event, x, y });
     if (allow === true || allow === undefined) {
       dragging = { dx: pos.x - x, dy: pos.y - y };
@@ -15,14 +28,23 @@ export function makeDraggable(
   };
 
   const end = (event) => {
-    const { clientX: x, clientY: y } = event;
+    const { clientX, clientY } = event;
+
+    const { left, top } = getScroll();
+    const x = clientX + left;
+    const y = clientY + top;
+
     onEnd?.({ event, x, y, dragging });
     dragging = null;
   };
 
   const move = (event) => {
     if (!dragging) return;
-    const { clientX: x, clientY: y } = event;
+    const { clientX, clientY } = event;
+
+    const { left, top } = getScroll();
+    const x = clientX + left;
+    const y = clientY + top;
 
     pos.x = x + dragging.dx;
     pos.y = y + dragging.dy;

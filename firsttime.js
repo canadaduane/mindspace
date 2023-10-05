@@ -19,8 +19,8 @@ export function* FirstTime() {
       ? html` <style>
             .firsttime--big-center {
               position: absolute;
-              top: 0px;
-              left: 50vw;
+              top: 50vh;
+              left: 100vw;
               transform: translateX(-50%);
               z-index: 2;
               display: flex;

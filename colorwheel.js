@@ -1,5 +1,6 @@
 import Color from "colorjs.io";
 import { svg } from "./utils.js";
+import { getScroll } from "./drag.js";
 
 export function getColorFromCoord(x, y, w, h) {
   const a = (x / w - 0.5) * 0.8;
@@ -33,10 +34,22 @@ export function* ColorWheel({ w, h }) {
   });
   for ({ w, h } of this) {
     const size = w > h ? h : w;
+    const { left, top } = getScroll();
     yield svg`
+      <svg
+          viewBox="0 0 ${w} ${h.innerHeight}"
+          style=${
+            `width: ${w}px;` +
+            `height: ${h}px;` +
+            `pointer-events: none;` +
+            `position: fixed;` +
+            `left: 0px;` +
+            `top: 0px;`
+          }
+          xmlns="http://www.w3.org/2000/svg"
+        >
       <g
         transform="translate(${w / 2},${h / 2})"
-        style="pointer-events: none"
         class=${classNames.join(" ")}
       >
         ${Array.from({ length: 60 }, (_, i) => {
@@ -61,6 +74,7 @@ export function* ColorWheel({ w, h }) {
           `;
         })}
       </g>
+      </svg>
     `;
   }
 }

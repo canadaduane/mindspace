@@ -3,7 +3,7 @@ import { html, svg } from "./utils.js";
 import { globalIsDragging } from "./constants.js";
 import { ColorWheel, getColorFromCoord } from "./colorwheel.js";
 import { applyNodeToShapes, makeNodesMap, makeShapesMap } from "./shape.js";
-import { makeDraggable } from "./drag.js";
+import { getScroll, makeDraggable } from "./drag.js";
 import { FirstTime } from "./firsttime.js";
 import { Orb } from "./orb.js";
 import { Line } from "./line.js";
@@ -16,18 +16,50 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let mostRecentlyActiveNodeId;
   let selectedLineId;
 
-  let w = window.innerWidth,
-    h = window.innerHeight;
+  let winW, winH, docW, docH;
+  let minDocH = window.innerHeight * 2;
+  let minDocW = window.innerWidth * 2;
 
-  const matchWindowSize = () => {
-    w = window.innerWidth;
-    h = window.innerHeight;
+  // Scroll to center of area after first render
+  setTimeout(() => {
+    document.documentElement.scrollLeft = window.innerWidth / 2;
+    document.documentElement.scrollTop = window.innerHeight / 2;
+  }, 0);
+
+  const matchWorkAreaSizesWithoutRefresh = () => {
+    winW = window.innerWidth;
+    winH = window.innerHeight;
+    if (minDocW < document.documentElement.scrollWidth) {
+      minDocW = document.documentElement.scrollWidth;
+    }
+    docW = Math.max(minDocW, document.documentElement.scrollWidth);
+    if (minDocH < document.documentElement.scrollHeight) {
+      minDocH = document.documentElement.scrollHeight;
+    }
+    docH = Math.max(minDocH, document.documentElement.scrollHeight);
+  };
+  matchWorkAreaSizesWithoutRefresh();
+
+  const matchWorkAreaSizes = () => {
+    matchWorkAreaSizesWithoutRefresh();
     this.refresh();
   };
 
   /** Event Listeners */
 
-  window.addEventListener("resize", matchWindowSize);
+  window.addEventListener("resize", matchWorkAreaSizes);
+
+  let prevWidth, prevHeight;
+  const resizeObserverInterval = setInterval(() => {
+    const w = document.documentElement.scrollWidth,
+      h = document.documentElement.scrollHeight;
+
+    if (w !== prevWidth || h !== prevHeight) {
+      prevWidth = w;
+      prevHeight = h;
+      matchWorkAreaSizes();
+    }
+  }, 100);
 
   this.addEventListener("nodeActive", ({ detail: { nodeId } }) => {
     mostRecentlyActiveNodeId = nodeId;
@@ -131,9 +163,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const nodeId = ++maxNodeId;
     const shapeId = ++maxShapeId;
 
+    const { left, top } = getScroll();
     const color = getColorFromCoord(
-      x,
-      y,
+      x - left,
+      y - top,
       window.innerWidth,
       window.innerHeight
     );
@@ -208,11 +241,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       this.refresh();
     },
     onMove: ({ x, y }) => {
+      const { left, top } = getScroll();
       recentlyCreatedNode.x = x;
       recentlyCreatedNode.y = y;
       recentlyCreatedNode.color = getColorFromCoord(
-        x,
-        y,
+        x - left,
+        y - top,
         window.innerWidth,
         window.innerHeight
       );
@@ -238,8 +272,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       }
 
       yield html`<svg
-          viewBox="0 0 ${w} ${h}"
-          style="width: ${w}px; height: ${h}px;"
+          viewBox="0 0 ${docW} ${docH - 10}"
+          style="width: ${docW}px; height: ${docH - 10}px;"
           xmlns="http://www.w3.org/2000/svg"
           onpointerdown=${start}
           onpointerup=${end}
@@ -247,7 +281,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           onpointermove=${move}
           ontouchstart=${touchStart}
         >
-          ${showColorGuide && svg`<${ColorWheel} w=${w} h=${h} />`}
           ${svgShapes.map(([shapeId, shape]) => {
             return html`<${Line}
               crank-key=${shapeId}
@@ -262,6 +295,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           })}
         </svg>
 
+        ${showColorGuide && html`<${ColorWheel} w=${winW} h=${winH} />`}
         ${htmlShapes.map(([shapeId, shape]) => {
           return svg`
               <${Orb} 
