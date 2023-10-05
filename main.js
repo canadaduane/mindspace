@@ -39,6 +39,19 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   });
 
+  this.addEventListener("removeNode", ({ detail: { nodeId } }) => {
+    const node = nodes.get(nodeId);
+    if (node) {
+      node.dependents.forEach((d) => {
+        shapes.delete(d.shapeId);
+      });
+      nodes.delete(nodeId);
+      this.refresh();
+    } else {
+      console.warn("can't set node movement", nodeId);
+    }
+  });
+
   const createNode = (x, y) => {
     if (globalIsDragging) return;
 

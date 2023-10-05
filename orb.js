@@ -1,6 +1,6 @@
 import { html } from "./utils.js";
 import { makeDraggable } from "./drag.js";
-import { globalIsDragging, stringLengthTransition } from "./constants.js";
+import { setGlobalIsDragging, stringLengthTransition } from "./constants.js";
 
 export function* Orb({ nodeId, x = 0, y = 0, color }) {
   const pos = { x, y };
@@ -11,11 +11,11 @@ export function* Orb({ nodeId, x = 0, y = 0, color }) {
 
   const { start, end, move, touchStart } = makeDraggable(pos, {
     onStart: () => {
-      globalIsDragging = true;
+      setGlobalIsDragging(true);
       didDrag = false;
     },
     onEnd: () => {
-      setTimeout(() => (globalIsDragging = false), 50);
+      setTimeout(() => setGlobalIsDragging(false), 50);
       if (!didDrag) {
         setTimeout(() => editEl?.focus(), 100);
       }
@@ -35,7 +35,18 @@ export function* Orb({ nodeId, x = 0, y = 0, color }) {
   let content = "";
 
   const onKey = (event) => {
-    console.log({ target: event.target });
+    console.log("event key", event.key);
+    if (event.key === "Backspace" || event.key === "Delete") {
+      if (content.length === 0) {
+        this.dispatchEvent(
+          new CustomEvent("removeNode", {
+            bubbles: true,
+            detail: { nodeId },
+          })
+        );
+        return;
+      }
+    }
     content = event.target.innerText.trim();
     rectShape = content.length > stringLengthTransition;
     this.refresh();
