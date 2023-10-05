@@ -16,6 +16,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let { shapes, maxShapeId } = makeShapesMap(initShapes);
 
   let showColorGuide = false;
+  let mostRecentlyActiveNodeId;
 
   let w = window.innerWidth,
     h = window.innerHeight;
@@ -27,6 +28,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   window.addEventListener("resize", matchWindowSize);
+
+  this.addEventListener("nodeActive", ({ detail: { nodeId } }) => {
+    mostRecentlyActiveNodeId = nodeId;
+  });
 
   this.addEventListener("nodeMoved", ({ detail: { nodeId, x, y } }) => {
     const node = nodes.get(nodeId);
@@ -53,15 +58,17 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   let newNodeAngle = 0;
+  const createNodeAroundNode = (node) => {
+    const { x: cx, y: cy } = node;
+    const x = cx + Math.cos(newNodeAngle) * 150;
+    const y = cy + Math.sin(newNodeAngle) * 150;
+    newNodeAngle += Math.PI / 4;
+    createNode(x, y, false);
+  };
+
   this.addEventListener("createNode", ({ detail: { nodeId } }) => {
     const node = nodes.get(nodeId);
-    if (node) {
-      const { x: cx, y: cy } = node;
-      const x = cx + Math.cos(newNodeAngle) * 150;
-      const y = cy + Math.sin(newNodeAngle) * 150;
-      newNodeAngle += Math.PI / 4;
-      createNode(x, y, false);
-    }
+    if (node) createNodeAroundNode(node);
   });
 
   const createNode = (x, y, initialFocus = true) => {
@@ -127,6 +134,15 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     return node;
   };
 
+  const onKeyDown = (event) => {
+    console.log("onKeyDown", event.key);
+    if (event.key !== "Enter") return;
+
+    const node = nodes.get(mostRecentlyActiveNodeId);
+    if (node) createNodeAroundNode(node);
+    else createNode(window.innerWidth / 2, window.innerHeight / 2);
+  };
+
   let recentlyCreatedNode;
   let createdNodeTimer;
   const pos = { x: 0, y: 0 };
@@ -159,42 +175,44 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let svgShapes = [],
     htmlShapes = [];
 
-  while (true) {
-    for (let node of nodes.values()) {
-      applyNodeToShapes(node, shapes);
-    }
+  document.body.addEventListener("keydown", onKeyDown);
+  try {
+    while (true) {
+      for (let node of nodes.values()) {
+        applyNodeToShapes(node, shapes);
+      }
 
-    svgShapes.length = 0;
-    htmlShapes.length = 0;
-    for (let [shapeId, shape] of shapes.entries()) {
-      if (shape.type === "line") svgShapes.push([shapeId, shape]);
-      if (shape.type === "circle") htmlShapes.push([shapeId, shape]);
-    }
+      svgShapes.length = 0;
+      htmlShapes.length = 0;
+      for (let [shapeId, shape] of shapes.entries()) {
+        if (shape.type === "line") svgShapes.push([shapeId, shape]);
+        if (shape.type === "circle") htmlShapes.push([shapeId, shape]);
+      }
 
-    yield html`<svg
-        viewBox="0 0 ${w} ${h}"
-        style="width: ${w}px; height: ${h}px;"
-        xmlns="http://www.w3.org/2000/svg"
-        onpointerdown=${start}
-        onpointerup=${end}
-        onpointercancel=${end}
-        onpointermove=${move}
-        ontouchstart=${touchStart}
-      >
-        ${showColorGuide && svg`<${ColorWheel} w=${w} h=${h} />`}
-        ${svgShapes.map(([shapeId, shape]) => {
-          return html`<${Line}
-            crank-key=${shapeId}
-            x1=${shape.x1}
-            y1=${shape.y1}
-            x2=${shape.x2}
-            y2=${shape.y2}
-          /> `;
-        })}
-      </svg>
+      yield html`<svg
+          viewBox="0 0 ${w} ${h}"
+          style="width: ${w}px; height: ${h}px;"
+          xmlns="http://www.w3.org/2000/svg"
+          onpointerdown=${start}
+          onpointerup=${end}
+          onpointercancel=${end}
+          onpointermove=${move}
+          ontouchstart=${touchStart}
+        >
+          ${showColorGuide && svg`<${ColorWheel} w=${w} h=${h} />`}
+          ${svgShapes.map(([shapeId, shape]) => {
+            return html`<${Line}
+              crank-key=${shapeId}
+              x1=${shape.x1}
+              y1=${shape.y1}
+              x2=${shape.x2}
+              y2=${shape.y2}
+            /> `;
+          })}
+        </svg>
 
-      ${htmlShapes.map(([shapeId, shape]) => {
-        return svg`
+        ${htmlShapes.map(([shapeId, shape]) => {
+          return svg`
               <${Orb} 
                 crank-key=${shapeId}
                 nodeId=${shape.controlsNodeId} 
@@ -204,7 +222,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                 y=${shape.cy}
               /> 
             `;
-      })} `;
+        })} `;
+    }
+  } finally {
+    document.body.removeEventListener("keydown", onKeyDown);
   }
 }
 

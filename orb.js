@@ -43,12 +43,13 @@ export function* Orb({ nodeId, x = 0, y = 0, color, initialFocus }) {
         })
       );
       event.preventDefault();
+      // don't allow body to also create a node
+      event.stopPropagation();
       return;
     }
   };
 
   const onKey = (event) => {
-    console.log("event key", event.key);
     if (event.key === "Backspace" || event.key === "Delete") {
       if (content.length === 0) {
         this.dispatchEvent(
@@ -70,6 +71,12 @@ export function* Orb({ nodeId, x = 0, y = 0, color, initialFocus }) {
   if (initialFocus) {
     this.schedule(() => setTimeout(() => editEl?.focus(), 50));
   }
+
+  const onFocus = (event) => {
+    this.dispatchEvent(
+      new CustomEvent("nodeActive", { bubbles: true, detail: { nodeId } })
+    );
+  };
 
   for ({ x, y, color } of this) {
     pos.x = x;
@@ -149,6 +156,7 @@ export function* Orb({ nodeId, x = 0, y = 0, color, initialFocus }) {
           contenteditable="true"
           onkeydown=${onKeyDown}
           onkeyup=${onKey}
+          onfocus=${onFocus}
           c-ref=${(el) => (editEl = el)}
         ></div>
       </div>`;
