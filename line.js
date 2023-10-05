@@ -1,4 +1,4 @@
-import { svg } from "./utils.js";
+import { calcDistance, svg } from "./utils.js";
 import { lineMaxDistance, lineTransition } from "./constants.js";
 
 export function* Line({ shapeId, x1, y1, x2, y2, selected = false }) {
@@ -13,9 +13,7 @@ export function* Line({ shapeId, x1, y1, x2, y2, selected = false }) {
   };
 
   for ({ x1, y1, x2, y2, selected } of this) {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const distance = calcDistance(x1, y1, x2, y2);
 
     // Sigmoid function determines line visibility, based on line length (distance)
     const opacity =
