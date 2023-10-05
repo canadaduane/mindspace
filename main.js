@@ -188,7 +188,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const x = cx + Math.cos(newNodeAngle) * 180;
     const y = cy + Math.sin(newNodeAngle) * 180;
     newNodeAngle += Math.PI / 4;
-    createNode(x, y, false);
+    createNode(x, y, true);
   };
 
   let recentlyCreatedNode;
