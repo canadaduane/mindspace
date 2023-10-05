@@ -164,7 +164,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       if (selectedLineId) {
         const shape = shapes.get(selectedLineId);
         if (shape) {
-          shapes.delete(selectedLineId);
+          shape.deleted = true;
           selectedLineId = undefined;
           this.refresh();
         } else {
@@ -240,7 +240,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
               x2=${shape.x2}
               y2=${shape.y2}
               selected=${shape.selected}
-            /> `;
+              deleted=${shape.deleted}
+            />`;
           })}
         </svg>
 
@@ -255,7 +256,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                 y=${shape.cy}
               /> 
             `;
-        })} `;
+        })}`;
     }
   } finally {
     document.body.removeEventListener("keydown", onKeyDown);
