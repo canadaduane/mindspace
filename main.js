@@ -52,7 +52,19 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   });
 
-  const createNode = (x, y) => {
+  let newNodeAngle = 0;
+  this.addEventListener("createNode", ({ detail: { nodeId } }) => {
+    const node = nodes.get(nodeId);
+    if (node) {
+      const { x: cx, y: cy } = node;
+      const x = cx + Math.cos(newNodeAngle) * 150;
+      const y = cy + Math.sin(newNodeAngle) * 150;
+      newNodeAngle += Math.PI / 4;
+      createNode(x, y, false);
+    }
+  });
+
+  const createNode = (x, y, initialFocus = true) => {
     if (globalIsDragging) return;
 
     const nodeId = ++maxNodeId;
@@ -92,9 +104,18 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       x,
       y,
       color,
+      initialFocus,
       text: `n${nodeId}`,
       dependents: [
-        { shapeId, attrs: { x: "cx", y: "cy", color: "color" } },
+        {
+          shapeId,
+          attrs: {
+            x: "cx",
+            y: "cy",
+            color: "color",
+            initialFocus: "initialFocus",
+          },
+        },
         ...dependents,
       ],
     };
@@ -111,11 +132,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   const pos = { x: 0, y: 0 };
   const { start, end, move, touchStart } = makeDraggable(pos, {
     onStart: ({ x, y }) => {
-      // If a div is actively focused, first blur it
-      if (document.activeElement.tagName === "DIV") {
-        return false;
-      }
-      console.log("activeEl", document.activeElement);
       recentlyCreatedNode = createNode(x, y);
       createdNodeTimer = setTimeout(() => {
         showColorGuide = true;
@@ -183,6 +199,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                 crank-key=${shapeId}
                 nodeId=${shape.controlsNodeId} 
                 color=${shape.color}
+                initialFocus=${shape.initialFocus}
                 x=${shape.cx}
                 y=${shape.cy}
               /> 

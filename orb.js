@@ -2,7 +2,7 @@ import { html } from "./utils.js";
 import { makeDraggable } from "./drag.js";
 import { setGlobalIsDragging, stringLengthTransition } from "./constants.js";
 
-export function* Orb({ nodeId, x = 0, y = 0, color }) {
+export function* Orb({ nodeId, x = 0, y = 0, color, initialFocus }) {
   const pos = { x, y };
 
   let editEl;
@@ -34,6 +34,19 @@ export function* Orb({ nodeId, x = 0, y = 0, color }) {
 
   let content = "";
 
+  const onKeyDown = (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      this.dispatchEvent(
+        new CustomEvent("createNode", {
+          bubbles: true,
+          detail: { nodeId },
+        })
+      );
+      event.preventDefault();
+      return;
+    }
+  };
+
   const onKey = (event) => {
     console.log("event key", event.key);
     if (event.key === "Backspace" || event.key === "Delete") {
@@ -46,13 +59,17 @@ export function* Orb({ nodeId, x = 0, y = 0, color }) {
         );
         return;
       }
+    } else if (event.key === "Escape") {
+      editEl?.blur();
     }
     content = event.target.innerText.trim();
     rectShape = content.length > stringLengthTransition;
     this.refresh();
   };
 
-  this.schedule(() => setTimeout(() => editEl?.focus(), 50));
+  if (initialFocus) {
+    this.schedule(() => setTimeout(() => editEl?.focus(), 50));
+  }
 
   for ({ x, y, color } of this) {
     pos.x = x;
@@ -130,6 +147,7 @@ export function* Orb({ nodeId, x = 0, y = 0, color }) {
           class="edit ${rectShape || "circle"}"
           spellcheck=${rectShape ? "true" : "false"}
           contenteditable="true"
+          onkeydown=${onKeyDown}
           onkeyup=${onKey}
           c-ref=${(el) => (editEl = el)}
         ></div>
