@@ -7,6 +7,7 @@ import { makeDraggable } from "./drag.js";
 let globalIsDragging = false;
 const lineMaxDistance = 250;
 const lineTransition = 5;
+const stringLengthTransition = 3;
 
 /**
  * nodeId: number
@@ -246,31 +247,95 @@ function* Orb({ nodeId, x = 0, y = 0, color }) {
   const onKey = (event) => {
     console.log({ target: event.target });
     content = event.target.innerText.trim();
-    rectShape = content.length > 1;
+    rectShape = content.length > stringLengthTransition;
     this.refresh();
   };
-
-  // let content = "&#8203;";
 
   for ({ x, y, color } of this) {
     pos.x = x;
     pos.y = y;
-    yield html`<div
-      onpointerdown=${start}
-      onpointerup=${end}
-      onpointercancel=${end}
-      onpointermove=${move}
-      ontouchstart=${touchStart}
-      class="orb ${rectShape && "to-rect"}"
-      style="left: ${pos.x}px; top: ${pos.y}px; border-color: ${color}; outline-color: ${color}"
-    >
+    yield html` <style>
+        .orb {
+          position: absolute;
+          transform: translate(-50%, -50%);
+          background-color: var(--defaultOrbFill);
+          border-width: 3px;
+          border-radius: 100%;
+          border-style: solid;
+          width: 100px;
+          height: 100px;
+          color: var(--brightText);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          overflow-y: auto;
+        }
+        .orb:focus-within {
+          outline-width: 3px;
+          outline-style: solid;
+        }
+        .orb .edit {
+          padding: 8px;
+          flex-grow: 1;
+          margin: auto;
+          text-align: center;
+        }
+        .orb .edit:focus-visible {
+          outline: 0;
+        }
+        .orb .edit:empty {
+          content: "&nbsp;";
+          /* line-height: 100px; */
+        }
+
+        /* CSS hackery to get around bug where contenteditable with
+           centered text does not show caret in correct position */
+        .orb .edit:empty:not(:focus)::before {
+          content: attr(data-ph);
+          font-style: italic;
+          font-weight: bold;
+          color: #ccc;
+          letter-spacing: 0.2em;
+          word-wrap: break-word;
+        }
+        .orb .edit:focus::before {
+          display: none;
+        }
+        .orb .edit:focus:empty {
+          caret-color: transparent;
+        }
+        .orb .edit:focus:empty::after {
+          content: "";
+          display: inline-block;
+          width: 0.2ch;
+          height: 2rem;
+          vertical-align: text-bottom;
+          background: #ccc;
+          animation: blink 0.85s steps(2) infinite;
+        }
+        .orb .edit:focus::after {
+          display: none;
+        }
+      </style>
       <div
-        class="edit"
-        contenteditable=${editMode}
-        onkeyup=${onKey}
-        c-ref=${(el) => (editEl = el)}
-      ></div>
-    </div>`;
+        onpointerdown=${start}
+        onpointerup=${end}
+        onpointercancel=${end}
+        onpointermove=${move}
+        ontouchstart=${touchStart}
+        class="orb ${rectShape && "to-rect"}"
+        style=${`left: ${pos.x}px;` +
+        `top: ${pos.y}px;` +
+        `border-color: ${color};` +
+        `outline-color: ${color};`}
+      >
+        <div
+          class="edit"
+          contenteditable=${editMode}
+          onkeyup=${onKey}
+          c-ref=${(el) => (editEl = el)}
+        ></div>
+      </div>`;
   }
 }
 
@@ -318,6 +383,7 @@ function* FirstTime() {
               z-index: 2;
               display: flex;
               align-items: center;
+              justify-content: center;
 
               width: 50vw;
               height: 100vh;
@@ -338,7 +404,7 @@ function* FirstTime() {
             }
           </style>
           <div class="firsttime--big-center ${fade && "firsttime--fade-out"}">
-            hold and drag to start
+            tap and drag to start
           </div>`
       : null;
   }
