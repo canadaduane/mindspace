@@ -14,6 +14,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   let showColorGuide = false;
   let mostRecentlyActiveNodeId;
+  let selectedLineId;
 
   let w = window.innerWidth,
     h = window.innerHeight;
@@ -51,6 +52,23 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       this.refresh();
     } else {
       console.warn("can't set node movement", nodeId);
+    }
+  });
+
+  this.addEventListener("toggleSelectedLine", ({ detail: { shapeId } }) => {
+    const shape = shapes.get(shapeId);
+    if (shape) {
+      if (selectedLineId === shapeId) {
+        selectedLineId = undefined;
+        shape.selected = false;
+      } else {
+        selectedLineId = shapeId;
+        shape.selected = true;
+      }
+      console.log("toggleSelectedLine", selectedLineId);
+      this.refresh();
+    } else {
+      console.warn("can't toggle selected line", shapeId);
     }
   });
 
@@ -133,11 +151,22 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   const onKeyDown = (event) => {
     console.log("onKeyDown", event.key);
-    if (event.key !== "Enter") return;
-
-    const node = nodes.get(mostRecentlyActiveNodeId);
-    if (node) createNodeAroundNode(node);
-    else createNode(window.innerWidth / 2, window.innerHeight / 2);
+    if (event.key === "Enter") {
+      const node = nodes.get(mostRecentlyActiveNodeId);
+      if (node) createNodeAroundNode(node);
+      else createNode(window.innerWidth / 2, window.innerHeight / 2);
+    } else if (event.key === "Backspace" || event.key === "Delete") {
+      if (selectedLineId) {
+        const shape = shapes.get(selectedLineId);
+        if (shape) {
+          shapes.delete(selectedLineId);
+          selectedLineId = undefined;
+          this.refresh();
+        } else {
+          console.log("can't delete line, none selected");
+        }
+      }
+    }
   };
 
   let recentlyCreatedNode;
@@ -200,10 +229,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           ${svgShapes.map(([shapeId, shape]) => {
             return html`<${Line}
               crank-key=${shapeId}
+              shapeId=${shapeId}
               x1=${shape.x1}
               y1=${shape.y1}
               x2=${shape.x2}
               y2=${shape.y2}
+              selected=${shape.selected}
             /> `;
           })}
         </svg>

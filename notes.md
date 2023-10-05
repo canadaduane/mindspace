@@ -1,4 +1,3 @@
-
 Create a node in the center:
 
 ```js
@@ -16,39 +15,40 @@ const n0 = {
 const s0 = { shapeId: 0, type: "circle", controlsNodeId: 0 };
 ```
 
-
 ```ts
-nodeId: number
+nodeId: number;
 type Node = {
-  x: number
-  y: number
-  color: string
-  initialFocus: boolean 
-  text: string
-  dependents: Dependent[]
-}
+  x: number;
+  y: number;
+  color: string;
+  initialFocus: boolean;
+  text: string;
+  dependents: Dependent[];
+};
 
 type Dependent = {
-  shapeId: number
-  attrs: Record<string, string>
-}
+  shapeId: number;
+  attrs: Record<string, string>;
+};
 
-shapeId: number
-type Shape = {
-  type: "circle"
-  controlsNodeId: number
-  color: string
-  initialFocus: boolean
-  cx: number
-  cy: number
-} | {
-  type: "line"
-  color: string
-  initialFocus: boolean
-  x1: number
-  y1: number
-  x2: number
-  y2: number
-}
+shapeId: number;
+type Shape =
+  | {
+      type: "circle";
+      controlsNodeId: number;
+      color: string;
+      initialFocus: boolean;
+      cx: number;
+      cy: number;
+    }
+  | {
+      type: "line";
+      color: string;
+      initialFocus: boolean;
+      selected: boolean;
+      x1: number;
+      y1: number;
+      x2: number;
+      y2: number;
+    };
 ```
-
