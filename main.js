@@ -130,7 +130,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     if (event.key === "Enter") {
       const node = nodes.get(mostRecentlyActiveNodeId);
       if (node) createNodeAroundNode(node);
-      else createNode(window.innerWidth / 2, window.innerHeight / 2);
+      else createNode(window.innerWidth, window.innerHeight);
     }
   };
 
@@ -222,12 +222,14 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   };
 
-  let newNodeAngle = 0;
+  // Approximate Archimedean Spiral 
+  let t = 2;
   const createNodeAroundNode = (node) => {
     const { x: cx, y: cy } = node;
-    const x = cx + Math.cos(newNodeAngle) * 180;
-    const y = cy + Math.sin(newNodeAngle) * 180;
-    newNodeAngle += Math.PI / 4;
+    const r = Math.SQRT2 * Math.sqrt(t);
+    const x = cx + Math.cos(r) * 150;
+    const y = cy + Math.sin(r) * 150;
+    t += 3;
     createNode(x, y, true);
   };
 
