@@ -51,18 +51,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   window.addEventListener("resize", matchWorkAreaSizes);
 
-  let prevWidth, prevHeight;
-  // const resizeObserverInterval = setInterval(() => {
-  //   const w = document.documentElement.scrollWidth,
-  //     h = document.documentElement.scrollHeight;
-
-  //   if (w !== prevWidth || h !== prevHeight) {
-  //     prevWidth = w;
-  //     prevHeight = h;
-  //     matchWorkAreaSizes();
-  //   }
-  // }, 1000);
-
   this.addEventListener("nodeActive", ({ detail: { nodeId } }) => {
     mostRecentlyActiveNodeId = nodeId;
   });
