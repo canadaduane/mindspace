@@ -83,7 +83,7 @@ export function* Line({
             y1=${y1}
             x2=${x2}
             y2=${y2}
-            stroke="rgba(0, 0, 0, 0.1)"
+            stroke="rgba(0, 0, 0, 0.01)"
             stroke-width=${orbSize}
           />
         ${
