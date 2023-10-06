@@ -269,7 +269,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
           if (shape.type === "circle") {
             const distance = calcDistance(shape.cx, shape.cy, x, y);
-            if (distance <= orbSize / 2 - 5) {
+            if (distance <= orbSize / 2 - 1) {
               if (removeNode(shape.controlsNodeId)) {
                 shapeIdsCutThisMotion.add(shapeId);
               }
