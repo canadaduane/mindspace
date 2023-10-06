@@ -257,9 +257,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     onMove: ({ x, y }) => {
       coneX = x;
       coneY = y;
-      // recentlyCreatedNode.x = x;
-      // recentlyCreatedNode.y = y;
-      // recentlyCreatedNode.color = getColorFromWorldCoord(x, y);
 
       if (coneCutMode) {
         for (let [shapeId, shape] of shapes.entries()) {
@@ -267,13 +264,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
           if (shape.type === "circle") {
             const distance = calcDistance(shape.cx, shape.cy, x, y);
-            if (distance <= 95) {
+            if (distance <= orbSize / 2 - 5) {
               if (removeNode(shape.controlsNodeId)) {
                 shapeIdsCutThisMotion.add(shapeId);
               }
             }
           } else if (shape.type === "line") {
-            let didCutLine = false;
             coneCutPath.slice(1).forEach((p, i) => {
               const q = coneCutPath[i];
               if (
@@ -286,18 +282,15 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                   { x: shape.x2, y: shape.y2 }
                 )
               ) {
-                didCutLine = true;
                 shapeIdsCutThisMotion.add(shapeId);
+                console.log("cut line", shapeId, shape.lineType);
+                setLineType(
+                  shapeId,
+                  shape.lineType === "strong" ? "short" : "deleted"
+                );
                 return;
               }
             });
-            if (didCutLine) {
-              console.log("cut line", shapeId, shape.lineType);
-              setLineType(
-                shapeId,
-                shape.lineType === "strong" ? "short" : "deleted"
-              );
-            }
           }
         }
       }
