@@ -139,6 +139,22 @@ export function* Cone({
     }
 
     yield svg`
+      ${pointHistory.slice(1).map((p, i) => {
+        const q = pointHistory[i];
+        const tx = tipX * (1 - s);
+        const ty = tipY * (1 - s);
+        return svg`
+          <line
+            x1=${q.x - tx}
+            y1=${q.y - ty}
+            x2=${p.x - tx}
+            y2=${p.y - ty}
+            stroke-width="2"
+            stroke="rgb(240, 240, 240,${i / pointHistory.length})"
+            opacity=${spikeOpacity}
+          />
+        `;
+      })}}
       <g 
         transform="translate(${tx} ${ty}) rotate(${thetaDeg}) scale(1 ${squishScale})"
       > 
@@ -153,7 +169,7 @@ export function* Cone({
           d="M0,40 Q25 0,50 0 Q25 0,0 -40 Z"
           stroke="rgba(240, 60, 30, 1)"
           fill="rgba(240, 60, 30, 1)"
-          stroke-width="9"
+          stroke-width="0"
           opacity=${spikeOpacity}
         />
       </g> 
