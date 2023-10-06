@@ -1,4 +1,5 @@
 import { calcDistance, sigmoid, svg } from "./utils.js";
+import { orbSize, orbRectWidth } from "./constants.js";
 
 export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
   let pointHistory = [];
@@ -65,7 +66,7 @@ export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
 
     // How far the pointer needs to travel in a given timeframe to switch from
     // a circle to a cutting point:
-    const activationThreshold = 10 * pointHistoryMax;
+    const activationThreshold = 7 * pointHistoryMax;
     const s = forceCutMode ? 0 : sigmoid((activationThreshold - distance) / 20);
 
     // How much to "squish" the circle in the direction orthogonal to travel
@@ -78,11 +79,11 @@ export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
     const orbOpacity = 1 - spikeOpacity;
 
     // Shrink the circle towards a certain size as it transitions to cutting point
-    const radius = 50 - (1 - s) * 18;
+    const radius = orbSize / 2 - (1 - s) * orbSize * 0.33;
 
     // We want the tip of the cutting point to follow behind the pointer
-    const tipX = Math.cos(theta) * 40;
-    const tipY = Math.sin(theta) * 40;
+    const tipX = Math.cos(theta) * (orbSize / 2 - 10);
+    const tipY = Math.sin(theta) * (orbSize / 2 - 10);
 
     // As we transition to cutting point, diminish the importance of the original
     // tap location on the circle, and increase the importance of the follow-behind.
@@ -109,6 +110,7 @@ export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
         <path
           d="M0,40 Q25 0,50 0 Q25 0,0 -40 Z"
           stroke="rgba(240, 60, 30, 1)"
+          fill="rgba(240, 60, 30, 1)"
           stroke-width="9"
           opacity=${spikeOpacity}
         />

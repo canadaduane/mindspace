@@ -1,4 +1,7 @@
 export let globalIsDragging = false;
+export const orbSize = 100;
+export const orbRectWidth = 160;
+export const orbRectHeight = 100;
 export const lineMaxDistance = 230;
 export const lineTransition = 5;
 export const stringLengthTransition = 3;

@@ -1,6 +1,12 @@
 import { renderer } from "@b9g/crank/dom";
 import { calcDistance, html } from "./utils.js";
-import { globalIsDragging, scrollbarThickness } from "./constants.js";
+import {
+  globalIsDragging,
+  scrollbarThickness,
+  orbSize,
+  orbRectWidth,
+  orbRectHeight,
+} from "./constants.js";
 import { ColorWheel, getColorFromWorldCoord } from "./colorwheel.js";
 import { applyNodeToShapes, makeNodesMap, makeShapesMap } from "./shape.js";
 import {
@@ -316,7 +322,34 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         if (shape.type === "circle") htmlShapes.push([shapeId, shape]);
       }
 
-      yield html`<svg
+      yield html`<!-- -->
+        <!-- Orb styles are here because having them in the Orb component
+             causes an animation glitch on remount -->
+        <style>
+          .to-rect {
+            animation: 0.3s linear to-rect;
+            animation-timing-function: cubic-bezier(0.6, 0, 1, 1);
+            animation-fill-mode: forwards;
+          }
+          @keyframes to-rect {
+            0% {
+              border-radius: 100%;
+              width: ${orbSize}px;
+              height: ${orbSize}px;
+            }
+            40% {
+              border-radius: 9px;
+              width: ${orbSize}px;
+              height: ${orbSize}px;
+            }
+            100% {
+              border-radius: 9px;
+              width: ${orbRectWidth}px;
+              height: ${orbRectHeight}px;
+            }
+          }
+        </style>
+        <svg
           viewBox="0 0 ${docW} ${docH - scrollbarThickness}"
           style="width: ${docW}px; height: ${docH - scrollbarThickness}px;"
           xmlns="http://www.w3.org/2000/svg"

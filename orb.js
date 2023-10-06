@@ -1,6 +1,11 @@
 import { html } from "./utils.js";
 import { makeDraggable } from "./drag.js";
-import { setGlobalIsDragging, stringLengthTransition } from "./constants.js";
+import {
+  orbSize,
+  orbRectWidth,
+  setGlobalIsDragging,
+  stringLengthTransition,
+} from "./constants.js";
 
 function isFirefox() {
   return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
@@ -92,8 +97,8 @@ export function* Orb({ nodeId, x = 0, y = 0, color, initialFocus }) {
           border-width: 3px;
           border-radius: 100%;
           border-style: solid;
-          width: 100px;
-          height: 100px;
+          width: ${orbSize}px;
+          height: ${orbSize}px;
           color: var(--brightText);
           display: flex;
           justify-content: center;
