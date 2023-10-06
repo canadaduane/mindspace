@@ -34,15 +34,19 @@ function isIntersecting(
   return r >= 0 && r <= 1 && s >= 0 && s <= 1;
 }
 
+function sigmoid(p, d) {
+  return 1 - 1 / (1 + Math.pow(Math.E, p / d));
+}
+
 export function* Line({
   shapeId,
   x1,
   y1,
   x2,
   y2,
-  selected = false,
-  deleted = false,
+  type = "short" /*: "short" | "strong" | "deleted" */,
 }) {
+  let prevType = type;
   let prevX1 = x1,
     prevY1 = y1,
     prevX2 = x2,
@@ -62,7 +66,13 @@ export function* Line({
     );
     if (didCut) {
       this.dispatchEvent(
-        new CustomEvent("deleteLine", { bubbles: true, detail: { shapeId } })
+        new CustomEvent("setLineType", {
+          bubbles: true,
+          detail: {
+            shapeId,
+            lineType: prevType === "strong" ? "short" : "deleted",
+          },
+        })
       );
     }
     return didCut;
@@ -106,34 +116,51 @@ export function* Line({
     },
   });
 
-  for ({ x1, y1, x2, y2, selected, deleted } of this) {
+  let canBump = true;
+
+  for ({ x1, y1, x2, y2, type } of this) {
     // Update our cache of most recent line position
+    prevType = type;
     prevX1 = x1;
     prevY1 = y1;
     prevX2 = x2;
     prevY2 = y2;
 
     const distance = calcDistance(x1, y1, x2, y2);
-    if (deleted && distance < 110) {
+    if (canBump && (type === "deleted" || type === "short") && distance < 110) {
+      canBump = false;
       this.dispatchEvent(
-        new CustomEvent("undeleteLine", {
+        new CustomEvent("setLineType", {
           bubbles: true,
-          detail: { shapeId },
+          detail: {
+            shapeId,
+            lineType: type === "deleted" ? "short" : "strong",
+          },
         })
       );
+    } else if (distance > 120) {
+      canBump = true;
     }
 
-    // Sigmoid function determines line visibility, based on line length (distance)
-    const opacity =
-      1 -
-      1 /
-        (1 +
-          Math.pow(
-            Math.E,
-            ((deleted ? 120 : lineMaxDistance) - distance) / lineTransition
-          ));
+    let opacity, innerLineWidth, stroke;
 
-    const innerLineWidth = deleted ? opacity * 30 : 3;
+    if (type === "strong") {
+      opacity = 1;
+      innerLineWidth = 7;
+      stroke = `240, 240, 240, 1`;
+    } else if (type === "deleted") {
+      const s = sigmoid(120 - distance, lineTransition);
+      opacity = s;
+      innerLineWidth = s * 30;
+      stroke = `240, 100, 40, ${opacity}`;
+    } else if (type === "short") {
+      const s = sigmoid(lineMaxDistance - distance, lineTransition);
+      opacity = s;
+      innerLineWidth = 3;
+      stroke = `240, 240, 240, ${opacity}`;
+    } else {
+      throw new Error(`unknown line type: ${type}`);
+    }
 
     const connected = opacity >= 0.001;
 
@@ -160,9 +187,7 @@ export function* Line({
           y1=${y1}
           x2=${x2}
           y2=${y2}
-          stroke="rgba(${
-            deleted ? `240, 100, 40, ${opacity}` : `240, 240, 240, ${opacity}`
-          })"
+          stroke="rgba(${stroke})"
           stroke-width=${innerLineWidth}
         />
       `

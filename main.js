@@ -15,7 +15,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   let showColorGuide = false;
   let mostRecentlyActiveNodeId;
-  let selectedLineId;
 
   let winW, winH, docW, docH;
   let minDocH = window.innerHeight * 2;
@@ -79,42 +78,14 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   });
 
-  this.addEventListener("toggleSelectedLine", ({ detail: { shapeId } }) => {
+  this.addEventListener("setLineType", ({ detail: { shapeId, lineType } }) => {
     const shape = shapes.get(shapeId);
     if (shape) {
-      if (selectedLineId === shapeId) {
-        selectedLineId = undefined;
-        shape.selected = false;
-      } else {
-        selectedLineId = shapeId;
-        shape.selected = true;
-      }
-      console.log("toggleSelectedLine", selectedLineId);
+      shape.lineType = lineType;
+      console.log("setLineType", shapeId, lineType);
       this.refresh();
     } else {
-      console.warn("can't toggle selected line", shapeId);
-    }
-  });
-
-  this.addEventListener("deleteLine", ({ detail: { shapeId } }) => {
-    const shape = shapes.get(shapeId);
-    if (shape) {
-      shape.deleted = true;
-      this.refresh();
-    } else {
-      console.log("can't delete line, none found");
-    }
-  });
-
-  this.addEventListener("undeleteLine", ({ detail: { shapeId } }) => {
-    const shape = shapes.get(shapeId);
-    if (shape) {
-      shape.deleted = false;
-      // shape.selected = true;
-      // selectedLineId = shapeId;
-      // this.refresh();
-    } else {
-      console.log("can't undelete line, none found");
+      console.log(`can't set line type, line not found: ${shapeId}`);
     }
   });
 
@@ -147,7 +118,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   const createLine = (nodeDependents1, nodeDependents2) => {
     const shapeId = ++maxShapeId;
-    const lineShape = { type: "line" };
+    const lineShape = { type: "line", lineType: "short" };
 
     shapes.set(shapeId, lineShape);
     nodeDependents1.push({ shapeId, attrs: { x: "x2", y: "y2" } });
@@ -288,8 +259,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
               y1=${shape.y1}
               x2=${shape.x2}
               y2=${shape.y2}
-              selected=${shape.selected}
-              deleted=${shape.deleted}
+              type=${shape.lineType}
             />`;
           })}
         </svg>

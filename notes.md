@@ -45,8 +45,7 @@ type Shape =
       type: "line";
       color: string;
       initialFocus: boolean;
-      selected: boolean;
-      deleted: boolean; 
+      lineType: "short" | "deleted" | "strong"
       x1: number;
       y1: number;
       x2: number;
