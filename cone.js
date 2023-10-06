@@ -6,15 +6,7 @@ import { orbSize, orbRectWidth } from "./constants.js";
  * "cone" because it can be both a circle shape (create), and a pointy shape (delete),
  * depending on the angle you look at it.
  */
-export function* Cone({
-  x,
-  y,
-  dragDX,
-  dragDY,
-  color,
-  forceCutMode,
-  boostConeCutMode,
-}) {
+export function* Cone({ x, y, boostConeCutMode }) {
   const pointHistory = [];
   const noRepeatPointHistory = [];
   const pointHistoryMax = 10;
@@ -37,7 +29,7 @@ export function* Cone({
     );
   };
 
-  for (let { x, y, dragDX, dragDY, color, forceCutMode } of this) {
+  for (let { x, y, color, forceCutMode } of this) {
     // Track historical points where the mouse/touch events have occurred (used for distance)
     pointHistory.push({ x, y });
     if (pointHistory.length > pointHistoryMax) pointHistory.shift();
@@ -127,10 +119,9 @@ export function* Cone({
     const tipX = Math.cos(theta) * (orbSize / 2 - 10);
     const tipY = Math.sin(theta) * (orbSize / 2 - 10);
 
-    // As we transition to cutting point, diminish the importance of the original
-    // tap location on the circle, and increase the importance of the follow-behind.
-    const tx = x - dragDX * (1 - s) - tipX * (1 - s);
-    const ty = y - dragDY * (1 - s) - tipY * (1 - s);
+    // As we transition to cutting point, increase the importance of the follow-behind.
+    const tx = x - tipX * (1 - s);
+    const ty = y - tipY * (1 - s);
 
     if (s < 0.1 && !cutMode) {
       setCutMode(true);

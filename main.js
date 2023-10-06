@@ -27,8 +27,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let showColorGuide = false;
   let mostRecentlyActiveNodeId;
 
-  let coneX /*: number */;
-  let coneY /*: number */;
+  // let coneX /*: number */;
+  // let coneY /*: number */;
   let coneCutPath /*: Point[] */ = [];
   let coneCutMode = false;
   let boostConeCutMode = false;
@@ -89,11 +89,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     stopAnimation(name);
   });
 
-  this.addEventListener("coneMoved", ({ detail: { x, y } }) => {
-    coneX = x;
-    coneY = y;
-  });
-
   this.addEventListener("nodeActive", ({ detail: { nodeId } }) => {
     mostRecentlyActiveNodeId = nodeId;
   });
@@ -134,125 +129,34 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   };
 
-  /** Create Functions */
-
-  const createLine = (nodeDependents1, nodeDependents2) => {
-    const shapeId = ++maxShapeId;
-    const lineShape = { type: "line", lineType: "short" };
-
-    shapes.set(shapeId, lineShape);
-    nodeDependents1.push({ shapeId, attrs: { x: "x2", y: "y2" } });
-    nodeDependents2.push({ shapeId, attrs: { x: "x1", y: "y1" } });
-
-    return { shape: lineShape, shapeId };
-  };
-
-  const setLineType = (shapeId, lineType) => {
-    const shape = shapes.get(shapeId);
-    if (shape) {
-      shape.lineType = lineType;
-      return true;
-    } else {
-      console.warn(`can't set line type, line not found: ${shapeId}`);
-      return false;
-    }
-  };
-
-  const createNode = (x, y, initialFocus = true) => {
-    if (globalIsDragging) return;
-
-    const nodeId = ++maxNodeId;
-    const shapeId = ++maxShapeId;
-
-    const color = getColorFromWorldCoord(x, y);
-
-    // Create a circle that controls the node
-    const controllerShape = {
-      type: "circle",
-      cx: x,
-      cy: y,
-      controlsNodeId: nodeId,
-    };
-    shapes.set(shapeId, controllerShape);
-
-    const dependents = [];
-    // Create lines from this node to all other nodes
-    for (let otherNode of nodes.values()) {
-      createLine(dependents, otherNode.dependents);
-    }
-
-    // Create the new node that all shapes depend on for position updates
-    const node = {
-      x,
-      y,
-      color,
-      initialFocus,
-      text: `n${nodeId}`,
-      dependents: [
-        {
-          shapeId,
-          attrs: {
-            x: "cx",
-            y: "cy",
-            color: "color",
-            initialFocus: "initialFocus",
-          },
-        },
-        ...dependents,
-      ],
-    };
-    nodes.set(nodeId, node);
-
-    this.refresh();
-
-    return node;
-  };
-
-  const removeNode = (nodeId /*: number */) => {
-    const node = nodes.get(nodeId);
-    if (node) {
-      node.dependents.forEach((d) => {
-        shapes.delete(d.shapeId);
-      });
-      nodes.delete(nodeId);
-      return true;
-    } else {
-      console.warn("can't set node movement", nodeId);
-      return false;
-    }
-  };
-
-  // Approximate Archimedean Spiral 
-  let t = 2;
-  const createNodeAroundNode = (node) => {
-    const { x: cx, y: cy } = node;
-    const r = Math.SQRT2 * Math.sqrt(t);
-    const x = cx + Math.cos(r) * 150;
-    const y = cy + Math.sin(r) * 150;
-    t += 3;
-    createNode(x, y, true);
-  };
-
   let createdNodeTimer;
+  let coneNodeId;
+  let coneShapeId;
   const shapeIdsCutThisMotion = new Set();
-  const pos = { x: 0, y: 0 };
-  const { start, end, move, touchStart } = makeDraggable(pos, {
-    onStart: ({ x, y, dx, dy }) => {
-      coneX = x;
-      coneY = y;
+  const conePos = { x: 0, y: 0 };
+  const { start, end, move, touchStart } = makeDraggable(conePos, {
+    onStart: ({ x, y }) => {
       startAnimation("cone");
-      // recentlyCreatedNode = createNode(x, y);
+      const { nodeId, shapeId } = createNode(x, y, "cone");
+      coneNodeId = nodeId;
+      coneShapeId = shapeId;
       // createdNodeTimer = setTimeout(() => {
       //   showColorGuide = true;
       //   this.refresh();
       // }, 200);
     },
     onEnd: ({ x, y }) => {
-      if (!coneCutMode) {
-        createNode(x, y);
+      if (coneCutMode) {
+        removeNode(coneNodeId);
+      } else {
+        // convert the Cone to an Orb
+        const shape = shapes.get(coneShapeId);
+        if (shape) {
+          shape.type = "circle";
+        } else {
+          throw new Error("can't find shapeId for cone");
+        }
       }
-      coneX = undefined;
-      coneY = undefined;
       shapeIdsCutThisMotion.clear();
       clearTimeout(createdNodeTimer);
       stopAnimation("cone");
@@ -262,12 +166,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       this.refresh();
     },
     onMove: ({ x, y }) => {
-      coneX = x;
-      coneY = y;
-
       if (coneCutMode) {
         for (let [shapeId, shape] of shapes.entries()) {
-          if (shapeIdsCutThisMotion.has(shapeId)) continue;
+          if (shapeIdsCutThisMotion.has(shapeId) || shape.type === "cone")
+            continue;
 
           if (shape.type === "circle") {
             const distance = calcDistance(shape.cx, shape.cy, x, y);
@@ -300,9 +202,127 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           }
         }
       }
+
+      const node = nodes.get(coneNodeId);
+      if (node) {
+        node.x = x;
+        node.y = y;
+        node.color = getColorFromWorldCoord(x, y);
+      } else {
+        throw new Error("can't find cone nodeId");
+      }
+
+      const shape = shapes.get(coneShapeId);
+      if (shape) {
+        shape.forceCutMode = shapeIdsCutThisMotion.size > 0;
+      } else {
+        throw new Error("can't find cone shapeId");
+      }
+
       this.refresh();
     },
   });
+
+  /** Create Functions */
+
+  const createLine = (nodeDependents1, nodeDependents2) => {
+    const shapeId = ++maxShapeId;
+    const lineShape = { type: "line", lineType: "short" };
+
+    shapes.set(shapeId, lineShape);
+    nodeDependents1.push({ shapeId, attrs: { x: "x2", y: "y2" } });
+    nodeDependents2.push({ shapeId, attrs: { x: "x1", y: "y1" } });
+
+    return { shape: lineShape, shapeId };
+  };
+
+  const setLineType = (shapeId, lineType) => {
+    const shape = shapes.get(shapeId);
+    if (shape) {
+      shape.lineType = lineType;
+      return true;
+    } else {
+      console.warn(`can't set line type, line not found: ${shapeId}`);
+      return false;
+    }
+  };
+
+  const createNode = (
+    x,
+    y,
+    controllerShapeType /*: "circle" | "cone" */ = "circle"
+  ) => {
+    if (globalIsDragging) return;
+
+    const nodeId = ++maxNodeId;
+    const shapeId = ++maxShapeId;
+
+    const color = getColorFromWorldCoord(x, y);
+
+    // Create a circle or cone that controls the node
+    const controllerShape = {
+      type: controllerShapeType,
+      cx: x,
+      cy: y,
+      controlsNodeId: nodeId,
+    };
+    shapes.set(shapeId, controllerShape);
+
+    const dependents = [];
+    // Create lines from this node to all other nodes
+    for (let otherNode of nodes.values()) {
+      createLine(dependents, otherNode.dependents);
+    }
+
+    // Create the new node that all shapes depend on for position updates
+    const node = {
+      x,
+      y,
+      color,
+      text: `n${nodeId}`,
+      dependents: [
+        {
+          shapeId,
+          attrs: {
+            x: "cx",
+            y: "cy",
+            color: "color",
+          },
+        },
+        ...dependents,
+      ],
+    };
+    nodes.set(nodeId, node);
+
+    this.refresh();
+
+    return { nodeId, shapeId };
+  };
+
+  const removeNode = (nodeId /*: number */) => {
+    const node = nodes.get(nodeId);
+    if (node) {
+      node.dependents.forEach((d) => {
+        shapes.delete(d.shapeId);
+      });
+      nodes.delete(nodeId);
+      return true;
+    } else {
+      console.warn("can't set node movement", nodeId);
+      return false;
+    }
+  };
+
+  // Approximate Archimedean Spiral
+  let t = 2;
+  const createNodeAroundNode = (node) => {
+    const { x: cx, y: cy } = node;
+    const r = Math.SQRT2 * Math.sqrt(t);
+    const x = cx + Math.cos(r) * 150;
+    const y = cy + Math.sin(r) * 150;
+    t += 3;
+    createNode(x, y, true);
+  };
 
   let svgShapes = [],
     htmlShapes = [];
@@ -317,8 +337,15 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       svgShapes.length = 0;
       htmlShapes.length = 0;
       for (let [shapeId, shape] of shapes.entries()) {
-        if (shape.type === "line") svgShapes.push([shapeId, shape]);
-        if (shape.type === "circle") htmlShapes.push([shapeId, shape]);
+        if (shape.type === "line") {
+          svgShapes.unshift([shapeId, shape]);
+        }
+        if (shape.type === "cone") {
+          svgShapes.push([shapeId, shape]);
+        }
+        if (shape.type === "circle") {
+          htmlShapes.push([shapeId, shape]);
+        }
       }
 
       yield html`<!-- -->
@@ -359,43 +386,50 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           ontouchstart=${touchStart}
         >
           ${svgShapes.map(([shapeId, shape]) => {
-            return html`<${Line}
-              crank-key=${shapeId}
-              shapeId=${shapeId}
-              x1=${shape.x1}
-              y1=${shape.y1}
-              x2=${shape.x2}
-              y2=${shape.y2}
-              type=${shape.lineType}
-            />`;
+            switch (shape.type) {
+              case "line":
+                return html`<${Line}
+                  crank-key=${shapeId}
+                  shapeId=${shapeId}
+                  x1=${shape.x1}
+                  y1=${shape.y1}
+                  x2=${shape.x2}
+                  y2=${shape.y2}
+                  type=${shape.lineType}
+                />`;
+              case "cone":
+                return html`
+                  <${Cone}
+                    crank-key=${shapeId}
+                    x=${shape.cx}
+                    y=${shape.cy}
+                    color=${shape.color}
+                    forceCutMode=${shape.forceCutMode}
+                    boostConeCutMode=${boostConeCutMode}
+                  />
+                `;
+              default:
+                throw new Error(`unknown svg shape type: ${shape.type}`);
+            }
           })}
-          ${coneX !== undefined &&
-          coneY !== undefined &&
-          html`
-            <${Cone}
-              x=${coneX}
-              y=${coneY}
-              dragDX=${0}
-              dragDY=${0}
-              color=${getColorFromWorldCoord(coneX, coneY)}
-              forceCutMode=${shapeIdsCutThisMotion.size > 0}
-              boostConeCutMode=${boostConeCutMode}
-            />
-          `}
         </svg>
 
         ${showColorGuide && html`<${ColorWheel} w=${winW} h=${winH} />`}
         ${htmlShapes.map(([shapeId, shape]) => {
-          return html`
-            <${Orb}
-              crank-key=${shapeId}
-              nodeId=${shape.controlsNodeId}
-              color=${shape.color}
-              initialFocus=${shape.initialFocus}
-              x=${shape.cx}
-              y=${shape.cy}
-            />
-          `;
+          switch (shape.type) {
+            case "circle":
+              return html`
+                <${Orb}
+                  crank-key=${shapeId}
+                  nodeId=${shape.controlsNodeId}
+                  x=${shape.cx}
+                  y=${shape.cy}
+                  color=${shape.color}
+                />
+              `;
+            default:
+              throw new Error(`unknown html shape type: ${shape.type}`);
+          }
         })}`;
     }
   } finally {

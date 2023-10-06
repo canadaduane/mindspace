@@ -21,7 +21,6 @@ type Node = {
   x: number;
   y: number;
   color: string;
-  initialFocus: boolean;
   text: string;
   dependents: Dependent[];
 };
@@ -37,15 +36,21 @@ type Shape =
       type: "circle";
       controlsNodeId: number;
       color: string;
-      initialFocus: boolean;
+      cx: number;
+      cy: number;
+    }
+  | {
+      type: "cone";
+      controlsNodeId: number;
+      forceCutMode: boolean; 
+      color: string;
       cx: number;
       cy: number;
     }
   | {
       type: "line";
       color: string;
-      initialFocus: boolean;
-      lineType: "short" | "deleted" | "strong"
+      lineType: "short" | "deleted" | "strong";
       x1: number;
       y1: number;
       x2: number;

@@ -11,7 +11,7 @@ function isFirefox() {
   return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
 }
 
-export function* Orb({ nodeId, x = 0, y = 0, color, initialFocus }) {
+export function* Orb({ nodeId, x = 0, y = 0, color }) {
   const pos = { x, y };
 
   let editEl;
@@ -76,9 +76,7 @@ export function* Orb({ nodeId, x = 0, y = 0, color, initialFocus }) {
     this.refresh();
   };
 
-  if (initialFocus) {
-    this.schedule(() => setTimeout(() => editEl?.focus(), 50));
-  }
+  this.schedule(() => setTimeout(() => editEl?.focus(), 50));
 
   const onFocus = (event) => {
     this.dispatchEvent(
