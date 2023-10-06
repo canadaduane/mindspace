@@ -5,6 +5,9 @@ export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
   let pointHistory = [];
   const pointHistoryMax = 10;
 
+  let sHistory = [];
+  const sHistoryMax = 5;
+
   let cutMode = false;
 
   const setCutMode = (mode /*: boolean */) => {
@@ -69,6 +72,11 @@ export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
     const activationThreshold = 7 * pointHistoryMax;
     const s = forceCutMode ? 0 : sigmoid((activationThreshold - distance) / 20);
 
+    // Track historical s values
+    sHistory.push(s);
+    if (sHistory.length > sHistoryMax) sHistory.shift();
+    const sHistoryAvg = sHistory.reduce((sum, s) => sum + s) / sHistory.length;
+
     // How much to "squish" the circle in the direction orthogonal to travel
     const squishScale = Math.max(s, 0.25);
 
@@ -79,7 +87,7 @@ export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
     const orbOpacity = 1 - spikeOpacity;
 
     // Shrink the circle towards a certain size as it transitions to cutting point
-    const radius = orbSize / 2 - (1 - s) * orbSize * 0.33;
+    const radius = orbSize / 2 - (1 - sHistoryAvg) * orbSize * 0.33;
 
     // We want the tip of the cutting point to follow behind the pointer
     const tipX = Math.cos(theta) * (orbSize / 2 - 10);
