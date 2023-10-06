@@ -6,7 +6,15 @@ import { orbSize, orbRectWidth } from "./constants.js";
  * "cone" because it can be both a circle shape (create), and a pointy shape (delete),
  * depending on the angle you look at it.
  */
-export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
+export function* Cone({
+  x,
+  y,
+  dragDX,
+  dragDY,
+  color,
+  forceCutMode,
+  boostConeCutMode,
+}) {
   const pointHistory = [];
   const noRepeatPointHistory = [];
   const pointHistoryMax = 10;
@@ -17,7 +25,7 @@ export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
   let cutMode = false;
 
   const setCutMode = (mode /*: boolean */) => {
-    cutMode = true;
+    cutMode = mode;
     this.dispatchEvent(
       new CustomEvent("setCutMode", { bubbles: true, detail: { mode } })
     );
@@ -95,7 +103,7 @@ export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
 
     // How far the pointer needs to travel in a given timeframe to switch from
     // a circle to a cutting point:
-    const activationThreshold = 7 * pointHistoryMax;
+    const activationThreshold = (boostConeCutMode ? 1 : 7) * pointHistoryMax;
     const s = forceCutMode ? 0 : sigmoid((activationThreshold - distance) / 20);
 
     // Track historical s values

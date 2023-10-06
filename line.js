@@ -1,5 +1,5 @@
 import { calcDistance, sigmoid, svg } from "./utils.js";
-import { lineMaxDistance, lineTransition } from "./constants.js";
+import { lineMaxDistance, lineTransition, orbSize } from "./constants.js";
 
 const opacityThreshold = 0.001;
 
@@ -12,6 +12,10 @@ export function* Line({
   type = "short" /*: "short" | "strong" | "deleted" */,
 }) {
   let canBump = true;
+
+  const onClick = (event) => {
+    this.dispatchEvent(new CustomEvent("boostConeCutMode", { bubbles: true }));
+  };
 
   for ({ x1, y1, x2, y2, type } of this) {
     const distance = calcDistance(x1, y1, x2, y2);
@@ -73,6 +77,15 @@ export function* Line({
 
     yield connected
       ? svg`
+          <line
+            onpointerdown=${onClick}
+            x1=${x1}
+            y1=${y1}
+            x2=${x2}
+            y2=${y2}
+            stroke="rgba(0, 0, 0, 0.1)"
+            stroke-width=${orbSize}
+          />
         ${
           line &&
           svg`

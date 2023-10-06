@@ -31,6 +31,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let coneY /*: number */;
   let coneCutPath /*: Point[] */ = [];
   let coneCutMode = false;
+  let boostConeCutMode = false;
 
   let winW, winH, docW, docH;
   let minDocH = window.innerHeight * 2;
@@ -68,6 +69,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   window.addEventListener("resize", matchWorkAreaSizes);
 
+  this.addEventListener("boostConeCutMode", () => {
+    boostConeCutMode = true;
+  });
+
   this.addEventListener("setCutMode", ({ detail: { mode } }) => {
     coneCutMode = mode;
   });
@@ -87,7 +92,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   this.addEventListener("coneMoved", ({ detail: { x, y } }) => {
     coneX = x;
     coneY = y;
-    // this.refresh();
   });
 
   this.addEventListener("nodeActive", ({ detail: { nodeId } }) => {
@@ -252,6 +256,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       stopAnimation("cone");
       showColorGuide = false;
       coneCutMode = false;
+      boostConeCutMode = false;
       this.refresh();
     },
     onMove: ({ x, y }) => {
@@ -372,6 +377,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
               dragDY=${0}
               color=${getColorFromWorldCoord(coneX, coneY)}
               forceCutMode=${shapeIdsCutThisMotion.size > 0}
+              boostConeCutMode=${boostConeCutMode}
             />
           `}
         </svg>
