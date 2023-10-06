@@ -2,12 +2,22 @@ import Color from "colorjs.io";
 import { svg } from "./utils.js";
 import { getScroll } from "./drag.js";
 
-export function getColorFromCoord(x, y, w, h) {
+export function getColorFromScreenCoord(x, y, w, h) {
   const a = (x / w - 0.5) * 0.8;
   const b = (y / h - 0.5) * 0.8;
   return new Color("oklab", [1, a, b]).toString({
     format: "rgba",
   });
+}
+
+export function getColorFromWorldCoord(x, y) {
+  const { left, top } = getScroll();
+  return getColorFromScreenCoord(
+    x - left,
+    y - top,
+    window.innerWidth,
+    window.innerHeight
+  );
 }
 
 export function* ColorWheel({ w, h }) {

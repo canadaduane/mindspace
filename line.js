@@ -1,4 +1,4 @@
-import { calcDistance, svg } from "./utils.js";
+import { calcDistance, sigmoid, isIntersecting, svg } from "./utils.js";
 import {
   lineMaxDistance,
   lineTransition,
@@ -7,36 +7,6 @@ import {
   pointerIconOffset,
 } from "./constants.js";
 import { makeDraggable } from "./drag.js";
-
-/*+
-type Point = {
-  x: number,
-  y: number
-}
-*/
-
-function isIntersecting(
-  a /*: Point */,
-  b /*: Point */,
-  c /*: Point */,
-  d /*: Point */
-) {
-  const denominator = (b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x);
-  const numerator1 = (a.y - c.y) * (d.x - c.x) - (a.x - c.x) * (d.y - c.y);
-  const numerator2 = (a.y - c.y) * (b.x - a.x) - (a.x - c.x) * (b.y - a.y);
-
-  // Detect coincident lines (has a problem, read below)
-  if (denominator == 0) return numerator1 == 0 && numerator2 == 0;
-
-  const r = numerator1 / denominator;
-  const s = numerator2 / denominator;
-
-  return r >= 0 && r <= 1 && s >= 0 && s <= 1;
-}
-
-function sigmoid(p, d) {
-  return 1 - 1 / (1 + Math.pow(Math.E, p / d));
-}
 
 export function* Line({
   shapeId,
@@ -149,12 +119,12 @@ export function* Line({
       innerLineWidth = 7;
       stroke = `240, 240, 240, 1`;
     } else if (type === "deleted") {
-      const s = sigmoid(120 - distance, lineTransition);
+      const s = sigmoid((120 - distance) / lineTransition);
       opacity = s;
       innerLineWidth = s * 30;
       stroke = `240, 100, 40, ${opacity}`;
     } else if (type === "short") {
-      const s = sigmoid(lineMaxDistance - distance, lineTransition);
+      const s = sigmoid((lineMaxDistance - distance) / lineTransition);
       opacity = s;
       innerLineWidth = 3;
       stroke = `240, 240, 240, ${opacity}`;

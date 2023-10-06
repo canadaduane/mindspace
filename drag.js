@@ -22,9 +22,9 @@ export function makeDraggable(
     const x = clientX + left;
     const y = clientY + top;
 
-    const allow = onStart?.({ event, x, y });
+    dragging = { dx: pos.x - x, dy: pos.y - y };
+    const allow = onStart?.({ event, x, y, dx: dragging.dx, dy: dragging.dy });
     if (allow === true || allow === undefined) {
-      dragging = { dx: pos.x - x, dy: pos.y - y };
       target.setPointerCapture(pointerId);
     }
   };
@@ -38,7 +38,7 @@ export function makeDraggable(
     const x = clientX + left;
     const y = clientY + top;
 
-    onEnd?.({ event, x, y, dragging });
+    onEnd?.({ event, x, y });
   };
 
   const move = (event) => {
@@ -55,7 +55,7 @@ export function makeDraggable(
     pos.x = x + dragging.dx;
     pos.y = y + dragging.dy;
 
-    onMove?.({ event, x, y });
+    onMove?.({ event, x, y, dx: dragging.dx, dy: dragging.dy });
   };
 
   const touchStart = (e) => e.preventDefault();

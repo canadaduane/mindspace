@@ -1,13 +1,18 @@
 import { renderer } from "@b9g/crank/dom";
-import { html, svg } from "./utils.js";
+import { calcDistance, html } from "./utils.js";
 import { globalIsDragging, scrollbarThickness } from "./constants.js";
-import { ColorWheel, getColorFromCoord } from "./colorwheel.js";
+import { ColorWheel, getColorFromWorldCoord } from "./colorwheel.js";
 import { applyNodeToShapes, makeNodesMap, makeShapesMap } from "./shape.js";
-import { getScroll, makeDraggable } from "./drag.js";
+import {
+  startAnimation as startAnimationUnbound,
+  stopAnimation,
+} from "./animation.js";
+import { isIntersecting } from "./utils.js";
+import { makeDraggable } from "./drag.js";
 import { FirstTime } from "./firsttime.js";
 import { Orb } from "./orb.js";
 import { Line } from "./line.js";
-import { Spike } from "./spike.js";
+import { Cone } from "./cone.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let { nodes, maxNodeId } = makeNodesMap(initNodes);
@@ -16,14 +21,21 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let showColorGuide = false;
   let mostRecentlyActiveNodeId;
 
+  let coneX /*: number */;
+  let coneY /*: number */;
+  let coneCutPath /*: Point[] */ = [];
+  let coneCutMode = false;
+
   let winW, winH, docW, docH;
   let minDocH = window.innerHeight * 2;
   let minDocW = window.innerWidth * 2;
 
+  const startAnimation = (name /*: string */) =>
+    startAnimationUnbound(name, () => this.refresh());
+
   // Scroll to center of area after first render
   setTimeout(() => {
     document.documentElement.scrollLeft = window.innerWidth / 2;
-    console.log("scrollTop =", window.innerHeight / 2);
     document.documentElement.scrollTop = window.innerHeight / 2;
   }, 100);
 
@@ -50,6 +62,28 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   window.addEventListener("resize", matchWorkAreaSizes);
 
+  this.addEventListener("setCutMode", ({ detail: { mode } }) => {
+    coneCutMode = mode;
+  });
+
+  this.addEventListener("setCutPath", ({ detail: { path } }) => {
+    coneCutPath = path;
+  });
+
+  this.addEventListener("startAnimation", ({ detail: { name } }) => {
+    startAnimation(name);
+  });
+
+  this.addEventListener("stopAnimation", ({ detail: { name } }) => {
+    stopAnimation(name);
+  });
+
+  this.addEventListener("coneMoved", ({ detail: { x, y } }) => {
+    coneX = x;
+    coneY = y;
+    // this.refresh();
+  });
+
   this.addEventListener("nodeActive", ({ detail: { nodeId } }) => {
     mostRecentlyActiveNodeId = nodeId;
   });
@@ -66,26 +100,14 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   this.addEventListener("removeNode", ({ detail: { nodeId } }) => {
-    const node = nodes.get(nodeId);
-    if (node) {
-      node.dependents.forEach((d) => {
-        shapes.delete(d.shapeId);
-      });
-      nodes.delete(nodeId);
+    if (removeNode(nodeId)) {
       this.refresh();
-    } else {
-      console.warn("can't set node movement", nodeId);
     }
   });
 
   this.addEventListener("setLineType", ({ detail: { shapeId, lineType } }) => {
-    const shape = shapes.get(shapeId);
-    if (shape) {
-      shape.lineType = lineType;
-      console.log("setLineType", shapeId, lineType);
+    if (setLineType(shapeId, lineType)) {
       this.refresh();
-    } else {
-      console.log(`can't set line type, line not found: ${shapeId}`);
     }
   });
 
@@ -94,19 +116,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     if (node) createNodeAroundNode(node);
   });
 
-  let spike;
-  this.addEventListener("showSpike", ({ detail: { x, y, theta } }) => {
-    spike = { x, y, theta };
-    this.refresh();
-  });
-
-  this.addEventListener("hideSpike", () => {
-    spike = undefined;
-    this.refresh();
-  });
-
   const onKeyDown = (event) => {
-    console.log("onKeyDown", event.key);
     if (event.key === "Enter") {
       const node = nodes.get(mostRecentlyActiveNodeId);
       if (node) createNodeAroundNode(node);
@@ -127,19 +137,24 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     return { shape: lineShape, shapeId };
   };
 
+  const setLineType = (shapeId, lineType) => {
+    const shape = shapes.get(shapeId);
+    if (shape) {
+      shape.lineType = lineType;
+      return true;
+    } else {
+      console.warn(`can't set line type, line not found: ${shapeId}`);
+      return false;
+    }
+  };
+
   const createNode = (x, y, initialFocus = true) => {
     if (globalIsDragging) return;
 
     const nodeId = ++maxNodeId;
     const shapeId = ++maxShapeId;
 
-    const { left, top } = getScroll();
-    const color = getColorFromCoord(
-      x - left,
-      y - top,
-      window.innerWidth,
-      window.innerHeight
-    );
+    const color = getColorFromWorldCoord(x, y);
 
     // Create a circle that controls the node
     const controllerShape = {
@@ -149,7 +164,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       controlsNodeId: nodeId,
     };
     shapes.set(shapeId, controllerShape);
-    console.log("create controllerShape", shapeId, controllerShape);
 
     const dependents = [];
     // Create lines from this node to all other nodes
@@ -177,12 +191,25 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         ...dependents,
       ],
     };
-    console.log("create node", nodeId, node);
     nodes.set(nodeId, node);
 
     this.refresh();
 
     return node;
+  };
+
+  const removeNode = (nodeId /*: number */) => {
+    const node = nodes.get(nodeId);
+    if (node) {
+      node.dependents.forEach((d) => {
+        shapes.delete(d.shapeId);
+      });
+      nodes.delete(nodeId);
+      return true;
+    } else {
+      console.warn("can't set node movement", nodeId);
+      return false;
+    }
   };
 
   let newNodeAngle = 0;
@@ -194,32 +221,81 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     createNode(x, y, true);
   };
 
-  let recentlyCreatedNode;
+  let didCutAnything = false;
   let createdNodeTimer;
   const pos = { x: 0, y: 0 };
   const { start, end, move, touchStart } = makeDraggable(pos, {
-    onStart: ({ x, y }) => {
-      recentlyCreatedNode = createNode(x, y);
-      createdNodeTimer = setTimeout(() => {
-        showColorGuide = true;
-        this.refresh();
-      }, 200);
+    onStart: ({ x, y, dx, dy }) => {
+      coneX = x;
+      coneY = y;
+      didCutAnything = false;
+      startAnimation("cone");
+      // recentlyCreatedNode = createNode(x, y);
+      // createdNodeTimer = setTimeout(() => {
+      //   showColorGuide = true;
+      //   this.refresh();
+      // }, 200);
     },
-    onEnd: () => {
+    onEnd: ({ x, y }) => {
+      if (!coneCutMode) {
+        createNode(x, y);
+      }
+      coneX = undefined;
+      coneY = undefined;
       clearTimeout(createdNodeTimer);
+      stopAnimation("cone");
       showColorGuide = false;
+      coneCutMode = false;
       this.refresh();
     },
     onMove: ({ x, y }) => {
-      const { left, top } = getScroll();
-      recentlyCreatedNode.x = x;
-      recentlyCreatedNode.y = y;
-      recentlyCreatedNode.color = getColorFromCoord(
-        x - left,
-        y - top,
-        window.innerWidth,
-        window.innerHeight
-      );
+      coneX = x;
+      coneY = y;
+      // recentlyCreatedNode.x = x;
+      // recentlyCreatedNode.y = y;
+      // recentlyCreatedNode.color = getColorFromWorldCoord(x, y);
+
+      if (coneCutMode) {
+        for (let [shapeId, shape] of shapes.entries()) {
+          if (shape.type === "circle") {
+            const distance = calcDistance(shape.cx, shape.cy, x, y);
+            console.log({ distance, x, y, shape });
+            if (distance <= 95) {
+              if (removeNode(shape.controlsNodeId)) {
+                didCutAnything = true;
+              }
+            }
+          } else if (shape.type === "line") {
+            let didCutLine = false;
+            coneCutPath.slice(1).forEach((p, i) => {
+              const q = coneCutPath[i];
+              if (
+                isIntersecting(
+                  // this part of the cut path segment
+                  { x: q.x, y: q.y },
+                  { x: p.x, y: p.y },
+                  // the line we are currently testing
+                  { x: shape.x1, y: shape.y1 },
+                  { x: shape.x2, y: shape.y2 }
+                )
+              ) {
+                didCutLine = true;
+                didCutAnything = true;
+                return;
+              }
+            });
+            if (didCutLine) {
+              setLineType(
+                shapeId,
+                shape.lineType === "strong" ? "short" : "deleted"
+              );
+            }
+          }
+        }
+        if (didCutAnything) {
+          console.log("Cut!");
+        }
+      }
       this.refresh();
     },
   });
@@ -262,6 +338,18 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
               type=${shape.lineType}
             />`;
           })}
+          ${coneX !== undefined &&
+          coneY !== undefined &&
+          html`
+            <${Cone}
+              x=${coneX}
+              y=${coneY}
+              dragDX=${0}
+              dragDY=${0}
+              color=${getColorFromWorldCoord(coneX, coneY)}
+              forceCutMode=${didCutAnything}
+            />
+          `}
         </svg>
 
         ${showColorGuide && html`<${ColorWheel} w=${winW} h=${winH} />`}
@@ -276,9 +364,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
               y=${shape.cy}
             />
           `;
-        })}
-        ${spike &&
-        html`<${Spike} x=${spike.x} y=${spike.y} theta=${spike.theta} />`} `;
+        })}`;
     }
   } finally {
     document.body.removeEventListener("keydown", onKeyDown);
