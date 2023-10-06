@@ -77,6 +77,15 @@ export function* Line({
 
     yield connected
       ? svg`
+          <line
+            onpointerdown=${onClick}
+            x1=${x1}
+            y1=${y1}
+            x2=${x2}
+            y2=${y2}
+            stroke="rgba(0, 0, 0, 0.1)"
+            stroke-width=${orbSize}
+          />
         ${
           line &&
           svg`
