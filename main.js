@@ -283,7 +283,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                 )
               ) {
                 shapeIdsCutThisMotion.add(shapeId);
-                console.log("cut line", shapeId, shape.lineType);
                 setLineType(
                   shapeId,
                   shape.lineType === "strong" ? "short" : "deleted"

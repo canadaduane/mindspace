@@ -1,11 +1,17 @@
 import { calcDistance, sigmoid, svg } from "./utils.js";
 import { orbSize, orbRectWidth } from "./constants.js";
 
+/**
+ * The Cone is the primary create/delete UI mechanism of mindspace. It is called a
+ * "cone" because it can be both a circle shape (create), and a pointy shape (delete),
+ * depending on the angle you look at it.
+ */
 export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
-  let pointHistory = [];
+  const pointHistory = [];
+  const noRepeatPointHistory = [];
   const pointHistoryMax = 10;
 
-  let sHistory = [];
+  const sHistory = [];
   const sHistoryMax = 5;
 
   let cutMode = false;
@@ -24,9 +30,21 @@ export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
   };
 
   for (let { x, y, dragDX, dragDY, color, forceCutMode } of this) {
-    // Track historical points where the mouse/touch events have occurred.
+    // Track historical points where the mouse/touch events have occurred (used for distance)
     pointHistory.push({ x, y });
     if (pointHistory.length > pointHistoryMax) pointHistory.shift();
+
+    // Track historical points, but only when motion is detected (used for direction)
+    if (noRepeatPointHistory.length > 0) {
+      const q = noRepeatPointHistory[noRepeatPointHistory.length - 1];
+      if (x !== q.x || y !== q.y) {
+        noRepeatPointHistory.push({ x, y });
+        if (noRepeatPointHistory.length > pointHistoryMax)
+          noRepeatPointHistory.shift();
+      }
+    } else {
+      noRepeatPointHistory.push({ x, y });
+    }
 
     setCutPath(pointHistory);
 
@@ -38,6 +56,14 @@ export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
       distance += segmentDistance;
     });
 
+    // Calculate total distance travelled, ignoring non-motion
+    let noRepeatDistance = 0;
+    noRepeatPointHistory.slice(1).forEach((p, i) => {
+      const q = noRepeatPointHistory[i];
+      const segmentDistance = calcDistance(q.x, q.y, p.x, p.y);
+      noRepeatDistance += segmentDistance;
+    });
+
     // Calculate the direction of the drag motion. We want to increase the importance
     // of strongly directional motions (i.e. quick pointer movements) because small
     // motions (e.g. 1 pixel) contain less directional information.  In addition, we
@@ -45,14 +71,14 @@ export function* Cone({ x, y, dragDX, dragDY, color, forceCutMode }) {
     let weightedDX = 0;
     let weightedDY = 0;
     let count = 0;
-    pointHistory.slice(1).forEach((p, i) => {
-      const q = pointHistory[i];
+    noRepeatPointHistory.slice(1).forEach((p, i) => {
+      const q = noRepeatPointHistory[i];
       const segmentDistance = calcDistance(q.x, q.y, p.x, p.y);
       if (segmentDistance > 0) {
         const dx = p.x - q.x;
         const dy = p.y - q.y;
-        const distanceWeight = segmentDistance / distance;
-        const recencyWeight = i / pointHistory.length;
+        const distanceWeight = segmentDistance / noRepeatDistance;
+        const recencyWeight = i / noRepeatPointHistory.length;
         weightedDX += dx * distanceWeight * recencyWeight;
         weightedDY += dy * distanceWeight * recencyWeight;
         count++;
