@@ -9,7 +9,6 @@ export function startAnimation(
   animations.add(name);
   let i = 0;
   const loop = () => {
-    if (i % 120 === 0) console.log("animation running");
     if (!animating) return;
     eachFrame();
     requestAnimationFrame(loop);
