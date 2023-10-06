@@ -221,14 +221,13 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     createNode(x, y, true);
   };
 
-  let didCutAnything = false;
   let createdNodeTimer;
+  const shapeIdsCutThisMotion = new Set();
   const pos = { x: 0, y: 0 };
   const { start, end, move, touchStart } = makeDraggable(pos, {
     onStart: ({ x, y, dx, dy }) => {
       coneX = x;
       coneY = y;
-      didCutAnything = false;
       startAnimation("cone");
       // recentlyCreatedNode = createNode(x, y);
       // createdNodeTimer = setTimeout(() => {
@@ -242,6 +241,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       }
       coneX = undefined;
       coneY = undefined;
+      shapeIdsCutThisMotion.clear();
       clearTimeout(createdNodeTimer);
       stopAnimation("cone");
       showColorGuide = false;
@@ -257,12 +257,13 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
       if (coneCutMode) {
         for (let [shapeId, shape] of shapes.entries()) {
+          if (shapeIdsCutThisMotion.has(shapeId)) continue;
+
           if (shape.type === "circle") {
             const distance = calcDistance(shape.cx, shape.cy, x, y);
-            console.log({ distance, x, y, shape });
             if (distance <= 95) {
               if (removeNode(shape.controlsNodeId)) {
-                didCutAnything = true;
+                shapeIdsCutThisMotion.add(shapeId);
               }
             }
           } else if (shape.type === "line") {
@@ -280,20 +281,18 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                 )
               ) {
                 didCutLine = true;
-                didCutAnything = true;
+                shapeIdsCutThisMotion.add(shapeId);
                 return;
               }
             });
             if (didCutLine) {
+              console.log("cut line", shapeId, shape.lineType);
               setLineType(
                 shapeId,
                 shape.lineType === "strong" ? "short" : "deleted"
               );
             }
           }
-        }
-        if (didCutAnything) {
-          console.log("Cut!");
         }
       }
       this.refresh();
@@ -347,7 +346,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
               dragDX=${0}
               dragDY=${0}
               color=${getColorFromWorldCoord(coneX, coneY)}
-              forceCutMode=${didCutAnything}
+              forceCutMode=${shapeIdsCutThisMotion.size > 0}
             />
           `}
         </svg>
