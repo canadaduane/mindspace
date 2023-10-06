@@ -16,6 +16,8 @@ export function makeDraggable(
 
     if (button !== 0) return; // left button only
 
+    event.stopPropagation();
+
     const { left, top } = getScroll();
     const x = clientX + left;
     const y = clientY + top;
@@ -28,6 +30,8 @@ export function makeDraggable(
   };
 
   const end = (event) => {
+    dragging = null;
+
     const { clientX, clientY } = event;
 
     const { left, top } = getScroll();
@@ -35,11 +39,13 @@ export function makeDraggable(
     const y = clientY + top;
 
     onEnd?.({ event, x, y, dragging });
-    dragging = null;
   };
 
   const move = (event) => {
     if (!dragging) return;
+
+    event.preventDefault();
+
     const { clientX, clientY } = event;
 
     const { left, top } = getScroll();

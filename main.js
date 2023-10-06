@@ -7,6 +7,7 @@ import { getScroll, makeDraggable } from "./drag.js";
 import { FirstTime } from "./firsttime.js";
 import { Orb } from "./orb.js";
 import { Line } from "./line.js";
+import { Spike } from "./spike.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let { nodes, maxNodeId } = makeNodesMap(initNodes);
@@ -107,6 +108,16 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   });
 
+  this.addEventListener("deleteLine", ({ detail: { shapeId } }) => {
+    const shape = shapes.get(shapeId);
+    if (shape) {
+      shape.deleted = true;
+      this.refresh();
+    } else {
+      console.log("can't delete line, none found");
+    }
+  });
+
   this.addEventListener("undeleteLine", ({ detail: { shapeId } }) => {
     const shape = shapes.get(shapeId);
     if (shape) {
@@ -124,24 +135,23 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     if (node) createNodeAroundNode(node);
   });
 
+  let spike;
+  this.addEventListener("showSpike", ({ detail: { x, y, theta } }) => {
+    spike = { x, y, theta };
+    this.refresh();
+  });
+
+  this.addEventListener("hideSpike", () => {
+    spike = undefined;
+    this.refresh();
+  });
+
   const onKeyDown = (event) => {
     console.log("onKeyDown", event.key);
     if (event.key === "Enter") {
       const node = nodes.get(mostRecentlyActiveNodeId);
       if (node) createNodeAroundNode(node);
       else createNode(window.innerWidth / 2, window.innerHeight / 2);
-    } else if (event.key === "Backspace" || event.key === "Delete") {
-      if (selectedLineId) {
-        const shape = shapes.get(selectedLineId);
-        if (shape) {
-          shape.deleted = true;
-          shape.selected = false;
-          selectedLineId = undefined;
-          this.refresh();
-        } else {
-          console.log("can't delete line, none selected");
-        }
-      }
     }
   };
 
@@ -298,17 +308,19 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
         ${showColorGuide && html`<${ColorWheel} w=${winW} h=${winH} />`}
         ${htmlShapes.map(([shapeId, shape]) => {
-          return svg`
-              <${Orb} 
-                crank-key=${shapeId}
-                nodeId=${shape.controlsNodeId} 
-                color=${shape.color}
-                initialFocus=${shape.initialFocus}
-                x=${shape.cx}
-                y=${shape.cy}
-              /> 
-            `;
-        })}`;
+          return html`
+            <${Orb}
+              crank-key=${shapeId}
+              nodeId=${shape.controlsNodeId}
+              color=${shape.color}
+              initialFocus=${shape.initialFocus}
+              x=${shape.cx}
+              y=${shape.cy}
+            />
+          `;
+        })}
+        ${spike &&
+        html`<${Spike} x=${spike.x} y=${spike.y} theta=${spike.theta} />`} `;
     }
   } finally {
     document.body.removeEventListener("keydown", onKeyDown);

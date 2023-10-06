@@ -3,6 +3,8 @@ export const lineMaxDistance = 230;
 export const lineTransition = 5;
 export const stringLengthTransition = 3;
 export const scrollbarThickness = 30;
+export const lineEventListenerWidth = 70;
+export const pointerIconOffset = 5;
 
 export function setGlobalIsDragging(value) {
   globalIsDragging = value;

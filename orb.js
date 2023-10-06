@@ -24,8 +24,7 @@ export function* Orb({ nodeId, x = 0, y = 0, color, initialFocus }) {
         setTimeout(() => editEl?.focus(), 100);
       }
     },
-    onMove: ({ event }) => {
-      event.preventDefault();
+    onMove: () => {
       didDrag = true;
       this.dispatchEvent(
         new CustomEvent("nodeMoved", {
