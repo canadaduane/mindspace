@@ -15,6 +15,7 @@ export function* Cone({ x, y, boostConeCutMode }) {
   const sHistoryMax = 5;
 
   let cutMode = false;
+  let leaveCutterModeTimer;
 
   const setCutMode = (mode /*: boolean */) => {
     cutMode = mode;
@@ -98,7 +99,7 @@ export function* Cone({ x, y, boostConeCutMode }) {
     let s;
     let spikeOpacity;
 
-    if (forceCutMode) {
+    if (cutMode || forceCutMode) {
       s = 0;
       spikeOpacity = 1;
     } else {
@@ -110,8 +111,8 @@ export function* Cone({ x, y, boostConeCutMode }) {
         spikeOpacity = 1 - sigmoid((activationThreshold + 20) / 1);
       } else {
         const activationThreshold = 7 * pointHistoryMax - distance;
-        s = sigmoid(activationThreshold / 20);
-        spikeOpacity = 1 - sigmoid((activationThreshold + 20) / 10);
+        s = sigmoid(activationThreshold / 6);
+        spikeOpacity = 1 - sigmoid((activationThreshold + 20) / 5.8);
       }
     }
 
@@ -136,10 +137,15 @@ export function* Cone({ x, y, boostConeCutMode }) {
     const tx = x - tipX * (1 - s);
     const ty = y - tipY * (1 - s);
 
-    if (s < 0.1 && !cutMode) {
+    if (cutMode && distance < 5) {
+      // Return to "create" mode after less motion
+      leaveCutterModeTimer = setTimeout(() => {
+        setCutMode(false);
+      }, 500);
+    } else if (s < 0.1 && !cutMode) {
+      // Enter "cutter" mode once motion threshold has been reached
       setCutMode(true);
-    } else if (s >= 0.3 && cutMode) {
-      setCutMode(false);
+      clearTimeout(leaveCutterModeTimer);
     }
 
     yield svg`
