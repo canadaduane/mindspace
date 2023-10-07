@@ -106,7 +106,7 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
           user-select: none;
         }
         .orb:focus-within {
-          outline-width: 3px;
+          outline-width: 5px;
           outline-style: solid;
         }
         .orb .edit {
