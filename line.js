@@ -3,39 +3,24 @@ import { lineMaxDistance, lineTransition, orbSize } from "./constants.js";
 
 const opacityThreshold = 0.001;
 
-export function promoteLineType(
-  type /*: "short" | "strong" | "deleted" | "disabled" */
-) {
-  switch (type) {
-    case "deleted":
-      return "short";
-    case "short":
-      return "strong";
-    default:
-      return type;
-  }
+/*+
+type LineProps = {
+  opacity: number 
+  strokeWidth: number
+  stroke: string
 }
-
-export function demoteLineType(
-  type /*: "short" | "strong" | "deleted" | "disabled" */
-) {
-  switch (type) {
-    case "strong":
-      return "short";
-    case "short":
-      return "deleted";
-    default:
-      return type;
-  }
-}
+*/
 
 export function* Line({
-  shapeId,
-  x1,
-  y1,
-  x2,
-  y2,
+  shapeId /*: number */,
+  x1 /*: number */,
+  y1 /*: number */,
+  x2 /*: number */,
+  y2 /*: number */,
   type = "short" /*: "short" | "strong" | "deleted" */,
+  progress /*: number */ = 0,
+  progressColor /*: string */ = "red",
+  progressDir /*: "in" | "out" */ = "out",
 }) {
   let canBump = true;
 
@@ -68,14 +53,6 @@ export function* Line({
     } else if (distance > orbSize + 20) {
       canBump = true;
     }
-
-    /*+
-    type LineProps = {
-      opacity: number 
-      strokeWidth: number
-      stroke: string
-    }
-    */
 
     let line /*: LineProps | undefined */;
     let nearIndicator /*: LineProps| undefined */;
@@ -124,32 +101,83 @@ export function* Line({
         ${
           line &&
           svg`
-          <line
-            style="pointer-events: none;"
-            x1=${x1}
-            y1=${y1}
-            x2=${x2}
-            y2=${y2}
-            stroke="rgba(${line.stroke})"
-            stroke-width=${line.strokeWidth}
-          />
-        `
+            <line
+              style="pointer-events: none;"
+              x1=${x1}
+              y1=${y1}
+              x2=${x2}
+              y2=${y2}
+              stroke="rgba(${line.stroke})"
+              stroke-width=${line.strokeWidth}
+            />
+          `
+        }
+        ${
+          line && progress > 0 && progressDir === "out"
+            ? svg`
+            <line
+              style="pointer-events: none;"
+              x1=${x1}
+              y1=${y1}
+              x2=${x1 + (x2 - x1) * progress}
+              y2=${y1 + (y2 - y1) * progress}
+              stroke=${progressColor}
+              stroke-width=${line.strokeWidth}
+            />
+          `
+            : svg`
+            <line
+              style="pointer-events: none;"
+              x1=${x2 + (x1 - x2) * progress}
+              y1=${y2 + (y1 - y2) * progress}
+              x2=${x2}
+              y2=${y2}
+              stroke=${progressColor}
+              stroke-width=${line.strokeWidth}
+            />
+          `
         }
         ${
           nearIndicator &&
           svg`
-          <line
-            style="pointer-events: none;"
-            x1=${x1}
-            y1=${y1}
-            x2=${x2}
-            y2=${y2}
-            stroke="rgba(${nearIndicator.stroke})"
-            stroke-width=${nearIndicator.strokeWidth}
-          />
+            <line
+              style="pointer-events: none;"
+              x1=${x1}
+              y1=${y1}
+              x2=${x2}
+              y2=${y2}
+              stroke="rgba(${nearIndicator.stroke})"
+              stroke-width=${nearIndicator.strokeWidth}
+            />
           `
         } 
       `
       : null;
+  }
+}
+
+export function promoteLineType(
+  type /*: "short" | "strong" | "deleted" | "disabled" */
+) {
+  switch (type) {
+    case "deleted":
+      return "short";
+    case "short":
+      return "strong";
+    default:
+      return type;
+  }
+}
+
+export function demoteLineType(
+  type /*: "short" | "strong" | "deleted" | "disabled" */
+) {
+  switch (type) {
+    case "strong":
+      return "short";
+    case "short":
+      return "deleted";
+    default:
+      return type;
   }
 }
