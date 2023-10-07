@@ -46,7 +46,9 @@ export function* FirstTime() {
             }
           </style>
           <div class="firsttime--big-center ${fade && "firsttime--fade-out"}">
-            tap to start a mind map
+            ${window.navigator.maxTouchPoints > 0
+              ? "tap to start a mind map"
+              : "click to start a mind map"}
           </div>`
       : null;
   }
