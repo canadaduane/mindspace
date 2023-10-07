@@ -114,7 +114,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       const shape = setLineType(shapeId, lineType);
       if (shape) {
         const connectedShapes = getShapesConnectedToLineShapeId(shapeId);
-        console.log({ connectedShapes });
         connectedShapes.forEach((s) => (s.shake = true));
         setTimeout(() => {
           connectedShapes.forEach((s) => (s.shake = false));
@@ -130,12 +129,14 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   const onKeyDown = (event) => {
-    if (event.key === "Enter") {
+    if (event.key === "Enter" && event.target.tagName === "BODY") {
       const node = nodes.get(mostRecentlyActiveNodeId);
       if (node) createNodeAroundNode(node);
       else createNode(window.innerWidth, window.innerHeight);
     }
   };
+
+  document.body.addEventListener("keydown", onKeyDown);
 
   let createdNodeTimer;
   let coneNodeId;
@@ -393,7 +394,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let svgShapes = [],
     htmlShapes = [];
 
-  document.body.addEventListener("keydown", onKeyDown);
   try {
     while (true) {
       for (let node of nodes.values()) {
@@ -422,12 +422,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
             animation: orb--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
           }
           .orb--shake {
-            animation: orb--shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97)
-              both;
+            animation: orb--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
           }
           .orb--rect-shake {
             animation: orb--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards,
-              orb--shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+              orb--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
           }
           @keyframes orb--rect {
             0% {
