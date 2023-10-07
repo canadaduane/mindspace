@@ -149,22 +149,6 @@ export function* Cone({ x, y, boostConeCutMode }) {
     }
 
     yield svg`
-      ${pointHistory.slice(1).map((p, i) => {
-        const q = pointHistory[i];
-        const tx = tipX * 1.1;
-        const ty = tipY * 1.1;
-        return svg`
-          <line
-            x1=${q.x - tx}
-            y1=${q.y - ty}
-            x2=${p.x - tx}
-            y2=${p.y - ty}
-            stroke-width="2"
-            stroke="rgb(240, 200, 30, ${i / pointHistory.length})"
-            opacity=${spikeOpacity}
-          />
-        `;
-      })}}
       <g 
         transform="translate(${tx} ${ty}) rotate(${thetaDeg}) scale(1 ${squishScale})"
       > 
