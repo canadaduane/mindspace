@@ -387,7 +387,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const x = cx + Math.cos(r) * 150;
     const y = cy + Math.sin(r) * 150;
     t += 3;
-    createNode(x, y, true);
+    createNode(x, y);
   };
 
   let svgShapes = [],
