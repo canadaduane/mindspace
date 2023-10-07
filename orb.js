@@ -3,6 +3,7 @@ import { makeDraggable } from "./drag.js";
 import {
   orbSize,
   orbRectWidth,
+  orbRectHeight,
   setGlobalIsDragging,
   stringLengthTransition,
 } from "./constants.js";
@@ -129,6 +130,57 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
           margin-bottom: 14px;
           overflow: hidden;
           white-space: nowrap;
+        }
+
+        .orb--rect {
+          animation: orb--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
+        }
+        .orb--shake {
+          animation: orb--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+        .orb--rect-shake {
+          animation: orb--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards,
+            orb--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+        @keyframes orb--rect {
+          0% {
+            border-radius: 100%;
+            width: ${orbSize}px;
+            height: ${orbSize}px;
+          }
+          40% {
+            border-radius: 9px;
+            width: ${orbSize}px;
+            height: ${orbSize}px;
+          }
+          100% {
+            border-radius: 9px;
+            width: ${orbRectWidth}px;
+            height: ${orbRectHeight}px;
+          }
+        }
+
+        @keyframes orb--shake {
+          10%,
+          90% {
+            transform: translate(-51%, -50%);
+          }
+
+          20%,
+          80% {
+            transform: translate(-48%, -50%);
+          }
+
+          30%,
+          50%,
+          70% {
+            transform: translate(-54%, -50%);
+          }
+
+          40%,
+          60% {
+            transform: translate(-46%, -50%);
+          }
         }
       </style>
       ${isFirefox() &&

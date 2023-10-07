@@ -1,12 +1,6 @@
 import { renderer } from "@b9g/crank/dom";
 import { calcDistance, html } from "./utils.js";
-import {
-  globalIsDragging,
-  scrollbarThickness,
-  orbSize,
-  orbRectWidth,
-  orbRectHeight,
-} from "./constants.js";
+import { globalIsDragging, scrollbarThickness, orbSize } from "./constants.js";
 import { ColorWheel, getColorFromWorldCoord } from "./colorwheel.js";
 import { applyNodeToShapes, makeNodesMap, makeShapesMap } from "./shape.js";
 import {
@@ -126,7 +120,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         setTimeout(() => {
           connectedShapes.forEach((s) => (s.shake = false));
         }, 1000);
-        this.refresh();
       }
     }
   );
@@ -424,60 +417,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       }
 
       yield html`<!-- -->
-        <!-- Orb styles are here because having them in the Orb component
-             causes an animation glitch on remount -->
-        <style>
-          .orb--rect {
-            animation: orb--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
-          }
-          .orb--shake {
-            animation: orb--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-          }
-          .orb--rect-shake {
-            animation: orb--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards,
-              orb--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-          }
-          @keyframes orb--rect {
-            0% {
-              border-radius: 100%;
-              width: ${orbSize}px;
-              height: ${orbSize}px;
-            }
-            40% {
-              border-radius: 9px;
-              width: ${orbSize}px;
-              height: ${orbSize}px;
-            }
-            100% {
-              border-radius: 9px;
-              width: ${orbRectWidth}px;
-              height: ${orbRectHeight}px;
-            }
-          }
-
-          @keyframes orb--shake {
-            10%,
-            90% {
-              transform: translate(-51%, -50%);
-            }
-
-            20%,
-            80% {
-              transform: translate(-48%, -50%);
-            }
-
-            30%,
-            50%,
-            70% {
-              transform: translate(-54%, -50%);
-            }
-
-            40%,
-            60% {
-              transform: translate(-46%, -50%);
-            }
-          }
-        </style>
         <svg
           viewBox="0 0 ${docW} ${docH - scrollbarThickness}"
           style="width: ${docW}px; height: ${docH - scrollbarThickness}px;"

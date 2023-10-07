@@ -113,7 +113,9 @@ export function* Line({
           `
         }
         ${
-          line && progress > 0 && progressDir === "out"
+          line &&
+          progress > 0 &&
+          (progressDir === "out"
             ? svg`
             <line
               style="pointer-events: none;"
@@ -135,7 +137,7 @@ export function* Line({
               stroke=${progressColor}
               stroke-width=${line.strokeWidth}
             />
-          `
+          `)
         }
         ${
           nearIndicator &&
