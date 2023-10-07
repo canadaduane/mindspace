@@ -92,22 +92,27 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
         .orb {
           position: absolute;
           transform: translate(-50%, -50%);
-          background-color: var(--defaultOrbFill);
-          border-width: 3px;
+
           border-radius: 100%;
-          border-style: solid;
+          outline-width: 3px;
+          outline-style: solid;
+          transition: outline-width 0.2s ease-in-out;
+
           width: ${orbSize}px;
           height: ${orbSize}px;
           color: var(--brightText);
+          background-color: var(--defaultOrbFill);
+
           display: flex;
           justify-content: center;
           align-items: center;
+
           overflow-y: auto;
           user-select: none;
         }
         .orb:focus-within {
-          outline-width: 5px;
-          outline-style: solid;
+          outline-width: 9px;
+          transition: outline-width 0.15s ease-in-out;
         }
         .orb .edit {
           padding: 8px;
