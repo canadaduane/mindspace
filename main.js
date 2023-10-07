@@ -267,8 +267,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const lineShape = { type: "line", lineType: "short" };
 
     shapes.set(lineShapeId, lineShape);
-    nodeDependents1.push({ lineShapeId, attrs: { x: "x2", y: "y2" } });
-    nodeDependents2.push({ lineShapeId, attrs: { x: "x1", y: "y1" } });
+    nodeDependents1.push({ shapeId: lineShapeId, attrs: { x: "x2", y: "y2" } });
+    nodeDependents2.push({ shapeId: lineShapeId, attrs: { x: "x1", y: "y1" } });
 
     return { shape: lineShape, shapeId: lineShapeId };
   };
