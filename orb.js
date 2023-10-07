@@ -109,7 +109,6 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
           align-items: center;
 
           overflow-y: auto;
-          user-select: none;
         }
         .orb:focus-within {
           outline-width: 9px;
@@ -198,7 +197,7 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
             height: 48px;
             vertical-align: text-bottom;
             background: #ccc;
-            animation: blink 1.2s steps(2) infinite;
+            animation: blink 1.2s steps(2) reverse infinite;
           }
           .orb .edit:focus::after {
             display: none;
