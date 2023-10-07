@@ -174,10 +174,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       coneNodeId = nodeId;
       coneShapeId = shapeId;
       coneShapeDepShapeIds = getDependentShapesOfControllerShape(coneShapeId);
-      // createdNodeTimer = setTimeout(() => {
-      //   showColorGuide = true;
-      //   this.refresh();
-      // }, 200);
+      createdNodeTimer = setTimeout(() => {
+        showColorGuide = true;
+        this.refresh();
+      }, 200);
     },
     onEnd: ({ x, y }) => {
       if (coneCutMode) {
