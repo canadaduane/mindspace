@@ -8,6 +8,10 @@ For me, mind mapping is as much an emotional exercise as it is reasoning about a
 
 I wanted a UI that encourages treating thoughts and concepts as toys to play with. If you're looking for something similar, you will probably enjoy Mindspace even in its early phase.
 
+
+https://github.com/canadaduane/mindspace/assets/129/74c83b99-19a2-4366-ad0c-264a5fa34207
+
+
 ## Instructions
 
 1. Create a concept circle: click or tap on the empty background--or press enter on the keyboard--then type. If the text is 3 characters or fewer, the concept will have a circular shape. If longer, it will take up a rectangular space. Tip: press enter several times to connect several concepts in a spiral shape.
