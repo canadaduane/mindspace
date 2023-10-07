@@ -87,6 +87,7 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
   for ({ x, y, color, shake } of this) {
     pos.x = x;
     pos.y = y;
+
     yield html` <style>
         .orb {
           position: absolute;
@@ -124,10 +125,6 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
           overflow: hidden;
           white-space: nowrap;
         }
-
-        .orb--shake {
-          animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-        }
       </style>
       ${isFirefox() &&
       html`
@@ -157,12 +154,17 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
         onpointercancel=${end}
         onpointermove=${move}
         ontouchstart=${touchStart}
-        class="orb ${rectShape && "to-rect"} ${shake && "orb--shake"}"
+        class="orb ${shake && rectShape
+          ? "orb--rect-shake"
+          : rectShape
+          ? "orb--rect"
+          : shake
+          ? "orb--shake"
+          : ""}"
         style=${`left: ${pos.x}px;` +
         `top: ${pos.y}px;` +
         `border-color: ${color};` +
-        `outline-color: ${color};` +
-        `animation-delay: ${Math.random() / 10}s`}
+        `outline-color: ${color};`}
       >
         <div
           class="edit ${rectShape || "circle"}"

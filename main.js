@@ -247,13 +247,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         throw new Error("can't find cone nodeId");
       }
 
-      const shape = shapes.get(coneShapeId);
-      if (shape) {
-        shape.forceCutMode = shapeIdsCutThisMotion.size > 0;
-      } else {
-        throw new Error("can't find cone shapeId");
-      }
-
       this.refresh();
     },
   });
@@ -425,12 +418,18 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         <!-- Orb styles are here because having them in the Orb component
              causes an animation glitch on remount -->
         <style>
-          .to-rect {
-            animation: 0.3s linear to-rect;
-            animation-timing-function: cubic-bezier(0.6, 0, 1, 1);
-            animation-fill-mode: forwards;
+          .orb--rect {
+            animation: orb--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
           }
-          @keyframes to-rect {
+          .orb--shake {
+            animation: orb--shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97)
+              both;
+          }
+          .orb--rect-shake {
+            animation: orb--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards,
+              orb--shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+          }
+          @keyframes orb--rect {
             0% {
               border-radius: 100%;
               width: ${orbSize}px;
@@ -445,6 +444,29 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
               border-radius: 9px;
               width: ${orbRectWidth}px;
               height: ${orbRectHeight}px;
+            }
+          }
+
+          @keyframes orb--shake {
+            10%,
+            90% {
+              transform: translate(-51%, -50%);
+            }
+
+            20%,
+            80% {
+              transform: translate(-48%, -50%);
+            }
+
+            30%,
+            50%,
+            70% {
+              transform: translate(-54%, -50%);
+            }
+
+            40%,
+            60% {
+              transform: translate(-46%, -50%);
             }
           }
         </style>
