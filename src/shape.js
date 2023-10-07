@@ -1,16 +1,3 @@
-export function makeNodesMap(initNodes /*: Node[] */) {
-  let maxNodeId = 0;
-  return {
-    nodes: new Map(
-      initNodes.map(({ nodeId, ...node }) => {
-        if (maxNodeId < nodeId) maxNodeId = nodeId;
-        return [nodeId, node];
-      })
-    ),
-    maxNodeId,
-  };
-}
-
 export function makeShapesMap(initShapes /*: Shape[] */) {
   let maxShapeId = 0;
   return {

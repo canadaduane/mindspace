@@ -2,7 +2,8 @@ import { renderer } from "@b9g/crank/dom";
 import { calcDistance, html } from "./utils.js";
 import { globalIsDragging, scrollbarThickness, orbSize } from "./constants.js";
 import { ColorWheel, getColorFromWorldCoord } from "./colorwheel.js";
-import { applyNodeToShapes, makeNodesMap, makeShapesMap } from "./shape.js";
+import { applyNodeToShapes, makeShapesMap } from "./shape.js";
+import { makeNodesMap, getNode, hasNode } from "./node.js";
 import {
   startAnimation as startAnimationUnbound,
   stopAnimation,
@@ -92,14 +93,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   this.addEventListener("nodeMoved", ({ detail: { nodeId, x, y } }) => {
-    const node = nodes.get(nodeId);
-    if (node) {
-      node.x = x;
-      node.y = y;
-      this.refresh();
-    } else {
-      console.warn("can't set node movement", nodeId);
-    }
+    const node = getNode(nodeId, nodes);
+    node.x = x;
+    node.y = y;
+    this.refresh();
   });
 
   this.addEventListener("removeNode", ({ detail: { nodeId } }) => {
@@ -125,14 +122,13 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   );
 
   this.addEventListener("createNode", ({ detail: { nodeId } }) => {
-    const node = nodes.get(nodeId);
-    if (node) createNodeAroundNode(node);
+    createNodeAroundNode(getNode(nodeId, nodes));
   });
 
   const onKeyDown = (event) => {
     if (event.key === "Enter" && event.target.tagName === "BODY") {
-      const node = nodes.get(mostRecentlyActiveNodeId);
-      if (node) createNodeAroundNode(node);
+      if (hasNode(mostRecentlyActiveNodeId, nodes))
+        createNodeAroundNode(getNode(mostRecentlyActiveNodeId, nodes));
       else createNode(window.innerWidth, window.innerHeight);
     }
   };
@@ -241,14 +237,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         }
       }
 
-      const node = nodes.get(coneNodeId);
-      if (node) {
-        node.x = x;
-        node.y = y;
-        node.color = getColorFromWorldCoord(x, y);
-      } else {
-        throw new Error("can't find cone nodeId");
-      }
+      const node = getNode(coneNodeId, nodes);
+      node.x = x;
+      node.y = y;
+      node.color = getColorFromWorldCoord(x, y);
 
       this.refresh();
     },
@@ -330,8 +322,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   const removeNode = (nodeId /*: number */) => {
-    const node = nodes.get(nodeId);
-    if (node) {
+    if (hasNode(nodeId, nodes)) {
+      const node = getNode(nodeId, nodes);
       node.dependents.forEach((d) => {
         shapes.delete(d.shapeId);
       });
@@ -346,7 +338,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   const getDependentShapesOfControllerShape = (shapeId /*: number */) => {
     const shape = shapes.get(shapeId);
     if (shape) {
-      const node = nodes.get(shape.controlsNodeId);
+      const node = getNode(shape.controlsNodeId, nodes);
       const shapeIds = [];
       if (node) {
         for (let dep of node.dependents) {
