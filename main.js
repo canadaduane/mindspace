@@ -73,6 +73,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   this.addEventListener("setCutMode", ({ detail: { mode } }) => {
     coneCutMode = mode;
+    enableDisableConeLines();
+    this.refresh();
   });
 
   this.addEventListener("setCutPath", ({ detail: { path } }) => {
@@ -114,7 +116,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       const shape = setLineType(shapeId, lineType);
       if (shape) {
         const connectedShapes = getShapesConnectedToLineShapeId(shapeId);
-        connectedShapes.forEach((s) => (s.shake = true));
+        connectedShapes.forEach((s) => {
+          if (s.type === "circle") s.shake = true;
+        });
         setTimeout(() => {
           connectedShapes.forEach((s) => (s.shake = false));
         }, 1000);
@@ -144,6 +148,25 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let coneShapeDepShapeIds = [];
   const shapeIdsCutThisMotion = new Set();
   const conePos = { x: 0, y: 0 };
+
+  const enableDisableConeLines = () => {
+    if (coneCutMode) {
+      // Disable lines from Cone when in "cutter" mode
+      for (const depShape of coneShapeDepShapeIds) {
+        if (depShape.type === "line" && depShape.lineType !== "disabled") {
+          depShape.lineType = "disabled";
+        }
+      }
+    } else {
+      // Enable lines to Cone when in "create" mode
+      for (const depShape of coneShapeDepShapeIds) {
+        if (depShape.type === "line" && depShape.lineType === "disabled") {
+          depShape.lineType = "short";
+        }
+      }
+    }
+  };
+
   const { start, end, move, touchStart } = makeDraggable(conePos, {
     onStart: ({ x, y }) => {
       startAnimation("cone");
@@ -177,22 +200,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       this.refresh();
     },
     onMove: ({ x, y }) => {
-      if (coneCutMode) {
-        // Disable lines from Cone when in "cutter" mode
-        for (const depShape of coneShapeDepShapeIds) {
-          if (depShape.type === "line" && depShape.lineType !== "disabled") {
-            depShape.lineType = "disabled";
-          }
-        }
-      } else {
-        // Enable lines to Cone when in "create" mode
-        for (const depShape of coneShapeDepShapeIds) {
-          if (depShape.type === "line" && depShape.lineType === "disabled") {
-            depShape.lineType = "short";
-          }
-        }
-      }
-
+      enableDisableConeLines();
       if (coneCutMode) {
         // Delete lines and orbs when in "cutter" mode
         for (let [shapeId, shape] of shapes.entries()) {
