@@ -108,12 +108,21 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   });
 
-  this.addEventListener("setLineType", ({ detail: { shapeId, lineType } }) => {
-    // TODO: ignore setting cone lines?
-    if (setLineType(shapeId, lineType)) {
-      this.refresh();
+  this.addEventListener(
+    "setLineTypeBump",
+    ({ detail: { shapeId, lineType } }) => {
+      const shape = setLineType(shapeId, lineType);
+      if (shape) {
+        const connectedShapes = getShapesConnectedToLineShapeId(shapeId);
+        console.log({ connectedShapes });
+        connectedShapes.forEach((s) => (s.shake = true));
+        setTimeout(() => {
+          connectedShapes.forEach((s) => (s.shake = false));
+        }, 1000);
+        this.refresh();
+      }
     }
-  });
+  );
 
   this.addEventListener("createNode", ({ detail: { nodeId } }) => {
     const node = nodes.get(nodeId);
@@ -266,10 +275,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const shape = shapes.get(shapeId);
     if (shape) {
       shape.lineType = lineType;
-      return true;
+      return shape;
     } else {
       console.warn(`can't set line type, line not found: ${shapeId}`);
-      return false;
     }
   };
 
@@ -353,7 +361,29 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         }
       }
       return shapeIds;
+    } else {
+      throw new Error(`can't find shape: ${shapeId}`);
     }
+  };
+
+  const getShapesConnectedToLineShapeId = (shapeId /*: number */) => {
+    const connectedShapes = [];
+    for (let node of nodes.values()) {
+      const hasDeps =
+        node.dependents.filter((dep) => dep.shapeId === shapeId).length > 0;
+
+      if (!hasDeps) continue;
+
+      for (let dep of node.dependents) {
+        if (dep.shapeId !== shapeId) {
+          const shape = shapes.get(dep.shapeId);
+          if (shape && shape.type === "circle") {
+            connectedShapes.push(shape);
+          }
+        }
+      }
+    }
+    return connectedShapes;
   };
 
   // Approximate Archimedean Spiral
@@ -468,6 +498,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                   x=${shape.cx}
                   y=${shape.cy}
                   color=${shape.color}
+                  shake=${shape.shake}
                 />
               `;
             default:

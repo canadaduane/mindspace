@@ -11,7 +11,7 @@ function isFirefox() {
   return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
 }
 
-export function* Orb({ nodeId, x = 0, y = 0, color }) {
+export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
   const pos = { x, y };
 
   let editEl;
@@ -84,7 +84,7 @@ export function* Orb({ nodeId, x = 0, y = 0, color }) {
     );
   };
 
-  for ({ x, y, color } of this) {
+  for ({ x, y, color, shake } of this) {
     pos.x = x;
     pos.y = y;
     yield html` <style>
@@ -109,7 +109,6 @@ export function* Orb({ nodeId, x = 0, y = 0, color }) {
           outline-style: solid;
         }
         .orb .edit {
-          background-color: rgba(0, 0, 0, 0.1);
           padding: 8px;
           flex-grow: 1;
           margin: auto;
@@ -124,6 +123,10 @@ export function* Orb({ nodeId, x = 0, y = 0, color }) {
           margin-bottom: 14px;
           overflow: hidden;
           white-space: nowrap;
+        }
+
+        .orb--shake {
+          animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
         }
       </style>
       ${isFirefox() &&
@@ -154,11 +157,12 @@ export function* Orb({ nodeId, x = 0, y = 0, color }) {
         onpointercancel=${end}
         onpointermove=${move}
         ontouchstart=${touchStart}
-        class="orb ${rectShape && "to-rect"}"
+        class="orb ${rectShape && "to-rect"} ${shake && "orb--shake"}"
         style=${`left: ${pos.x}px;` +
         `top: ${pos.y}px;` +
         `border-color: ${color};` +
-        `outline-color: ${color};`}
+        `outline-color: ${color};` +
+        `animation-delay: ${Math.random() / 10}s`}
       >
         <div
           class="edit ${rectShape || "circle"}"

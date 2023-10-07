@@ -95,8 +95,25 @@ export function* Cone({ x, y, boostConeCutMode }) {
 
     // How far the pointer needs to travel in a given timeframe to switch from
     // a circle to a cutting point:
-    const activationThreshold = (boostConeCutMode ? 1 : 7) * pointHistoryMax;
-    const s = forceCutMode ? 0 : sigmoid((activationThreshold - distance) / 20);
+    let s;
+    let spikeOpacity;
+
+    if (forceCutMode) {
+      s = 0;
+      spikeOpacity = 1;
+    } else {
+      // Calculate the activation threshold between "create" and "cutter" modes.
+      // The opacity transition follows behind the squish, by just a bit.
+      if (boostConeCutMode) {
+        const activationThreshold = 3 * pointHistoryMax - distance;
+        s = sigmoid(activationThreshold / 2);
+        spikeOpacity = 1 - sigmoid((activationThreshold + 20) / 1);
+      } else {
+        const activationThreshold = 7 * pointHistoryMax - distance;
+        s = sigmoid(activationThreshold / 20);
+        spikeOpacity = 1 - sigmoid((activationThreshold + 20) / 10);
+      }
+    }
 
     // Track historical s values
     sHistory.push(s);
@@ -106,18 +123,14 @@ export function* Cone({ x, y, boostConeCutMode }) {
     // How much to "squish" the circle in the direction orthogonal to travel
     const squishScale = Math.max(s, 0.25);
 
-    // The opacity transition follows behind the squish, by just a bit
-    const spikeOpacity = forceCutMode
-      ? 1
-      : 1 - sigmoid((activationThreshold + 20 - distance) / 10);
     const orbOpacity = 1 - spikeOpacity;
 
     // Shrink the circle towards a certain size as it transitions to cutting point
     const radius = orbSize / 2 - (1 - sHistoryAvg) * orbSize * 0.33;
 
     // We want the tip of the cutting point to follow behind the pointer
-    const tipX = Math.cos(theta) * (orbSize / 2 - 10);
-    const tipY = Math.sin(theta) * (orbSize / 2 - 10);
+    const tipX = Math.cos(theta) * (orbSize / 2 - 4);
+    const tipY = Math.sin(theta) * (orbSize / 2 - 4);
 
     // As we transition to cutting point, increase the importance of the follow-behind.
     const tx = x - tipX * (1 - s);
@@ -132,8 +145,8 @@ export function* Cone({ x, y, boostConeCutMode }) {
     yield svg`
       ${pointHistory.slice(1).map((p, i) => {
         const q = pointHistory[i];
-        const tx = tipX * (1 - s);
-        const ty = tipY * (1 - s);
+        const tx = tipX * 1.1;
+        const ty = tipY * 1.1;
         return svg`
           <line
             x1=${q.x - tx}
@@ -141,7 +154,7 @@ export function* Cone({ x, y, boostConeCutMode }) {
             x2=${p.x - tx}
             y2=${p.y - ty}
             stroke-width="2"
-            stroke="rgb(240, 240, 240,${i / pointHistory.length})"
+            stroke="rgb(240, 200, 30, ${i / pointHistory.length})"
             opacity=${spikeOpacity}
           />
         `;

@@ -36,6 +36,7 @@ type Shape =
       type: "circle";
       controlsNodeId: number;
       color: string;
+      shake: boolean;
       cx: number;
       cy: number;
     }

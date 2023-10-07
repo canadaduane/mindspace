@@ -57,7 +57,7 @@ export function* Line({
     ) {
       canBump = false;
       this.dispatchEvent(
-        new CustomEvent("setLineType", {
+        new CustomEvent("setLineTypeBump", {
           bubbles: true,
           detail: {
             shapeId,
