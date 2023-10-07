@@ -263,14 +263,14 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   /** Create Functions */
 
   const createLine = (nodeDependents1, nodeDependents2) => {
-    const shapeId = ++maxShapeId;
+    const lineShapeId = ++maxShapeId;
     const lineShape = { type: "line", lineType: "short" };
 
-    shapes.set(shapeId, lineShape);
-    nodeDependents1.push({ shapeId, attrs: { x: "x2", y: "y2" } });
-    nodeDependents2.push({ shapeId, attrs: { x: "x1", y: "y1" } });
+    shapes.set(lineShapeId, lineShape);
+    nodeDependents1.push({ lineShapeId, attrs: { x: "x2", y: "y2" } });
+    nodeDependents2.push({ lineShapeId, attrs: { x: "x1", y: "y1" } });
 
-    return { shape: lineShape, shapeId };
+    return { shape: lineShape, shapeId: lineShapeId };
   };
 
   const setLineType = (shapeId, lineType) => {
