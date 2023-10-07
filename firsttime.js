@@ -46,7 +46,7 @@ export function* FirstTime() {
             }
           </style>
           <div class="firsttime--big-center ${fade && "firsttime--fade-out"}">
-            tap and drag to start
+            tap to start a mind map
           </div>`
       : null;
   }

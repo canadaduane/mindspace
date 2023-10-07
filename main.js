@@ -33,10 +33,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     startAnimationUnbound(name, () => this.refresh());
 
   // Scroll to center of area after first render
-  setTimeout(() => {
+  window.addEventListener("load", () => {
     document.documentElement.scrollLeft = window.innerWidth / 2;
     document.documentElement.scrollTop = window.innerHeight / 2;
-  }, 100);
+  });
 
   const matchWorkAreaSizesWithoutRefresh = () => {
     winW = window.innerWidth;
