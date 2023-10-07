@@ -15,7 +15,7 @@ export function* Cone({ x, y, boostConeCutMode }) {
   const sHistoryMax = 5;
 
   let cutMode = false;
-  let leaveCutterModeTimer;
+  let lastMotionTimestamp;
 
   const setCutMode = (mode /*: boolean */) => {
     if (cutMode === mode) return;
@@ -138,15 +138,17 @@ export function* Cone({ x, y, boostConeCutMode }) {
     const tx = x - tipX * (1 - s);
     const ty = y - tipY * (1 - s);
 
-    if (cutMode && distance < 5) {
+    const now = Date.now();
+    if (distance > 2) {
+      lastMotionTimestamp = now;
+    }
+
+    if (cutMode && now - lastMotionTimestamp > 700) {
       // Return to "create" mode after less motion
-      leaveCutterModeTimer = setTimeout(() => {
-        setCutMode(false);
-      }, 500);
+      setCutMode(false);
     } else if (s < 0.1 && !cutMode) {
       // Enter "cutter" mode once motion threshold has been reached
       setCutMode(true);
-      clearTimeout(leaveCutterModeTimer);
     }
 
     yield svg`
