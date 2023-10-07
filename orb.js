@@ -193,11 +193,13 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
           .orb .edit:focus:empty::after {
             content: "";
             display: inline-block;
-            width: 3px;
-            height: 48px;
+            width: 3.5px;
+            height: 64px;
+            margin-bottom: -8px;
             vertical-align: text-bottom;
             background: #ccc;
-            animation: blink 1.2s steps(2) reverse infinite;
+            opacity: 1;
+            animation: blink 1.2s steps(2, jump-none) reverse infinite;
           }
           .orb .edit:focus::after {
             display: none;
