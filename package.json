@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "An experiment in spatial notes",
   "scripts": {
-    "dev": "sirv --dev ."
+    "dev": "sirv --dev .",
+    "build": "esbuild --bundle src/main.js --format=esm --minify --external:colorjs.io >dist/bundle.js"
   },
   "keywords": [],
   "author": "Duane Johnson <duane.johnson@gmail.com>",
@@ -12,6 +13,7 @@
     "@b9g/crank": "^0.5.4"
   },
   "devDependencies": {
+    "esbuild": "^0.19.4",
     "sirv-cli": "^2.0.2"
   }
 }
