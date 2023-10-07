@@ -18,6 +18,7 @@ export function* Cone({ x, y, boostConeCutMode }) {
   let leaveCutterModeTimer;
 
   const setCutMode = (mode /*: boolean */) => {
+    if (cutMode === mode) return;
     cutMode = mode;
     this.dispatchEvent(
       new CustomEvent("setCutMode", { bubbles: true, detail: { mode } })

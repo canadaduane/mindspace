@@ -38,16 +38,15 @@ export function* ColorWheel({ w, h }) {
     setTimeout(() => {
       if (!classNames.includes("fade-in")) {
         classNames.push("fade-in");
-        this.refresh();
       }
     }, 100);
   });
+
   for ({ w, h } of this) {
     const size = w > h ? h : w;
-    const { left, top } = getScroll();
     yield svg`
       <svg
-          viewBox="0 0 ${w} ${h.innerHeight}"
+          viewBox="0 0 ${w} ${h}"
           style=${
             `width: ${w}px;` +
             `height: ${h}px;` +

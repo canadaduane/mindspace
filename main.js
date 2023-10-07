@@ -74,7 +74,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   this.addEventListener("setCutMode", ({ detail: { mode } }) => {
     coneCutMode = mode;
     enableDisableConeLines();
-    this.refresh();
+    if (coneCutMode) {
+      showColorGuide = false;
+    } else if (!coneCutMode && coneNodeId) {
+      showColorGuide = true;
+    }
   });
 
   this.addEventListener("setCutPath", ({ detail: { path } }) => {
@@ -142,7 +146,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   document.body.addEventListener("keydown", onKeyDown);
 
-  let createdNodeTimer;
   let coneNodeId;
   let coneShapeId;
   let coneShapeDepShapeIds = [];
@@ -171,15 +174,13 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     onStart: ({ x, y }) => {
       startAnimation("cone");
       const { nodeId, shapeId } = createNode(x, y, "cone");
+      showColorGuide = true;
       coneNodeId = nodeId;
       coneShapeId = shapeId;
       coneShapeDepShapeIds = getDependentShapesOfControllerShape(coneShapeId);
-      createdNodeTimer = setTimeout(() => {
-        showColorGuide = true;
-        this.refresh();
-      }, 200);
     },
     onEnd: ({ x, y }) => {
+      stopAnimation("cone");
       if (coneCutMode) {
         removeNode(coneNodeId);
       } else {
@@ -191,10 +192,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           throw new Error("can't find shapeId for cone");
         }
       }
-      shapeIdsCutThisMotion.clear();
-      clearTimeout(createdNodeTimer);
-      stopAnimation("cone");
       showColorGuide = false;
+      coneNodeId = undefined;
+      coneShapeId = undefined;
+      shapeIdsCutThisMotion.clear();
       coneCutMode = false;
       boostConeCutMode = false;
       this.refresh();
