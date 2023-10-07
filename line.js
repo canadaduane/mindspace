@@ -3,6 +3,32 @@ import { lineMaxDistance, lineTransition, orbSize } from "./constants.js";
 
 const opacityThreshold = 0.001;
 
+export function promoteLineType(
+  type /*: "short" | "strong" | "deleted" | "disabled" */
+) {
+  switch (type) {
+    case "deleted":
+      return "short";
+    case "short":
+      return "strong";
+    default:
+      return type;
+  }
+}
+
+export function demoteLineType(
+  type /*: "short" | "strong" | "deleted" | "disabled" */
+) {
+  switch (type) {
+    case "strong":
+      return "short";
+    case "short":
+      return "deleted";
+    default:
+      return type;
+  }
+}
+
 export function* Line({
   shapeId,
   x1,
@@ -18,19 +44,28 @@ export function* Line({
   };
 
   for ({ x1, y1, x2, y2, type } of this) {
+    if (type === "disabled") {
+      yield null;
+      continue;
+    }
+
     const distance = calcDistance(x1, y1, x2, y2);
-    if (canBump && (type === "deleted" || type === "short") && distance < 110) {
+    if (
+      canBump &&
+      (type === "deleted" || type === "short") &&
+      distance < orbSize + 5
+    ) {
       canBump = false;
       this.dispatchEvent(
         new CustomEvent("setLineType", {
           bubbles: true,
           detail: {
             shapeId,
-            lineType: type === "deleted" ? "short" : "strong",
+            lineType: promoteLineType(type),
           },
         })
       );
-    } else if (distance > 120) {
+    } else if (distance > orbSize + 20) {
       canBump = true;
     }
 

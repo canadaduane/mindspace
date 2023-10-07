@@ -17,7 +17,7 @@ import { isIntersecting } from "./utils.js";
 import { makeDraggable } from "./drag.js";
 import { FirstTime } from "./firsttime.js";
 import { Orb } from "./orb.js";
-import { Line } from "./line.js";
+import { Line, demoteLineType } from "./line.js";
 import { Cone } from "./cone.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
@@ -27,8 +27,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let showColorGuide = false;
   let mostRecentlyActiveNodeId;
 
-  // let coneX /*: number */;
-  // let coneY /*: number */;
   let coneCutPath /*: Point[] */ = [];
   let coneCutMode = false;
   let boostConeCutMode = false;
@@ -111,6 +109,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   this.addEventListener("setLineType", ({ detail: { shapeId, lineType } }) => {
+    // TODO: ignore setting cone lines?
     if (setLineType(shapeId, lineType)) {
       this.refresh();
     }
@@ -132,6 +131,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let createdNodeTimer;
   let coneNodeId;
   let coneShapeId;
+  let coneShapeDepShapeIds = [];
   const shapeIdsCutThisMotion = new Set();
   const conePos = { x: 0, y: 0 };
   const { start, end, move, touchStart } = makeDraggable(conePos, {
@@ -140,6 +140,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       const { nodeId, shapeId } = createNode(x, y, "cone");
       coneNodeId = nodeId;
       coneShapeId = shapeId;
+      coneShapeDepShapeIds = getDependentShapesOfControllerShape(coneShapeId);
       // createdNodeTimer = setTimeout(() => {
       //   showColorGuide = true;
       //   this.refresh();
@@ -167,9 +168,36 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     },
     onMove: ({ x, y }) => {
       if (coneCutMode) {
+        // Disable lines from Cone when in "cutter" mode
+        for (const depShape of coneShapeDepShapeIds) {
+          if (depShape.type === "line" && depShape.lineType !== "disabled") {
+            depShape.lineType = "disabled";
+          }
+        }
+      } else {
+        // Enable lines to Cone when in "create" mode
+        for (const depShape of coneShapeDepShapeIds) {
+          if (depShape.type === "line" && depShape.lineType === "disabled") {
+            depShape.lineType = "short";
+          }
+        }
+      }
+
+      if (coneCutMode) {
+        // Delete lines and orbs when in "cutter" mode
         for (let [shapeId, shape] of shapes.entries()) {
-          if (shapeIdsCutThisMotion.has(shapeId) || shape.type === "cone")
+          // Skip self-cutting Cone
+          if (
+            shapeId === coneShapeId ||
+            (shape.type === "line" && shape.lineType === "disabled")
+          ) {
             continue;
+          }
+
+          // Skip shapes we've already deleted during this "cutter" session
+          if (shapeIdsCutThisMotion.has(shapeId)) {
+            continue;
+          }
 
           if (shape.type === "circle") {
             const distance = calcDistance(shape.cx, shape.cy, x, y);
@@ -192,10 +220,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                 )
               ) {
                 shapeIdsCutThisMotion.add(shapeId);
-                setLineType(
-                  shapeId,
-                  shape.lineType === "strong" ? "short" : "deleted"
-                );
+                const demoted = demoteLineType(shape.lineType);
+                setLineType(shapeId, demoted);
                 return;
               }
             });
@@ -310,6 +336,23 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     } else {
       console.warn("can't set node movement", nodeId);
       return false;
+    }
+  };
+
+  const getDependentShapesOfControllerShape = (shapeId /*: number */) => {
+    const shape = shapes.get(shapeId);
+    if (shape) {
+      const node = nodes.get(shape.controlsNodeId);
+      const shapeIds = [];
+      if (node) {
+        for (let dep of node.dependents) {
+          const depShape = shapes.get(dep.shapeId);
+          if (depShape) {
+            shapeIds.push(depShape);
+          }
+        }
+      }
+      return shapeIds;
     }
   };
 

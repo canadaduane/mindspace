@@ -42,7 +42,7 @@ type Shape =
   | {
       type: "cone";
       controlsNodeId: number;
-      forceCutMode: boolean; 
+      forceCutMode: boolean;
       color: string;
       cx: number;
       cy: number;
@@ -50,7 +50,7 @@ type Shape =
   | {
       type: "line";
       color: string;
-      lineType: "short" | "deleted" | "strong";
+      lineType: "short" | "deleted" | "strong" | "disabled";
       x1: number;
       y1: number;
       x2: number;
