@@ -491,7 +491,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
             switch (shape.type) {
               case "line":
                 return html`<${Line}
-                  crank-key=${shapeId}
+                  $key=${shapeId}
                   shapeId=${shapeId}
                   x1=${shape.x1}
                   y1=${shape.y1}
@@ -502,7 +502,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
               case "cone":
                 return html`
                   <${Cone}
-                    crank-key=${shapeId}
+                    $key=${shapeId}
                     x=${shape.cx}
                     y=${shape.cy}
                     color=${shape.color}
@@ -515,14 +515,15 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
             }
           })}
         </svg>
-
+        <!-- -->
         ${showColorGuide && html`<${ColorWheel} w=${winW} h=${winH} />`}
+        <!-- -->
         ${htmlShapes.map(([shapeId, shape]) => {
           switch (shape.type) {
             case "circle":
               return html`
                 <${Orb}
-                  crank-key=${shapeId}
+                  $key=${shapeId}
                   nodeId=${shape.controlsNodeId}
                   x=${shape.cx}
                   y=${shape.cy}
