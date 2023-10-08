@@ -20,7 +20,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let { nodes, maxNodeId } = makeNodesMap(initNodes);
   let { shapes, maxShapeId } = makeShapesMap(initShapes);
 
-  let showColorGuide = false;
+  let showColorWheel = false;
   let mostRecentlyActiveNodeId;
 
   let coneCutPath /*: Point[] */ = [];
@@ -71,11 +71,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     coneCutMode = mode;
     enableDisableConeLines();
     if (coneCutMode) {
-      showColorGuide = false;
-      this.refresh();
+      showColorWheel = false;
+      // this.refresh();
     } else if (!coneCutMode && coneNodeId) {
-      showColorGuide = true;
-      this.refresh();
+      showColorWheel = true;
+      // this.refresh();
     }
   });
 
@@ -166,7 +166,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     onStart: ({ x, y }) => {
       // startAnimation("cone");
       const { nodeId, shapeId } = createNode(x, y, "cone");
-      showColorGuide = true;
+      showColorWheel = true;
       coneNodeId = nodeId;
       coneShapeId = shapeId;
       coneShapeDepShapeIds = getDependentShapesOfControllerShape(coneShapeId);
@@ -185,7 +185,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           throw new Error("can't find shapeId for cone");
         }
       }
-      showColorGuide = false;
+      showColorWheel = false;
       coneNodeId = undefined;
       coneShapeId = undefined;
       shapeIdsCutThisMotion.clear();
@@ -452,7 +452,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           })}
         </svg>
         <!-- -->
-        <${Transition} active=${showColorGuide}>
+        <${Transition} active=${showColorWheel}>
           <${ColorWheel} w=${winW} h=${winH} />
         </${Transition}>        <!-- -->
         ${htmlShapes.map(([shapeId, shape]) => {

@@ -35,13 +35,13 @@ export function* FirstTime() {
       }
     </style>
     <${Transition} active=${show}>
-    <div class="firsttime--big-center">
-      ${
-        window.navigator.maxTouchPoints > 0
-          ? "tap to start a mind map"
-          : "click to start a mind map"
-      }
-    </div>
+      <div class="firsttime--big-center">
+        ${
+          window.navigator.maxTouchPoints > 0
+            ? "tap to start a mind map"
+            : "click to start a mind map"
+        }
+      </div>
     </${Transition}>`;
   }
 }
