@@ -8,6 +8,7 @@ import {
   startAnimation as startAnimationUnbound,
   stopAnimation,
 } from "./animation.js";
+import { Transition } from "./transition.js";
 import { isIntersecting } from "./utils.js";
 import { makeDraggable } from "./drag.js";
 import { FirstTime } from "./firsttime.js";
@@ -71,8 +72,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     enableDisableConeLines();
     if (coneCutMode) {
       showColorGuide = false;
+      this.refresh();
     } else if (!coneCutMode && coneNodeId) {
       showColorGuide = true;
+      this.refresh();
     }
   });
 
@@ -161,12 +164,13 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   const { start, end, move, touchStart } = makeDraggable(conePos, {
     onStart: ({ x, y }) => {
-      startAnimation("cone");
+      // startAnimation("cone");
       const { nodeId, shapeId } = createNode(x, y, "cone");
       showColorGuide = true;
       coneNodeId = nodeId;
       coneShapeId = shapeId;
       coneShapeDepShapeIds = getDependentShapesOfControllerShape(coneShapeId);
+      this.refresh();
     },
     onEnd: ({ x, y }) => {
       stopAnimation("cone");
@@ -448,8 +452,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           })}
         </svg>
         <!-- -->
-        ${showColorGuide && html`<${ColorWheel} w=${winW} h=${winH} />`}
-        <!-- -->
+        <${Transition} active=${showColorGuide}>
+          <${ColorWheel} w=${winW} h=${winH} />
+        </${Transition}>        <!-- -->
         ${htmlShapes.map(([shapeId, shape]) => {
           switch (shape.type) {
             case "circle":

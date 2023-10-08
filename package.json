@@ -10,7 +10,8 @@
   "author": "Duane Johnson <duane.johnson@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@b9g/crank": "^0.5.4"
+    "@b9g/crank": "0.5.4",
+    "gsap": "3.12.2"
   },
   "devDependencies": {
     "esbuild": "^0.19.4",

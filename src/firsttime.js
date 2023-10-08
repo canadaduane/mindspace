@@ -1,55 +1,47 @@
 import { html } from "./utils.js";
+import { Transition } from "./transition.js";
 
 export function* FirstTime() {
-  let fade = false;
-  let firsttime = true;
+  let show = true;
 
   setTimeout(() => {
-    fade = true;
-    this.refresh();
-  }, 1800);
-
-  setTimeout(() => {
-    firsttime = false;
+    show = false;
     this.refresh();
   }, 3000);
 
   for ({} of this) {
-    yield firsttime
-      ? html` <style>
-            .firsttime--big-center {
-              position: absolute;
-              top: 50vh;
-              left: 100vw;
-              transform: translateX(-50%);
-              z-index: 2;
-              display: flex;
-              align-items: center;
-              justify-content: center;
+    yield html`
+    <!-- firsttime styles --> 
+    <style>
+      .firsttime--big-center {
+        position: absolute;
+        top: 50vh;
+        left: 100vw;
+        transform: translateX(-50%);
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
-              width: 50vw;
-              height: 100vh;
-              color: var(--dullText);
-              font-family: sans-serif;
-              font-size: 28px;
-              text-align: center;
-              line-height: 24px;
+        width: 50vw;
+        height: 100vh;
+        color: var(--dullText);
+        font-family: sans-serif;
+        font-size: 28px;
+        text-align: center;
+        line-height: 24px;
 
-              pointer-events: none;
-
-              opacity: 1;
-              transition-property: opacity;
-              transition-duration: 1.2s;
-            }
-            .firsttime--fade-out {
-              opacity: 0;
-            }
-          </style>
-          <div class="firsttime--big-center ${fade && "firsttime--fade-out"}">
-            ${window.navigator.maxTouchPoints > 0
-              ? "tap to start a mind map"
-              : "click to start a mind map"}
-          </div>`
-      : null;
+        pointer-events: none;
+      }
+    </style>
+    <${Transition} active=${show}>
+    <div class="firsttime--big-center">
+      ${
+        window.navigator.maxTouchPoints > 0
+          ? "tap to start a mind map"
+          : "click to start a mind map"
+      }
+    </div>
+    </${Transition}>`;
   }
 }
