@@ -6,10 +6,13 @@ settings:
 
 dependencies:
   '@b9g/crank':
-    specifier: ^0.5.4
+    specifier: 0.5.4
     version: 0.5.4
+  '@fontsource/yantramanav':
+    specifier: 5.0.15
+    version: 5.0.15
   gsap:
-    specifier: ^3.12.2
+    specifier: 3.12.2
     version: 3.12.2
 
 devDependencies:
@@ -223,6 +226,10 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@fontsource/yantramanav@5.0.15:
+    resolution: {integrity: sha512-b+M8pJaPO6/H69RSJNQLhdP5lC58Yb3sMPEY4j6d96XPJ9cRY2+LRj62Q1cFiefHE7MpU3MZVPg5BaFzaDahXA==}
+    dev: false
 
   /@polka/url@1.0.0-next.23:
     resolution: {integrity: sha512-C16M+IYz0rgRhWZdCmK+h58JMv8vijAA61gmz2rspCSwKwzBebpdcsiUmwrtJRdphuY30i6BSLEOP8ppbNLyLg==}
