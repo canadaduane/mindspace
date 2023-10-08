@@ -72,11 +72,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     enableDisableConeLines();
     if (coneCutMode) {
       showColorWheel = false;
-      // this.refresh();
     } else if (!coneCutMode && coneNodeId) {
       showColorWheel = true;
-      // this.refresh();
     }
+    // no need to refresh because we're animating "cone"
   });
 
   this.addEventListener("setCutPath", ({ detail: { path } }) => {
@@ -164,7 +163,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   const { start, end, move, touchStart } = makeDraggable(conePos, {
     onStart: ({ x, y }) => {
-      // startAnimation("cone");
+      startAnimation("cone");
       const { nodeId, shapeId } = createNode(x, y, "cone");
       showColorWheel = true;
       coneNodeId = nodeId;
