@@ -1,18 +1,24 @@
 import { calcDistance, sigmoid, svg } from "./utils.js";
 import { orbSize, orbRectWidth } from "./constants.js";
+import Color from "colorjs.io";
+
+// Constant used for bezier control points to approximate circle
+const k = 0.5522847498;
+const spikeColor = "rgba(240, 60, 30, 1)";
+const defaultOrbFill = "rgba(27, 61, 92, 1)";
 
 /**
  * The Cone is the primary create/delete UI mechanism of mindspace. It is called a
  * "cone" because it can be both a circle shape (create), and a pointy shape (delete),
  * depending on the angle you look at it.
  */
-export function* Cone({ x, y, boostConeCutMode }) {
+export function* Cone({ boostConeCutMode }) {
   const pointHistory = [];
   const noRepeatPointHistory = [];
   const pointHistoryMax = 10;
 
   const sHistory = [];
-  const sHistoryMax = 5;
+  const sHistoryMax = 10;
 
   let cutMode = false;
   let lastMotionTimestamp;
@@ -98,22 +104,18 @@ export function* Cone({ x, y, boostConeCutMode }) {
     // How far the pointer needs to travel in a given timeframe to switch from
     // a circle to a cutting point:
     let s;
-    let spikeOpacity;
 
     if (cutMode || forceCutMode) {
       s = 0;
-      spikeOpacity = 1;
     } else {
       // Calculate the activation threshold between "create" and "cutter" modes.
       // The opacity transition follows behind the squish, by just a bit.
       if (boostConeCutMode) {
         const activationThreshold = 3 * pointHistoryMax - distance;
         s = sigmoid(activationThreshold / 2);
-        spikeOpacity = 1 - sigmoid((activationThreshold + 20) / 1);
       } else {
-        const activationThreshold = 7 * pointHistoryMax - distance;
-        s = sigmoid(activationThreshold / 6);
-        spikeOpacity = 1 - sigmoid((activationThreshold + 20) / 5.8);
+        const activationThreshold = 10 * pointHistoryMax - distance;
+        s = sigmoid(activationThreshold / 20);
       }
     }
 
@@ -124,11 +126,6 @@ export function* Cone({ x, y, boostConeCutMode }) {
 
     // How much to "squish" the circle in the direction orthogonal to travel
     const squishScale = Math.max(s, 0.25);
-
-    const orbOpacity = 1 - spikeOpacity;
-
-    // Shrink the circle towards a certain size as it transitions to cutting point
-    const radius = orbSize / 2 - (1 - sHistoryAvg) * orbSize * 0.33;
 
     // We want the tip of the cutting point to follow behind the pointer
     const tipX = Math.cos(theta) * (orbSize / 2 - 4);
@@ -151,23 +148,58 @@ export function* Cone({ x, y, boostConeCutMode }) {
       setCutMode(true);
     }
 
+    const fillColor = new Color(defaultOrbFill).mix(
+      spikeColor,
+      1 - sHistoryAvg,
+      {
+        space: "oklab",
+        outputSpace: "oklab",
+      }
+    );
+
+    //       | 0,-
+    //    A3 | A4
+    // -,0   |
+    // ------+-----*  <-- starting point
+    //       |   +,0
+    //    A2 | A1
+    //   +,0 |
+    //
+    // prettier-ignore
+    const r = orbSize/2
+    const t = sHistoryAvg;
+    // The 'c' value is used to "tuck in" the back of the triangle so its back is curved slightly
+    const c = ((1 - t) * r) / 5;
+    /**
+     * Create 4 approximate arcs to form a circle. When we transition from "circle"
+     * to "cutter" shape, we smoothly pull the arcs in to form a triangle. We go
+     * around clockwise, starting from the center-right point of the circle to begin
+     * arc A1.
+     */
+    const d =
+      `M${r},0 ` +
+      // bottom-right arc
+      `C${r} ${r * k * /* more pointy */ t},${
+        r * k * /* flat point */ t
+      } ${r},0 ${r} ` +
+      // bottom-left arc
+      `C${-r * k * t} ${r},${-r * t + c} ${r * k * t},${-r * t + c / 2} 0 ` +
+      // top-left arc
+      `C${-r * t + c} ${-r * k * t},${-r * k * t} ${-r},0 ${-r} ` +
+      // top-right arc
+      `C${r * k * /* flat point */ t} ${-r},${r} ${
+        -r * k * /* more pointy */ t
+      },${r} 0 `;
+
     yield svg`
       <g 
         transform="translate(${tx} ${ty}) rotate(${thetaDeg}) scale(1 ${squishScale})"
       > 
-        <circle
-          r=${radius}
-          stroke=${color}
-          stroke-width="3" 
-          opacity=${orbOpacity}
-          fill="var(--defaultOrbFill)"
-        /> 
         <path
-          d="M0,40 Q25 0,50 0 Q25 0,0 -40 Z"
-          stroke="rgba(240, 60, 30, 1)"
-          fill="rgba(240, 60, 30, 1)"
-          stroke-width="0"
-          opacity=${spikeOpacity}
+          d=${d}
+          stroke=${color}
+          stroke-width=${t * 3}
+          fill=${fillColor}
         />
       </g> 
     `;
