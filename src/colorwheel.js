@@ -31,16 +31,6 @@ export function* ColorWheel({ w, h }) {
         })
       );
     };
-  let classNames = ["fade"];
-
-  // Fade-in transition
-  this.schedule(() => {
-    setTimeout(() => {
-      if (!classNames.includes("fade-in")) {
-        classNames.push("fade-in");
-      }
-    }, 100);
-  });
 
   for ({ w, h } of this) {
     const size = w > h ? h : w;
@@ -59,7 +49,6 @@ export function* ColorWheel({ w, h }) {
         >
       <g
         transform="translate(${w / 2},${h / 2})"
-        class=${classNames.join(" ")}
       >
         ${Array.from({ length: 60 }, (_, i) => {
           const C = 0.3;
