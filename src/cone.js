@@ -22,7 +22,6 @@ export function* Cone({ boostConeCutMode }) {
 
   let cutMode = false;
   let lastMotionTimestamp;
-  let firstMotionTimestamp;
 
   const setCutMode = (mode /*: boolean */) => {
     if (cutMode === mode) return;
@@ -108,7 +107,8 @@ export function* Cone({ boostConeCutMode }) {
     // a circle to a cutting point:
     let s;
 
-    const timeDelta = now - pointHistory[0].ts;
+    const timeDelta =
+      pointHistory[0].ts === now ? Infinity : now - pointHistory[0].ts;
 
     if (cutMode || forceCutMode) {
       s = 0;
