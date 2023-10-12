@@ -451,7 +451,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           })}
         </svg>
         <!-- -->
-        <${Transition} msIn=${1000} msOut=${1000} active=${showColorWheel}>
+        <${Transition} delayIn=${1000} msIn=${1000} msOut=${1000} active=${showColorWheel}>
           <${ColorWheel} w=${winW} h=${winH} />
         </${Transition}>
         <!-- -->

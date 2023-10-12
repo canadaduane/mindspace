@@ -9,10 +9,8 @@ function animate(time) {
 
 animate();
 
-/*+
- */
-
 export async function* Transition({
+  delayIn = 0,
   msIn = 1500,
   msOut = 1500,
   // props = { opacity: 0 },
@@ -20,6 +18,7 @@ export async function* Transition({
   let mount;
   let animatingEl;
   let transitionState = "init";
+  let delayTimeout;
 
   const style = { opacity: 0 };
 
@@ -40,9 +39,6 @@ export async function* Transition({
     ) {
       mount = true;
       transitionState = "in-ready";
-      if (transitionState === "init") {
-        this.schedule((el) => (el.opacity = 0));
-      }
     } else if (!active) {
       if (transitionState === "in" || transitionState === "in-ready") {
         transitionState = "out-ready";
@@ -55,11 +51,22 @@ export async function* Transition({
 
     if (transitionState === "in-ready") {
       animatingEl = el;
-      tween
-        .stop()
-        .to({ opacity: 1 }, msIn)
-        .onComplete(() => {})
-        .start();
+      el.style.opacity = 0;
+
+      const start = () => {
+        tween
+          .stop()
+          .to({ opacity: 1 }, msIn)
+          .onComplete(() => {})
+          .start();
+      };
+
+      clearTimeout(delayTimeout);
+      if (delayIn > 0) {
+        delayTimeout = setTimeout(start, delayIn);
+      } else {
+        start();
+      }
 
       // Transition animation to mounted
       transitionState = "in";
@@ -69,6 +76,7 @@ export async function* Transition({
       // Transition animation to unmounted
 
       animatingEl = el;
+      clearTimeout(delayTimeout);
       tween
         .stop()
         .to({ opacity: 0 }, msOut)
