@@ -9,25 +9,44 @@ function animate(time) {
 
 animate();
 
+const pixelProperties = new Set([
+  "top",
+  "left",
+  "right",
+  "bottom",
+  "width",
+  "height",
+]);
+
 export async function* Transition({
-  delayIn = 0,
-  msIn = 1500,
-  msOut = 1500,
-  // props = { opacity: 0 },
+  in: { delay: delayIn = 0, ms: msIn = 1500, style: styleIn = { opacity: 1 } },
+  out: {
+    delay: delayOut = 0,
+    ms: msOut = 1500,
+    style: styleOut = { opacity: 0 },
+  },
 }) {
   let mount;
   let animatingEl;
   let transitionState = "init";
   let delayTimeout;
 
-  const style = { opacity: 0 };
+  const styles = { ...styleOut };
+  const applyStyles = (el) => {
+    for (const [propertyName, value] of Object.entries(styles)) {
+      el.style.setProperty(
+        propertyName,
+        pixelProperties.has(propertyName) ? value + "px" : value
+      );
+    }
+  };
 
-  const tween = new TWEEN.Tween(style, false).onUpdate(() => {
+  const tween = new TWEEN.Tween(styles, false).onUpdate(() => {
     if (!animatingEl) {
       console.warn("no animatingEl!", this);
       return;
     }
-    animatingEl.style.setProperty("opacity", style.opacity);
+    applyStyles(animatingEl);
   });
 
   for await (let { children, active } of this) {
@@ -51,12 +70,12 @@ export async function* Transition({
 
     if (transitionState === "in-ready") {
       animatingEl = el;
-      el.style.opacity = 0;
+      applyStyles(el);
 
       const start = () => {
         tween
           .stop()
-          .to({ opacity: 1 }, msIn)
+          .to(styleIn, msIn)
           .onComplete(() => {})
           .start();
       };
@@ -79,7 +98,7 @@ export async function* Transition({
       clearTimeout(delayTimeout);
       tween
         .stop()
-        .to({ opacity: 0 }, msOut)
+        .to(styleOut, msOut)
         .onComplete(() => {
           mount = false;
           transitionState = "init";
