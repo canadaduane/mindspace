@@ -1,3 +1,4 @@
+import { Raw } from "@b9g/crank/standalone";
 import { html } from "./utils.js";
 import { makeDraggable } from "./drag.js";
 import {
@@ -16,8 +17,9 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
   const pos = { x, y };
 
   let editEl;
-  let rectShape = false;
+  let shape = "circle";
   let didDrag = false;
+  let content = "";
 
   const { start, end, move, touchStart } = makeDraggable(pos, {
     onStart: () => {
@@ -40,8 +42,6 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
       );
     },
   });
-
-  let content = "";
 
   const onKeyDown = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -73,7 +73,11 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
       editEl?.blur();
     }
     content = event.target.innerText.trim();
-    rectShape = content.length > stringLengthTransition;
+    if (content.length <= stringLengthTransition) {
+      shape = "circle";
+    } else {
+      shape = "rect";
+    }
     this.refresh();
   };
 
@@ -212,21 +216,23 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
         onpointercancel=${end}
         onpointermove=${move}
         ontouchstart=${touchStart}
-        class="orb ${shake && rectShape
+        class="orb ${shake && shape === "rect"
           ? "orb--rect-shake"
-          : rectShape
+          : shape === "rect"
           ? "orb--rect"
           : shake
           ? "orb--shake"
           : ""}"
-        style=${`left: ${pos.x}px;` +
-        `top: ${pos.y}px;` +
-        `border-color: ${color};` +
-        `outline-color: ${color};`}
+        style=${{
+          "left": `${pos.x}px`,
+          "top": `${pos.y}px`,
+          "border-color": color,
+          "outline-color": color,
+        }}
       >
         <div
-          class="edit ${rectShape || "circle"}"
-          spellcheck=${rectShape ? "true" : "false"}
+          class="edit ${shape === "circle" && "circle"}"
+          spellcheck=${shape === "rect" ? "true" : "false"}
           contenteditable="true"
           onkeydown=${onKeyDown}
           onkeyup=${onKey}
