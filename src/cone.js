@@ -22,6 +22,7 @@ export function* Cone({ boostConeCutMode }) {
 
   let cutMode = false;
   let lastMotionTimestamp;
+  let firstMotionTimestamp;
 
   const setCutMode = (mode /*: boolean */) => {
     if (cutMode === mode) return;
@@ -38,8 +39,10 @@ export function* Cone({ boostConeCutMode }) {
   };
 
   for (let { x, y, color, forceCutMode } of this) {
+    const now = Date.now();
+
     // Track historical points where the mouse/touch events have occurred (used for distance)
-    pointHistory.push({ x, y });
+    pointHistory.push({ x, y, ts: now });
     if (pointHistory.length > pointHistoryMax) pointHistory.shift();
 
     // Track historical points, but only when motion is detected (used for direction)
@@ -105,17 +108,19 @@ export function* Cone({ boostConeCutMode }) {
     // a circle to a cutting point:
     let s;
 
+    const timeDelta = now - pointHistory[0].ts;
+
     if (cutMode || forceCutMode) {
       s = 0;
     } else {
       // Calculate the activation threshold between "create" and "cutter" modes.
       // The opacity transition follows behind the squish, by just a bit.
       if (boostConeCutMode) {
-        const activationThreshold = 3 * pointHistoryMax - distance;
-        s = sigmoid(activationThreshold / 2);
+        const activationThreshold = distance / timeDelta;
+        s = sigmoid(3 - activationThreshold * 10);
       } else {
-        const activationThreshold = 10 * pointHistoryMax - distance;
-        s = sigmoid(activationThreshold / 20);
+        const activationThreshold = distance / timeDelta;
+        s = sigmoid(4 - activationThreshold * 3);
       }
     }
 
@@ -135,7 +140,6 @@ export function* Cone({ boostConeCutMode }) {
     const tx = x - tipX * (1 - s);
     const ty = y - tipY * (1 - s);
 
-    const now = Date.now();
     if (distance > 2) {
       lastMotionTimestamp = now;
     }
@@ -143,7 +147,7 @@ export function* Cone({ boostConeCutMode }) {
     if (cutMode && now - lastMotionTimestamp > 700) {
       // Return to "create" mode after less motion
       setCutMode(false);
-    } else if (s < 0.1 && !cutMode) {
+    } else if (!cutMode && s < 0.1) {
       // Enter "cutter" mode once motion threshold has been reached
       setCutMode(true);
     }
