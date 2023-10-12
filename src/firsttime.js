@@ -34,7 +34,7 @@ export function* FirstTime() {
         pointer-events: none;
       }
     </style>
-    <${Transition} active=${show}>
+    <${Transition} msIn=${1500} msOut=${1500} active=${show}>
       <div class="firsttime--big-center">
         ${
           window.navigator.maxTouchPoints > 0

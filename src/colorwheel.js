@@ -34,17 +34,18 @@ export function* ColorWheel({ w, h }) {
 
   for ({ w, h } of this) {
     const size = w > h ? h : w;
+
     yield svg`
       <svg
           viewBox="0 0 ${w} ${h}"
-          style=${
-            `width: ${w}px;` +
-            `height: ${h}px;` +
-            `pointer-events: none;` +
-            `position: fixed;` +
-            `left: 0px;` +
-            `top: 0px;`
-          }
+          style=${{
+            "width": `${w}px`,
+            "height": `${h}px`,
+            "pointer-events": "none",
+            "position": "fixed",
+            "left": 0,
+            "top": 0,
+          }}
           xmlns="http://www.w3.org/2000/svg"
         >
       <g

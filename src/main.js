@@ -181,7 +181,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         if (shape) {
           shape.type = "circle";
         } else {
-          throw new Error("can't find shapeId for cone");
+          throw new Error("can't find coneShapeId");
         }
       }
       showColorWheel = false;
@@ -451,9 +451,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           })}
         </svg>
         <!-- -->
-        <${Transition} active=${showColorWheel}>
+        <${Transition} msIn=${1000} msOut=${1000} active=${showColorWheel}>
           <${ColorWheel} w=${winW} h=${winH} />
-        </${Transition}>        <!-- -->
+        </${Transition}>
+        <!-- -->
         ${htmlShapes.map(([shapeId, shape]) => {
           switch (shape.type) {
             case "circle":
