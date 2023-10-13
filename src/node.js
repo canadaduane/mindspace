@@ -41,6 +41,5 @@ export function hasNode(nodeId /*: number */, nodes /*: NodeMap */) {
 }
 
 export function setNode(node /*: Node */, values) {
-  console.log("setNode", node, values);
   Object.assign(node, values);
 }

@@ -1,5 +1,10 @@
 import { renderer } from "@b9g/crank/dom";
-import { calcDistance, html } from "./utils.js";
+import {
+  calcDistance,
+  html,
+  doesLineIntersectLine,
+  doesLineIntersectCircle,
+} from "./utils.js";
 import {
   globalIsDragging,
   scrollbarThickness,
@@ -16,7 +21,6 @@ import {
   stopAnimation,
 } from "./animation.js";
 import { Transition } from "./transition.js";
-import { isIntersecting } from "./utils.js";
 import { makeDraggable } from "./drag.js";
 import { FirstTime } from "./firsttime.js";
 import { Orb } from "./orb.js";
@@ -218,23 +222,31 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           }
 
           if (shape.type === "circle") {
-            const distance = calcDistance(shape.cx, shape.cy, x, y);
-            if (distance <= orbSize / 2 - 1) {
-              if (removeNode(shape.controlsNodeId)) {
-                shapeIdsCutThisMotion.add(shapeId);
+            const c = { x: shape.cx, y: shape.cy };
+            coneCutPath.slice(1).forEach((p, i) => {
+              const q = coneCutPath[i];
+              if (doesLineIntersectCircle(q, p, c, orbSize / 2 - 1)) {
+                if (!shapeIdsCutThisMotion.has(shapeId)) {
+                  if (removeNode(shape.controlsNodeId)) {
+                    shapeIdsCutThisMotion.add(shapeId);
+                    return;
+                  }
+                }
               }
-            }
+            });
           } else if (shape.type === "line") {
+            const p1 = { x: shape.x1, y: shape.y1 };
+            const p2 = { x: shape.x2, y: shape.y2 };
             coneCutPath.slice(1).forEach((p, i) => {
               const q = coneCutPath[i];
               if (
-                isIntersecting(
+                doesLineIntersectLine(
                   // this part of the cut path segment
-                  { x: q.x, y: q.y },
-                  { x: p.x, y: p.y },
+                  q,
+                  p,
                   // the line we are currently testing
-                  { x: shape.x1, y: shape.y1 },
-                  { x: shape.x2, y: shape.y2 }
+                  p1,
+                  p2
                 )
               ) {
                 shapeIdsCutThisMotion.add(shapeId);
