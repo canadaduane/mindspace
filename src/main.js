@@ -239,16 +239,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
             const p2 = { x: shape.x2, y: shape.y2 };
             coneCutPath.slice(1).forEach((p, i) => {
               const q = coneCutPath[i];
-              if (
-                doesLineIntersectLine(
-                  // this part of the cut path segment
-                  q,
-                  p,
-                  // the line we are currently testing
-                  p1,
-                  p2
-                )
-              ) {
+              // (q, p) is this part of the cut path segment
+              // (p1, p2) is the line we are currently testing
+              if (doesLineIntersectLine(q, p, p1, p2)) {
                 shapeIdsCutThisMotion.add(shapeId);
                 const demoted = demoteLineType(shape.lineType);
                 setLineType(shapeId, demoted);
