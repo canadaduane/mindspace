@@ -1,9 +1,16 @@
 import { renderer } from "@b9g/crank/dom";
 import { calcDistance, html } from "./utils.js";
-import { globalIsDragging, scrollbarThickness, orbSize } from "./constants.js";
+import {
+  globalIsDragging,
+  scrollbarThickness,
+  orbSize,
+  spiralRadius,
+  spiralInitial,
+  spiralAddend,
+} from "./constants.js";
 import { ColorWheel, getColorFromWorldCoord } from "./colorwheel.js";
 import { applyNodeToShapes, makeShapesMap } from "./shape.js";
-import { makeNodesMap, getNode, hasNode } from "./node.js";
+import { makeNodesMap, getNode, hasNode, setNode } from "./node.js";
 import {
   startAnimation as startAnimationUnbound,
   stopAnimation,
@@ -378,14 +385,21 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   // Approximate Archimedean Spiral
-  let t = 2;
   const createNodeAroundNode = (node) => {
     const { x: cx, y: cy } = node;
-    const r = Math.SQRT2 * Math.sqrt(t);
-    const x = cx + Math.cos(r) * 150;
-    const y = cy + Math.sin(r) * 150;
-    t += 3;
-    createNode(x, y);
+    if (node.spiral === undefined) node.spiral = spiralInitial;
+
+    const r = Math.SQRT2 * Math.sqrt(node.spiral);
+    const x = cx + Math.cos(r) * spiralRadius;
+    const y = cy + Math.sin(r) * spiralRadius;
+
+    const { nodeId } = createNode(x, y);
+    const createdNode = getNode(nodeId, nodes);
+    // Pass the spirality on to the next node
+    setNode(createdNode, { spiral: node.spiral + spiralAddend });
+
+    // When revisiting this node, set the spiral to start in a new direction
+    setNode(node, { spiral: node.spiral + spiralAddend + 5 });
   };
 
   let svgShapes = [],
