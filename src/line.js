@@ -25,7 +25,7 @@ export function* Line({
   let canBump = true;
 
   const onClick = (event) => {
-    this.dispatchEvent(new CustomEvent("boostConeCutMode", { bubbles: true }));
+    event.stopPropagation();
   };
 
   for ({ x1, y1, x2, y2, type } of this) {
@@ -42,7 +42,7 @@ export function* Line({
     ) {
       canBump = false;
       this.dispatchEvent(
-        new CustomEvent("setLineTypeBump", {
+        new CustomEvent("setLineTypeAndBump", {
           bubbles: true,
           detail: {
             shapeId,
@@ -87,17 +87,17 @@ export function* Line({
       (line && line.opacity >= opacityThreshold) ||
       (nearIndicator && nearIndicator.opacity >= opacityThreshold);
 
-    yield connected
-      ? svg`
-          <line
-            onpointerdown=${onClick}
-            x1=${x1}
-            y1=${y1}
-            x2=${x2}
-            y2=${y2}
-            stroke="rgba(0, 0, 0, 0.01)"
-            stroke-width=${orbSize}
-          />
+    yield connected &&
+      svg`
+        <line
+          onpointerdown=${onClick}
+          x1=${x1}
+          y1=${y1}
+          x2=${x2}
+          y2=${y2}
+          stroke="rgba(0, 0, 0, 0.01)"
+          stroke-width=${orbSize}
+        />
         ${
           line &&
           svg`
@@ -153,8 +153,7 @@ export function* Line({
             />
           `
         } 
-      `
-      : null;
+      `;
   }
 }
 

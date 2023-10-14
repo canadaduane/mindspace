@@ -35,7 +35,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   let coneCutPath /*: Point[] */ = [];
   let coneCutMode = false;
-  let boostConeCutMode = false;
 
   let winW, winH, docW, docH;
   let minDocH = window.innerHeight * 2;
@@ -72,10 +71,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   /** Event Listeners */
 
   window.addEventListener("resize", matchWorkAreaSizes);
-
-  this.addEventListener("boostConeCutMode", () => {
-    boostConeCutMode = true;
-  });
 
   this.addEventListener("setCutMode", ({ detail: { mode } }) => {
     coneCutMode = mode;
@@ -118,7 +113,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   this.addEventListener(
-    "setLineTypeBump",
+    "setLineTypeAndBump",
     ({ detail: { shapeId, lineType } }) => {
       const shape = setLineType(shapeId, lineType);
       if (shape) {
@@ -199,7 +194,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       coneShapeId = undefined;
       shapeIdsCutThisMotion.clear();
       coneCutMode = false;
-      boostConeCutMode = false;
       this.refresh();
     },
     onMove: ({ x, y }) => {
@@ -460,7 +454,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                     y=${shape.cy}
                     color=${shape.color}
                     forceCutMode=${shape.forceCutMode}
-                    boostConeCutMode=${boostConeCutMode}
                   />
                 `;
               default:

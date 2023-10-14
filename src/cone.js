@@ -12,7 +12,7 @@ const defaultOrbFill = "rgba(27, 61, 92, 1)";
  * "cone" because it can be both a circle shape (create), and a pointy shape (delete),
  * depending on the angle you look at it.
  */
-export function* Cone({ boostConeCutMode }) {
+export function* Cone() {
   const pointHistory = [];
   const noRepeatPointHistory = [];
   const pointHistoryMax = 10;
@@ -115,13 +115,8 @@ export function* Cone({ boostConeCutMode }) {
     } else {
       // Calculate the activation threshold between "create" and "cutter" modes.
       // The opacity transition follows behind the squish, by just a bit.
-      if (boostConeCutMode) {
-        const activationThreshold = distance / timeDelta;
-        s = sigmoid(3 - activationThreshold * 10);
-      } else {
-        const activationThreshold = distance / timeDelta;
-        s = sigmoid(3.5 - activationThreshold * 2.5);
-      }
+      const activationThreshold = distance / timeDelta;
+      s = sigmoid(3.5 - activationThreshold * 2.5);
     }
 
     // Track historical s values
