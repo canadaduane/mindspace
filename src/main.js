@@ -1,6 +1,5 @@
 import { renderer } from "@b9g/crank/dom";
 import {
-  calcDistance,
   html,
   doesLineIntersectLine,
   doesLineIntersectCircle,

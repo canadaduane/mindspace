@@ -1,5 +1,5 @@
 import { calcDistance, sigmoid, svg } from "./utils.js";
-import { orbSize, orbRectWidth } from "./constants.js";
+import { orbSize } from "./constants.js";
 import Color from "colorjs.io";
 
 // Constant used for bezier control points to approximate circle
@@ -120,7 +120,7 @@ export function* Cone({ boostConeCutMode }) {
         s = sigmoid(3 - activationThreshold * 10);
       } else {
         const activationThreshold = distance / timeDelta;
-        s = sigmoid(4 - activationThreshold * 3);
+        s = sigmoid(3.5 - activationThreshold * 2.5);
       }
     }
 
@@ -130,7 +130,7 @@ export function* Cone({ boostConeCutMode }) {
     const sHistoryAvg = sHistory.reduce((sum, s) => sum + s) / sHistory.length;
 
     // How much to "squish" the circle in the direction orthogonal to travel
-    const squishScale = Math.max(s, 0.25);
+    const squishScale = Math.max(sHistoryAvg, 0.25);
 
     // We want the tip of the cutting point to follow behind the pointer
     const tipX = Math.cos(theta) * (orbSize / 2 - 4);
@@ -161,16 +161,7 @@ export function* Cone({ boostConeCutMode }) {
       }
     );
 
-    //       | 0,-
-    //    A3 | A4
-    // -,0   |
-    // ------+-----*  <-- starting point
-    //       |   +,0
-    //    A2 | A1
-    //   +,0 |
-    //
-    // prettier-ignore
-    const r = orbSize/2
+    const r = orbSize / 2 + 2;
     const t = sHistoryAvg;
     // The 'c' value is used to "tuck in" the back of the triangle so its back is curved slightly
     const c = ((1 - t) * r) / 5;
@@ -179,6 +170,15 @@ export function* Cone({ boostConeCutMode }) {
      * to "cutter" shape, we smoothly pull the arcs in to form a triangle. We go
      * around clockwise, starting from the center-right point of the circle to begin
      * arc A1.
+     *
+     *       | 0,-
+     *    A3 | A4
+     * -,0   |
+     * ------+-----*  <-- starting point
+     *       |   +,0
+     *    A2 | A1
+     *   +,0 |
+     *
      */
     const d =
       `M${r},0 ` +
@@ -205,6 +205,12 @@ export function* Cone({ boostConeCutMode }) {
           stroke-width=${t * 3}
           fill=${fillColor}
         />
+        ${
+          sHistoryAvg > 0.7 &&
+          svg`
+            <circle r=${7.5} stroke-width="0" fill=${color} />
+          `
+        } 
       </g> 
     `;
   }
