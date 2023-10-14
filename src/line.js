@@ -163,7 +163,7 @@ export function promoteLineType(
 ) {
   switch (type) {
     case "deleted":
-      return "short";
+      return "strong";
     case "short":
       return "strong";
     default:
@@ -176,7 +176,7 @@ export function demoteLineType(
 ) {
   switch (type) {
     case "strong":
-      return "short";
+      return "deleted";
     case "short":
       return "deleted";
     default:
