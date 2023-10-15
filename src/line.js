@@ -135,7 +135,7 @@ export function* Line({
     }
 
     if (type === "deleted" || type === "short") {
-      const s = sigmoid((120 - length) / lineTransition);
+      const s = sigmoid((orbSize + 20 - length) / lineTransition);
       nearIndicator = {
         opacity: s,
         strokeWidth: s * 30,
