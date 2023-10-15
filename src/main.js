@@ -122,10 +122,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   this.addEventListener(
-    "setLineTypeAndBump",
-    ({ detail: { shapeId, lineType } }) => {
+    "setLineType",
+    ({ detail: { shapeId, lineType, bump } }) => {
       const shape = setLineType(shapeId, lineType);
-      if (shape) {
+      if (shape && bump) {
         const connectedShapes = getShapesConnectedToLineShapeId(shapeId);
         connectedShapes.forEach((s) => {
           if (s.type === "circle") s.shake = true;

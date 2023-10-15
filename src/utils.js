@@ -18,6 +18,10 @@ export function isSyncExecuting(component) {
   return component[Symbol.for("crank.ContextImpl")].f & 2;
 }
 
+export function refresh(component) {
+  if (!isSyncExecuting(component)) component.refresh();
+}
+
 /*+
 type Point = {
   x: number,

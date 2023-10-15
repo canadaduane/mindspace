@@ -21,6 +21,10 @@ export function startAnimation(
   }
 }
 
+export function isAnimating(name /*: string */) {
+  return animations.has(name);
+}
+
 export function stopAnimation(name /*: string */) {
   animations.delete(name);
   // Transition from 1 animation to 0 animations means stop the loop
