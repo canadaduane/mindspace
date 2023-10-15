@@ -115,7 +115,7 @@ export function* Cone() {
       // Calculate the activation threshold between "create" and "cutter" modes.
       // The opacity transition follows behind the squish, by just a bit.
       const activationThreshold = distance / timeDelta;
-      s = sigmoid(3.5 - activationThreshold * 2.5);
+      s = sigmoid(2.5 - activationThreshold * 2.5);
     }
 
     // Track historical s values
