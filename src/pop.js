@@ -1,4 +1,4 @@
-import { svg } from "./utils.js";
+import { isSyncExecuting, svg } from "./utils.js";
 import { orbSize } from "./constants.js";
 
 export function* Pop({ shapeId, x, y, theta, color }) {
@@ -30,7 +30,8 @@ export function* Pop({ shapeId, x, y, theta, color }) {
         })
       );
     }
-    this.refresh();
+
+    if (!isSyncExecuting) this.refresh();
 
     requestAnimationFrame(animate);
   };

@@ -14,6 +14,10 @@ export function sigmoid(ratio) {
   return 1 - 1 / (1 + Math.pow(Math.E, ratio));
 }
 
+export function isSyncExecuting(component) {
+  return component[Symbol.for("crank.ContextImpl")].f & 2;
+}
+
 /*+
 type Point = {
   x: number,
