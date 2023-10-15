@@ -166,12 +166,16 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       const { nodeId, shapeId } = createNode(x, y, "cone");
       showColorWheel = true;
       coneNodeId = nodeId;
+      if (coneShapeId) {
+        console.warn(`coneShapeId not null at start ${coneShapeId}`);
+      }
       coneShapeId = shapeId;
       coneShapeDepShapeIds = getDependentShapesOfControllerShape(coneShapeId);
       this.refresh();
     },
     onEnd: () => {
       if (coneCutMode) {
+        console.log("remove cone node", coneNodeId);
         removeNode(coneNodeId);
       } else {
         // convert the Cone to an Orb
@@ -180,6 +184,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           shape.type = "circle";
         } else {
           throw new Error("can't find coneShapeId");
+          throw new Error(`can't find coneShapeId ${coneShapeId}`);
         }
       }
       showColorWheel = false;
