@@ -79,7 +79,7 @@ export function* Line({
       nearIndicator = {
         opacity: s,
         strokeWidth: s * 30,
-        stroke: `240, 100, 40, ${s}`,
+        stroke: `240, 240, 240, ${s}`,
       };
     }
 
