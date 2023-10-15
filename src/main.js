@@ -15,10 +15,7 @@ import {
 import { ColorWheel, getColorFromWorldCoord } from "./colorwheel.js";
 import { applyNodeToShapes, makeShapesMap } from "./shape.js";
 import { makeNodesMap, getNode, hasNode, setNode } from "./node.js";
-import {
-  startAnimation as startAnimationUnbound,
-  stopAnimation,
-} from "./animation.js";
+import { startAnimation, stopAnimation } from "./animation.js";
 import { Transition } from "./transition.js";
 import { makeDraggable } from "./drag.js";
 import { FirstTime } from "./firsttime.js";
@@ -41,9 +38,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let winW, winH, docW, docH;
   let minDocH = window.innerHeight * 2;
   let minDocW = window.innerWidth * 2;
-
-  const startAnimation = (name /*: string */) =>
-    startAnimationUnbound(name, () => this.refresh());
 
   // Scroll to center of area after first render
   window.addEventListener("load", () => {
@@ -88,14 +82,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   this.addEventListener("setCutPath", ({ detail: { path, theta } }) => {
     coneCutTheta = theta;
     coneCutPath = path;
-  });
-
-  this.addEventListener("startAnimation", ({ detail: { name } }) => {
-    startAnimation(name);
-  });
-
-  this.addEventListener("stopAnimation", ({ detail: { name } }) => {
-    stopAnimation(name);
   });
 
   this.addEventListener("nodeActive", ({ detail: { nodeId } }) => {
@@ -177,7 +163,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   const { start, end, move, touchStart } = makeDraggable(conePos, {
     onStart: ({ x, y }) => {
-      startAnimation("cone");
       const { nodeId, shapeId } = createNode(x, y, "cone");
       showColorWheel = true;
       coneNodeId = nodeId;
@@ -185,8 +170,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       coneShapeDepShapeIds = getDependentShapesOfControllerShape(coneShapeId);
       this.refresh();
     },
-    onEnd: ({ x, y }) => {
-      stopAnimation("cone");
+    onEnd: () => {
       if (coneCutMode) {
         removeNode(coneNodeId);
       } else {

@@ -72,18 +72,16 @@ export function* Line({
     const changeInLength =
       lengthHistory[lengthHistory.length - 1] - lengthHistory[0];
 
-    const animationName = `line-${shapeId}`;
-
     const minChange = 5;
     const snapChange = 70;
 
     if (changeInLength > 0) {
-      if (!isAnimating(animationName)) {
-        startAnimation(animationName, () => refresh(this));
+      if (!isAnimating(this)) {
+        startAnimation(this);
       }
     } else if (changeInLength === 0) {
       // no more need to animate
-      stopAnimation(animationName);
+      stopAnimation(this);
     }
 
     if (type === "strong") {

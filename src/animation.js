@@ -1,3 +1,5 @@
+import { refresh } from "./utils.js";
+
 // A set of current animations requiring requestAnimationFrame draw refresh
 const animations = new Map();
 let animating = false;
@@ -13,10 +15,11 @@ const loop = () => {
 };
 
 export function startAnimation(
-  name /*: string */,
+  component /*: string */,
   eachFrame /*: () => void */
 ) {
-  animations.set(name, eachFrame);
+  const defaultEachFrame = () => refresh(component);
+  animations.set(component, eachFrame ?? defaultEachFrame);
 
   if (!animating) {
     animating = true;
@@ -24,12 +27,12 @@ export function startAnimation(
   }
 }
 
-export function isAnimating(name /*: string */) {
-  return animating && animations.has(name);
+export function isAnimating(component) {
+  return animating && animations.has(component);
 }
 
-export function stopAnimation(name /*: string */) {
-  animations.delete(name);
+export function stopAnimation(component) {
+  animations.delete(component);
 
   // Transition from 1 animation to 0 animations means stop the loop
   if (animations.size === 0) {
