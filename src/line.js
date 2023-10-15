@@ -95,7 +95,7 @@ export function* Line({
 
         strokeWidth /= thinFactor;
 
-        if (strokeWidth < 2) {
+        if (strokeWidth < 2.5) {
           this.dispatchEvent(
             new CustomEvent("setLineType", {
               bubbles: true,
