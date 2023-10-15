@@ -1,9 +1,8 @@
 import { calcDistance, sigmoid, svg } from "./utils.js";
-import { orbSize } from "./constants.js";
+import { orbSize, bezierCircleK } from "./constants.js";
 import Color from "colorjs.io";
 
 // Constant used for bezier control points to approximate circle
-const k = 0.5522847498;
 const spikeColor = "rgba(240, 60, 30, 1)";
 const defaultOrbFill = "rgba(27, 61, 92, 1)";
 
@@ -31,9 +30,9 @@ export function* Cone() {
     );
   };
 
-  const setCutPath = (path /*: Point[] */) => {
+  const setCutPath = (path /*: Point[] */, theta /*: number */) => {
     this.dispatchEvent(
-      new CustomEvent("setCutPath", { bubbles: true, detail: { path } })
+      new CustomEvent("setCutPath", { bubbles: true, detail: { path, theta } })
     );
   };
 
@@ -55,8 +54,6 @@ export function* Cone() {
     } else {
       noRepeatPointHistory.push({ x, y });
     }
-
-    setCutPath(pointHistory);
 
     // Calculate total distance travelled over the course of recent memory.
     let distance = 0;
@@ -102,6 +99,8 @@ export function* Cone() {
     // The calculated direction, in radians, that we should be pointing toward
     let theta = Math.atan2(weightedDY, weightedDX);
     let thetaDeg = (theta * 180) / Math.PI;
+
+    setCutPath(pointHistory, theta);
 
     // How far the pointer needs to travel in a given timeframe to switch from
     // a circle to a cutting point:
@@ -160,6 +159,7 @@ export function* Cone() {
     const t = sHistoryAvg;
     // The 'c' value is used to "tuck in" the back of the triangle so its back is curved slightly
     const c = ((1 - t) * r) / 5;
+    const k = bezierCircleK;
     /**
      * Create 4 approximate arcs to form a circle. When we transition from "circle"
      * to "cutter" shape, we smoothly pull the arcs in to form a triangle. We go

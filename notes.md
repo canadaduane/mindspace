@@ -56,5 +56,11 @@ type Shape =
       y1: number;
       x2: number;
       y2: number;
+    }
+  | {
+      type: "pop";
+      color: string;
+      x: number;
+      y: number;
     };
 ```

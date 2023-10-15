@@ -25,6 +25,7 @@ import { FirstTime } from "./firsttime.js";
 import { Orb } from "./orb.js";
 import { Line, demoteLineType } from "./line.js";
 import { Cone } from "./cone.js";
+import { Pop } from "./pop.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let { nodes, maxNodeId } = makeNodesMap(initNodes);
@@ -34,6 +35,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let mostRecentlyActiveNodeId;
 
   let coneCutPath /*: Point[] */ = [];
+  let coneCutTheta /*: number */ = 0;
   let coneCutMode = false;
 
   let winW, winH, docW, docH;
@@ -83,7 +85,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     // no need to refresh because we're animating "cone"
   });
 
-  this.addEventListener("setCutPath", ({ detail: { path } }) => {
+  this.addEventListener("setCutPath", ({ detail: { path, theta } }) => {
+    coneCutTheta = theta;
     coneCutPath = path;
   });
 
@@ -108,6 +111,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   this.addEventListener("removeNode", ({ detail: { nodeId } }) => {
     if (removeNode(nodeId)) {
+      this.refresh();
+    }
+  });
+
+  this.addEventListener("removeShape", ({ detail: { shapeId } }) => {
+    if (removeShape(shapeId)) {
       this.refresh();
     }
   });
@@ -222,6 +231,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                 if (!shapeIdsCutThisMotion.has(shapeId)) {
                   if (removeNode(shape.controlsNodeId)) {
                     shapeIdsCutThisMotion.add(shapeId);
+                    createPop(
+                      shape.cx,
+                      shape.cy,
+                      coneCutTheta + Math.PI,
+                      shape.color
+                    );
                     return;
                   }
                 }
@@ -265,6 +280,25 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     nodeDependents2.push({ shapeId: lineShapeId, attrs: { x: "x1", y: "y1" } });
 
     return { shape: lineShape, shapeId: lineShapeId };
+  };
+
+  const createPop = (x, y, theta, color) => {
+    const popShapeId = ++maxShapeId;
+    shapes.set(popShapeId, {
+      type: "pop",
+      color,
+      x,
+      y,
+      theta,
+    });
+  };
+
+  const removeShape = (shapeId) => {
+    if (shapes.has(shapeId)) {
+      shapes.delete(shapeId);
+      return true;
+    }
+    return false;
   };
 
   const setLineType = (shapeId, lineType) => {
@@ -415,7 +449,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         if (shape.type === "line") {
           svgShapes.unshift([shapeId, shape]);
         }
-        if (shape.type === "cone") {
+        if (shape.type === "cone" || shape.type === "pop") {
           svgShapes.push([shapeId, shape]);
         }
         if (shape.type === "circle") {
@@ -454,6 +488,17 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                     y=${shape.cy}
                     color=${shape.color}
                     forceCutMode=${shape.forceCutMode}
+                  />
+                `;
+              case "pop":
+                return html`
+                  <${Pop}
+                    $key=${shapeId}
+                    shapeId=${shapeId}
+                    x=${shape.x}
+                    y=${shape.y}
+                    theta=${shape.theta}
+                    color=${shape.color}
                   />
                 `;
               default:
