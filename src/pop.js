@@ -2,10 +2,11 @@ import { svg } from "./utils.js";
 import { orbSize } from "./constants.js";
 
 export function* Pop({ shapeId, x, y, theta, color }) {
-  let rate = 0;
+  let gapGrowthRate = 0;
   let gap = 0;
+  let thickness = 3;
 
-  let r = orbSize / 2 - 10;
+  let r = orbSize / 2 + 15;
 
   let animating = true;
 
@@ -14,9 +15,11 @@ export function* Pop({ shapeId, x, y, theta, color }) {
 
     x -= Math.cos(theta) * 3;
     y -= Math.sin(theta) * 3;
-    r += 4;
-    gap += rate;
-    rate += 0.05;
+    r += 2;
+    gap += gapGrowthRate;
+    gapGrowthRate += 0.05;
+    thickness -= 0.3;
+    if (thickness < 0.5) thickness = 0.5;
 
     if (gap >= Math.PI * 2) {
       animating = false;
@@ -55,7 +58,7 @@ export function* Pop({ shapeId, x, y, theta, color }) {
         <path
           d=${d}
           stroke=${color}
-          stroke-width=${3}
+          stroke-width=${thickness}
           fill="transparent" 
         />
       </g> 
