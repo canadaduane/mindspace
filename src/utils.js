@@ -14,8 +14,18 @@ export function sigmoid(ratio) {
   return 1 - 1 / (1 + Math.pow(Math.E, ratio));
 }
 
+function getCrankContext(component) {
+  return component[Symbol.for("crank.ContextImpl")];
+}
+
+const IsSyncExecuting = 1 << 1;
 export function isSyncExecuting(component) {
-  return component[Symbol.for("crank.ContextImpl")].f & 2;
+  return getCrankContext(component).f & IsSyncExecuting;
+}
+
+const IsUnmounted = 1 << 7;
+export function isUnmounted(component) {
+  return getCrankContext(component).f & IsUnmounted;
 }
 
 export function refresh(component) {
