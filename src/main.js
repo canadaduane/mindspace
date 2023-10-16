@@ -14,7 +14,7 @@ import {
 } from "./constants.js";
 import { nanoid } from "nanoid";
 import { ColorWheel, getColorFromWorldCoord } from "./colorwheel.js";
-import { applyNodeToShapes, makeShapesMap } from "./shape.js";
+import { applyNodeToShapes, removeShape, makeShapesMap } from "./shape.js";
 import {
   makeNodesMap,
   getNode,
@@ -117,8 +117,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   });
 
-  this.addEventListener("removeShape", ({ detail: { shapeId } }) => {
-    if (removeShape(shapeId)) {
+  this.addEventListener("destroyShape", ({ detail: { shapeId } }) => {
+    if (removeShape(shapes, shapeId)) {
       this.refresh();
     }
   });
@@ -307,14 +307,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     });
   };
 
-  const removeShape = (shapeId) => {
-    if (shapes.has(shapeId)) {
-      shapes.delete(shapeId);
-      return true;
-    }
-    return false;
-  };
-
   const setLineType = (shapeId, lineType) => {
     const shape = shapes.get(shapeId);
     if (shape) {
@@ -383,8 +375,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       node.dependents.forEach((d) => {
         shapes.delete(d.shapeId);
       });
-      removeNode(nodes, nodeId);
-      return true;
+      return removeNode(nodes, nodeId);
     } else {
       console.warn("can't set node movement", nodeId);
       return false;

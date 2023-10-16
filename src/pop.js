@@ -24,7 +24,7 @@ export function* Pop({ shapeId, x, y, theta, color }) {
     if (gap >= Math.PI * 2) {
       animating = false;
       this.dispatchEvent(
-        new CustomEvent("removeShape", {
+        new CustomEvent("destroyShape", {
           bubbles: true,
           detail: { shapeId },
         })

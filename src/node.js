@@ -42,7 +42,11 @@ export function setNode(
 }
 
 export function removeNode(nodes /*: NodeMap */, nodeId /*: string */) {
-  nodes.delete(nodeId);
+  if (nodes.has(nodeId)) {
+    nodes.delete(nodeId);
+    return true;
+  }
+  return false;
 }
 
 export function forEachNode(

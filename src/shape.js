@@ -45,6 +45,14 @@ export function makeShapesMap(initShapes /*: InitialShape[] */) {
   );
 }
 
+export function removeShape(shapes, shapeId) {
+  if (shapes.has(shapeId)) {
+    shapes.delete(shapeId);
+    return true;
+  }
+  return false;
+}
+
 export function applyNodeToShapes(
   node /*: Node */,
   shapes /*: Map<string, Shape> */
