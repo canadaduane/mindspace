@@ -15,7 +15,7 @@ import {
 import { nanoid } from "nanoid";
 import { ColorWheel, getColorFromWorldCoord } from "./colorwheel.js";
 import { applyNodeToShapes, makeShapesMap } from "./shape.js";
-import { makeNodesMap, getNode, hasNode, setNode } from "./node.js";
+import { makeNodesMap, getNode, hasNode, setNodeValues } from "./node.js";
 import { Transition } from "./transition.js";
 import { makeDraggable } from "./drag.js";
 import { FirstTime } from "./firsttime.js";
@@ -94,7 +94,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   this.addEventListener("nodeMoved", ({ detail: { nodeId, x, y, color } }) => {
-    const node = getNode(nodeId, nodes);
+    const node = getNode(nodes, nodeId);
     node.x = x;
     node.y = y;
     if (color !== undefined) {
@@ -132,13 +132,13 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   );
 
   this.addEventListener("createNode", ({ detail: { nodeId } }) => {
-    createNodeAroundNode(getNode(nodeId, nodes));
+    createNodeAroundNode(getNode(nodes, nodeId));
   });
 
   const onKeyDown = (event) => {
     if (event.key === "Enter" && event.target.tagName === "BODY") {
-      if (hasNode(mostRecentlyActiveNodeId, nodes))
-        createNodeAroundNode(getNode(mostRecentlyActiveNodeId, nodes));
+      if (hasNode(nodes, mostRecentlyActiveNodeId))
+        createNodeAroundNode(getNode(nodes, mostRecentlyActiveNodeId));
       else createNode(window.innerWidth, window.innerHeight);
     }
   };
@@ -263,7 +263,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         }
       }
 
-      const node = getNode(coneNodeId, nodes);
+      const node = getNode(nodes, coneNodeId);
       node.x = x;
       node.y = y;
 
@@ -370,8 +370,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   const removeNode = (nodeId /*: string */) => {
-    if (hasNode(nodeId, nodes)) {
-      const node = getNode(nodeId, nodes);
+    if (hasNode(nodes, nodeId)) {
+      const node = getNode(nodes, nodeId);
       node.dependents.forEach((d) => {
         shapes.delete(d.shapeId);
       });
@@ -386,7 +386,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   const getDependentShapesOfControllerShape = (shapeId /*: string */) => {
     const shape = shapes.get(shapeId);
     if (shape) {
-      const node = getNode(shape.controlsNodeId, nodes);
+      const node = getNode(nodes, shape.controlsNodeId);
       const shapeIds = [];
       if (node) {
         for (let dep of node.dependents) {
@@ -432,12 +432,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const y = cy + Math.sin(r) * spiralRadius;
 
     const { nodeId } = createNode(x, y);
-    const createdNode = getNode(nodeId, nodes);
+    const createdNode = getNode(nodes, nodeId);
     // Pass the spirality on to the next node
-    setNode(createdNode, { spiral: node.spiral + spiralAddend });
+    setNodeValues(createdNode, { spiral: node.spiral + spiralAddend });
 
     // When revisiting this node, set the spiral to start in a new direction
-    setNode(node, { spiral: node.spiral + spiralAddend + 5 });
+    setNodeValues(node, { spiral: node.spiral + spiralAddend + 5 });
   };
 
   let svgShapes = [],

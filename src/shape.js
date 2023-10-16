@@ -1,6 +1,8 @@
 import { nanoid } from "nanoid";
 
 /*+
+type InitialShape = Shape & { shapeId: string };
+
 type Shape =
   | {
       type: "circle";
@@ -35,7 +37,7 @@ type Shape =
     };
 */
 
-export function makeShapesMap(initShapes /*: Shape[] */) {
+export function makeShapesMap(initShapes /*: InitialShape[] */) {
   return new Map(
     initShapes.map(({ shapeId, ...shape }) => {
       return [shapeId ?? nanoid(12), shape];

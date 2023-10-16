@@ -27,16 +27,16 @@ export function makeNodesMap(initNodes /*: Node[] */) {
   );
 }
 
-export function getNode(nodeId /*: string */, nodes /*: NodeMap */) {
+export function getNode(nodes /*: NodeMap */, nodeId /*: string */) {
   const node = nodes.get(nodeId);
   if (!node) throw new Error(`can't get node ${nodeId}`);
   return node;
 }
 
-export function hasNode(nodeId /*: string */, nodes /*: NodeMap */) {
+export function hasNode(nodes /*: NodeMap */, nodeId /*: string */) {
   return nodes.has(nodeId);
 }
 
-export function setNode(node /*: Node */, values) {
+export function setNodeValues(node /*: Node */, values) {
   Object.assign(node, values);
 }
