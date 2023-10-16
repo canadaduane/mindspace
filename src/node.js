@@ -33,6 +33,27 @@ export function getNode(nodes /*: NodeMap */, nodeId /*: string */) {
   return node;
 }
 
+export function setNode(
+  nodes /*: NodeMap */,
+  nodeId /*: string */,
+  node /*: Node */
+) {
+  nodes.set(nodeId, node);
+}
+
+export function removeNode(nodes /*: NodeMap */, nodeId /*: string */) {
+  nodes.delete(nodeId);
+}
+
+export function forEachNode(
+  nodes /*: NodeMap */,
+  action /*: (node: Node) => void */
+) {
+  for (let node of nodes.values()) {
+    action(node);
+  }
+}
+
 export function hasNode(nodes /*: NodeMap */, nodeId /*: string */) {
   return nodes.has(nodeId);
 }

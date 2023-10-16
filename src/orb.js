@@ -90,7 +90,7 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
     if (event.key === "Backspace" || event.key === "Delete") {
       if (content.length === 0) {
         this.dispatchEvent(
-          new CustomEvent("removeNode", {
+          new CustomEvent("destroyNode", {
             bubbles: true,
             detail: { nodeId },
           })

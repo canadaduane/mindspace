@@ -15,7 +15,15 @@ import {
 import { nanoid } from "nanoid";
 import { ColorWheel, getColorFromWorldCoord } from "./colorwheel.js";
 import { applyNodeToShapes, makeShapesMap } from "./shape.js";
-import { makeNodesMap, getNode, hasNode, setNodeValues } from "./node.js";
+import {
+  makeNodesMap,
+  getNode,
+  setNode,
+  hasNode,
+  removeNode,
+  setNodeValues,
+  forEachNode,
+} from "./node.js";
 import { Transition } from "./transition.js";
 import { makeDraggable } from "./drag.js";
 import { FirstTime } from "./firsttime.js";
@@ -103,8 +111,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     this.refresh();
   });
 
-  this.addEventListener("removeNode", ({ detail: { nodeId } }) => {
-    if (removeNode(nodeId)) {
+  this.addEventListener("destroyNode", ({ detail: { nodeId } }) => {
+    if (destroyNode(nodeId)) {
       this.refresh();
     }
   });
@@ -190,7 +198,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     onEnd: () => {
       if (coneCutMode) {
         console.log("remove cone node", coneNodeId);
-        removeNode(coneNodeId);
+        destroyNode(coneNodeId);
       } else {
         // convert the Cone to an Orb
         const shape = shapes.get(coneShapeId);
@@ -232,7 +240,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
               const q = coneCutPath[i];
               if (doesLineIntersectCircle(q, p, c, orbSize / 2 - 1)) {
                 if (!shapeIdsCutThisMotion.has(shapeId)) {
-                  if (removeNode(shape.controlsNodeId)) {
+                  if (destroyNode(shape.controlsNodeId)) {
                     shapeIdsCutThisMotion.add(shapeId);
                     createPop(
                       shape.cx,
@@ -340,12 +348,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
     const dependents = [];
     // Create lines from this node to all other nodes
-    for (let otherNode of nodes.values()) {
+    forEachNode(nodes, (otherNode) => {
       createLine(dependents, otherNode.dependents);
-    }
+    });
 
     // Create the new node that all shapes depend on for position updates
-    const node = {
+    setNode(nodes, nodeId, {
       x,
       y,
       color,
@@ -361,21 +369,21 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         },
         ...dependents,
       ],
-    };
-    nodes.set(nodeId, node);
+    });
 
     this.refresh();
 
     return { nodeId, shapeId };
   };
 
-  const removeNode = (nodeId /*: string */) => {
+  // Remove node and its dependents
+  const destroyNode = (nodeId /*: string */) => {
     if (hasNode(nodes, nodeId)) {
       const node = getNode(nodes, nodeId);
       node.dependents.forEach((d) => {
         shapes.delete(d.shapeId);
       });
-      nodes.delete(nodeId);
+      removeNode(nodes, nodeId);
       return true;
     } else {
       console.warn("can't set node movement", nodeId);
@@ -404,11 +412,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   const getShapesConnectedToLineShapeId = (shapeId /*: string */) => {
     const connectedShapes = [];
-    for (let node of nodes.values()) {
+    forEachNode(nodes, (node) => {
       const hasDeps =
         node.dependents.filter((dep) => dep.shapeId === shapeId).length > 0;
 
-      if (!hasDeps) continue;
+      if (!hasDeps) return;
 
       for (let dep of node.dependents) {
         if (dep.shapeId !== shapeId) {
@@ -418,7 +426,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           }
         }
       }
-    }
+    });
     return connectedShapes;
   };
 
@@ -445,9 +453,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   try {
     while (true) {
-      for (let node of nodes.values()) {
+      forEachNode(nodes, (node) => {
         applyNodeToShapes(node, shapes);
-      }
+      });
 
       svgShapes.length = 0;
       htmlShapes.length = 0;
