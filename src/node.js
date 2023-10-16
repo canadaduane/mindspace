@@ -1,3 +1,5 @@
+import { nanoid } from "nanoid";
+
 /*+
 type Node = {
   x: number; // The global X coordinate for this node
@@ -13,30 +15,25 @@ type Dependent = {
   attrs: Record<string, string>; // A mapping from Node attributes to Shape attributes
 };
 
-type NodeMap = Map<number, Node>;
+type NodeMap = Map<string, Node>;
 
 */
 
 export function makeNodesMap(initNodes /*: Node[] */) {
-  let maxNodeId = 0;
-  return {
-    nodes: new Map(
-      initNodes.map(({ nodeId, ...node }) => {
-        if (maxNodeId < nodeId) maxNodeId = nodeId;
-        return [nodeId, node];
-      })
-    ),
-    maxNodeId,
-  };
+  return new Map(
+    initNodes.map(({ nodeId, ...node }) => {
+      return [nodeId ?? nanoid(12), node];
+    })
+  );
 }
 
-export function getNode(nodeId /*: number */, nodes /*: NodeMap */) {
+export function getNode(nodeId /*: string */, nodes /*: NodeMap */) {
   const node = nodes.get(nodeId);
   if (!node) throw new Error(`can't get node ${nodeId}`);
   return node;
 }
 
-export function hasNode(nodeId /*: number */, nodes /*: NodeMap */) {
+export function hasNode(nodeId /*: string */, nodes /*: NodeMap */) {
   return nodes.has(nodeId);
 }
 

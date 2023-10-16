@@ -12,10 +12,10 @@ import {
   spiralInitial,
   spiralAddend,
 } from "./constants.js";
+import { nanoid } from "nanoid";
 import { ColorWheel, getColorFromWorldCoord } from "./colorwheel.js";
 import { applyNodeToShapes, makeShapesMap } from "./shape.js";
 import { makeNodesMap, getNode, hasNode, setNode } from "./node.js";
-import { startAnimation, stopAnimation } from "./animation.js";
 import { Transition } from "./transition.js";
 import { makeDraggable } from "./drag.js";
 import { FirstTime } from "./firsttime.js";
@@ -25,7 +25,7 @@ import { Cone } from "./cone.js";
 import { Pop } from "./pop.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
-  let { nodes, maxNodeId } = makeNodesMap(initNodes);
+  let nodes = makeNodesMap(initNodes);
   let { shapes, maxShapeId } = makeShapesMap(initShapes);
 
   let showColorWheel = false;
@@ -324,7 +324,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   ) => {
     if (globalIsDragging) return;
 
-    const nodeId = ++maxNodeId;
+    const nodeId = nanoid(12);
     const shapeId = ++maxShapeId;
 
     const color = getColorFromWorldCoord(x, y);
@@ -369,7 +369,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     return { nodeId, shapeId };
   };
 
-  const removeNode = (nodeId /*: number */) => {
+  const removeNode = (nodeId /*: string */) => {
     if (hasNode(nodeId, nodes)) {
       const node = getNode(nodeId, nodes);
       node.dependents.forEach((d) => {

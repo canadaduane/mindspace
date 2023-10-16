@@ -12,7 +12,9 @@
   "dependencies": {
     "@b9g/crank": "0.5.4",
     "@fontsource/yantramanav": "5.0.15",
-    "gsap": "3.12.2"
+    "colorjs.io": "0.4.5",
+    "gsap": "3.12.2",
+    "nanoid": "5.0.2"
   },
   "devDependencies": {
     "esbuild": "^0.19.4",
