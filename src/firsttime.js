@@ -14,16 +14,16 @@ export function* FirstTime() {
     <!-- firsttime styles --> 
     <style>
       .firsttime--big-center {
-        position: absolute;
-        top: 50vh;
-        left: 100vw;
+        position: fixed;
+        top: 0;
+        left: 50vw;
         transform: translateX(-50%);
         z-index: 2;
         display: flex;
         align-items: center;
         justify-content: center;
 
-        width: 50vw;
+        width: 100vw;
         height: 100vh;
         color: var(--dullText);
         font-family: sans-serif;
