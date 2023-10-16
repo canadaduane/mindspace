@@ -84,14 +84,22 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     coneCutPath = path;
   });
 
+  this.addEventListener("setShowColorWheel", ({ detail: { enabled } }) => {
+    showColorWheel = enabled;
+    this.refresh();
+  });
+
   this.addEventListener("nodeActive", ({ detail: { nodeId } }) => {
     mostRecentlyActiveNodeId = nodeId;
   });
 
-  this.addEventListener("nodeMoved", ({ detail: { nodeId, x, y } }) => {
+  this.addEventListener("nodeMoved", ({ detail: { nodeId, x, y, color } }) => {
     const node = getNode(nodeId, nodes);
     node.x = x;
     node.y = y;
+    if (color !== undefined) {
+      node.color = color;
+    }
     this.refresh();
   });
 
@@ -140,8 +148,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let coneNodeId;
   let coneShapeId;
   let coneShapeDepShapeIds = [];
-  const shapeIdsCutThisMotion = new Set();
+  let coneSelectColorMode /*: "static" | "dynamic" */ = "static";
   const conePos = { x: 0, y: 0 };
+  const shapeIdsCutThisMotion = new Set();
 
   const enableDisableConeLines = () => {
     if (coneCutMode) {
@@ -162,15 +171,20 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   const { start, end, move, touchStart } = makeDraggable(conePos, {
+    onLongPress: ({ x, y }) => {
+      showColorWheel = true;
+      coneSelectColorMode = "dynamic";
+      this.refresh();
+    },
     onStart: ({ x, y }) => {
       const { nodeId, shapeId } = createNode(x, y, "cone");
-      showColorWheel = true;
       coneNodeId = nodeId;
       if (coneShapeId) {
         console.warn(`coneShapeId not null at start ${coneShapeId}`);
       }
       coneShapeId = shapeId;
       coneShapeDepShapeIds = getDependentShapesOfControllerShape(coneShapeId);
+      coneSelectColorMode = "static";
       this.refresh();
     },
     onEnd: () => {
@@ -252,7 +266,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       const node = getNode(coneNodeId, nodes);
       node.x = x;
       node.y = y;
-      node.color = getColorFromWorldCoord(x, y);
+
+      if (coneSelectColorMode === "dynamic") {
+        node.color = getColorFromWorldCoord(x, y);
+      }
 
       this.refresh();
     },
@@ -498,8 +515,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         <!-- -->
         <${Transition}
           active=${showColorWheel}
-          in=${{ delay: 1000, ms: 1000 }}
-          out=${{ delay: 1000, ms: 1000 }}
+          in=${{ ms: 1000 }}
+          out=${{ ms: 1000 }}
         >
           <${ColorWheel} w=${winW} h=${winH} />
         </${Transition}>

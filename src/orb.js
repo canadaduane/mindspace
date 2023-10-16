@@ -8,6 +8,7 @@ import {
   setGlobalIsDragging,
   stringLengthTransition,
 } from "./constants.js";
+import { getColorFromWorldCoord } from "./colorwheel.js";
 
 function isFirefox() {
   return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
@@ -20,10 +21,22 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
   let shape = "circle";
   let didDrag = false;
   let content = "";
+  let orbSelectColorMode /*: "static" | "dynamic" */ = "static";
 
   const { start, end, move, touchStart } = makeDraggable(pos, {
+    onLongPress: () => {
+      orbSelectColorMode = "dynamic";
+
+      this.dispatchEvent(
+        new CustomEvent("setShowColorWheel", {
+          bubbles: true,
+          detail: { enabled: true },
+        })
+      );
+    },
     onStart: () => {
       setGlobalIsDragging(true);
+      orbSelectColorMode = "static";
       didDrag = false;
     },
     onEnd: () => {
@@ -31,13 +44,28 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
       if (!didDrag) {
         setTimeout(() => editEl?.focus(), 100);
       }
+
+      // if long press enabled the color wheel, hide it
+      this.dispatchEvent(
+        new CustomEvent("setShowColorWheel", {
+          bubbles: true,
+          detail: { enabled: false },
+        })
+      );
     },
-    onMove: () => {
+    onMove: ({ x, y }) => {
       didDrag = true;
       this.dispatchEvent(
         new CustomEvent("nodeMoved", {
           bubbles: true,
-          detail: { nodeId, ...pos },
+          detail: {
+            nodeId,
+            ...pos,
+            color:
+              orbSelectColorMode === "dynamic"
+                ? getColorFromWorldCoord(x, y)
+                : undefined,
+          },
         })
       );
     },
