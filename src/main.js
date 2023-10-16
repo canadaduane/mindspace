@@ -26,7 +26,7 @@ import { Pop } from "./pop.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let nodes = makeNodesMap(initNodes);
-  let { shapes, maxShapeId } = makeShapesMap(initShapes);
+  let shapes = makeShapesMap(initShapes);
 
   let showColorWheel = false;
   let mostRecentlyActiveNodeId;
@@ -278,7 +278,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   /** Create Functions */
 
   const createLine = (nodeDependents1, nodeDependents2) => {
-    const lineShapeId = ++maxShapeId;
+    const lineShapeId = nanoid(12);
     const lineShape = { type: "line", lineType: "short" };
 
     shapes.set(lineShapeId, lineShape);
@@ -289,7 +289,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   const createPop = (x, y, theta, color) => {
-    const popShapeId = ++maxShapeId;
+    const popShapeId = nanoid(12);
     shapes.set(popShapeId, {
       type: "pop",
       color,
@@ -325,7 +325,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     if (globalIsDragging) return;
 
     const nodeId = nanoid(12);
-    const shapeId = ++maxShapeId;
+    const shapeId = nanoid(12);
 
     const color = getColorFromWorldCoord(x, y);
 
@@ -383,7 +383,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   };
 
-  const getDependentShapesOfControllerShape = (shapeId /*: number */) => {
+  const getDependentShapesOfControllerShape = (shapeId /*: string */) => {
     const shape = shapes.get(shapeId);
     if (shape) {
       const node = getNode(shape.controlsNodeId, nodes);
@@ -402,7 +402,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   };
 
-  const getShapesConnectedToLineShapeId = (shapeId /*: number */) => {
+  const getShapesConnectedToLineShapeId = (shapeId /*: string */) => {
     const connectedShapes = [];
     for (let node of nodes.values()) {
       const hasDeps =
