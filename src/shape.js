@@ -45,12 +45,23 @@ export function makeShapesMap(initShapes /*: InitialShape[] */) {
   );
 }
 
+export function getShape(shapes /*: ShapesMap */, shapeId /*: string */) {
+  const shape = shapes.get(shapeId);
+  if (!shape) throw new Error(`can't get shape ${shapeId}`);
+  return shape;
+}
+
 export function removeShape(shapes, shapeId) {
   if (shapes.has(shapeId)) {
     shapes.delete(shapeId);
     return true;
   }
   return false;
+}
+
+export function setShapeValues(shape /*: Shape */, values) {
+  Object.assign(shape, values);
+  return shape;
 }
 
 export function applyNodeToShapes(

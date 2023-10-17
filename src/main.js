@@ -14,7 +14,12 @@ import {
 } from "./constants.js";
 import { nanoid } from "nanoid";
 import { ColorWheel, getColorFromWorldCoord } from "./colorwheel.js";
-import { applyNodeToShapes, removeShape, makeShapesMap } from "./shape.js";
+import {
+  applyNodeToShapes,
+  removeShape,
+  setShapeValues,
+  makeShapesMap,
+} from "./shape.js";
 import {
   makeNodesMap,
   getNode,
@@ -202,12 +207,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       } else {
         // convert the Cone to an Orb
         const shape = shapes.get(coneShapeId);
-        if (shape) {
-          shape.type = "circle";
-        } else {
-          throw new Error("can't find coneShapeId");
-          throw new Error(`can't find coneShapeId ${coneShapeId}`);
-        }
+        setShapeValues(shape, { type: "circle" });
       }
       showColorWheel = false;
       coneNodeId = undefined;
@@ -310,8 +310,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   const setLineType = (shapeId, lineType) => {
     const shape = shapes.get(shapeId);
     if (shape) {
-      shape.lineType = lineType;
-      return shape;
+      return setShapeValues(shape, { lineType });
     } else {
       console.warn(`can't set line type, line not found: ${shapeId}`);
     }
