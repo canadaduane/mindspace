@@ -19,6 +19,7 @@ import {
   removeShape,
   setShapeValues,
   makeShapesMap,
+  getShape,
 } from "./shape.js";
 import {
   makeNodesMap,
@@ -141,6 +142,14 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           connectedShapes.forEach((s) => (s.shake = false));
         }, 1000);
       }
+    }
+  );
+
+  this.addEventListener(
+    "setShapeValues",
+    ({ detail: { shapeId, ...values } }) => {
+      const shape = getShape(shapes, shapeId);
+      setShapeValues(shape, values);
     }
   );
 

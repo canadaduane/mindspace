@@ -60,7 +60,13 @@ export function removeShape(shapes, shapeId) {
 }
 
 export function setShapeValues(shape /*: Shape */, values) {
-  Object.assign(shape, values);
+  const definedValues = Object.assign({}, values);
+  for (var k in definedValues) {
+    if (definedValues[k] === undefined) delete definedValues[k];
+  }
+
+  Object.assign(shape, definedValues);
+
   return shape;
 }
 
