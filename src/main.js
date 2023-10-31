@@ -129,21 +129,22 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   });
 
-  this.addEventListener(
-    "setLineType",
-    ({ detail: { shapeId, lineType, bump } }) => {
-      const shape = setLineType(shapeId, lineType);
-      if (shape && bump) {
-        const connectedShapes = getShapesConnectedToLineShapeId(shapeId);
-        connectedShapes.forEach((s) => {
-          if (s.type === "circle") s.shake = true;
-        });
-        setTimeout(() => {
-          connectedShapes.forEach((s) => (s.shake = false));
-        }, 1000);
-      }
+  // this.addEventListener("setLineType", ({ detail: { shapeId, lineType } }) => {
+  //   setLineType(shapeId, lineType);
+  // });
+
+  this.addEventListener("bump", ({ detail: { shapeId, lineType } }) => {
+    const shape = setLineType(shapeId, lineType);
+    if (shape) {
+      const connectedShapes = getShapesConnectedToLineShapeId(shapeId);
+      connectedShapes.forEach((s) => {
+        if (s.type === "circle") s.shake = true;
+      });
+      setTimeout(() => {
+        connectedShapes.forEach((s) => (s.shake = false));
+      }, 1000);
     }
-  );
+  });
 
   this.addEventListener(
     "setShapeValues",

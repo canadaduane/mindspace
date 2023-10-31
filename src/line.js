@@ -46,13 +46,9 @@ export function* Line({
     ) {
       canBump = false;
       this.dispatchEvent(
-        new CustomEvent("setLineType", {
+        new CustomEvent("bump", {
           bubbles: true,
-          detail: {
-            shapeId,
-            lineType: promoteLineType(type),
-            bump: true,
-          },
+          detail: { shapeId, lineType: promoteLineType(type) },
         })
       );
     } else if (length > orbSize + 20) {
