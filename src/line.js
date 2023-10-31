@@ -1,7 +1,6 @@
 import Color from "colorjs.io";
-import { calcDistance, refresh, sigmoid, svg } from "./utils.js";
+import { calcDistance, sigmoid, svg } from "./utils.js";
 import { lineMaxDistance, lineTransition, orbSize } from "./constants.js";
-import { isAnimating, startAnimation, stopAnimation } from "./animation.js";
 
 const opacityThreshold = 0.001;
 const defaultStroke = "rgba(240, 240, 240, 1)";
@@ -26,9 +25,6 @@ export function* Line({
   progressColor /*: string */ = "red",
   progressDir /*: "in" | "out" */ = "out",
 }) {
-  const lengthHistory = [];
-  const lengthHistoryMax = 20;
-
   let canBump = true;
 
   const onClick = (event) => {
@@ -42,9 +38,6 @@ export function* Line({
     }
 
     const length = calcDistance(x1, y1, x2, y2);
-
-    lengthHistory.push(length);
-    if (lengthHistory.length > lengthHistoryMax) lengthHistory.shift();
 
     if (
       canBump &&
@@ -69,43 +62,8 @@ export function* Line({
     let line /*: LineProps | undefined */;
     let nearIndicator /*: LineProps| undefined */;
 
-    const changeInLength =
-      lengthHistory[lengthHistory.length - 1] - lengthHistory[0];
-
-    const minChange = 5;
-    const snapChange = 70;
-
-    if (changeInLength > 0) {
-      if (!isAnimating(this)) {
-        startAnimation(this);
-      }
-    } else if (changeInLength === 0) {
-      // no more need to animate
-      stopAnimation(this);
-    }
-
     if (type === "strong") {
       let strokeWidth = 7;
-
-      if (changeInLength >= minChange) {
-        let thinFactor = (changeInLength - minChange) / snapChange;
-        if (thinFactor < 1) thinFactor = 1;
-
-        strokeWidth /= thinFactor;
-
-        if (strokeWidth < 2.5) {
-          this.dispatchEvent(
-            new CustomEvent("setLineType", {
-              bubbles: true,
-              detail: {
-                shapeId,
-                lineType: "deleted",
-                bump: false,
-              },
-            })
-          );
-        }
-      }
 
       const stroke = new Color(defaultStroke).mix(
         warnColor,
