@@ -1,4 +1,3 @@
-import { Raw } from "@b9g/crank/standalone";
 import { html } from "./utils.js";
 import { makeDraggable } from "./drag.js";
 import {
@@ -14,7 +13,7 @@ function isFirefox() {
   return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
 }
 
-export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
+export function* Orb({ nodeId, x = 0, y = 0 }) {
   const pos = { x, y };
 
   let editEl;
@@ -117,7 +116,7 @@ export function* Orb({ nodeId, x = 0, y = 0, color, shake = false }) {
     );
   };
 
-  for ({ x, y, color, shake } of this) {
+  for (const { x, y, color, shake } of this) {
     pos.x = x;
     pos.y = y;
 
