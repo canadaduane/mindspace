@@ -37,6 +37,13 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
       setGlobalIsDragging(true);
       orbSelectColorMode = "static";
       didDrag = false;
+
+      this.dispatchEvent(
+        new CustomEvent("controllingNode", {
+          bubbles: true,
+          detail: { nodeId },
+        })
+      );
     },
     onEnd: () => {
       setTimeout(() => setGlobalIsDragging(false), 50);

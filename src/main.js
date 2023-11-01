@@ -53,6 +53,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let minDocH = window.innerHeight * 2;
   let minDocW = window.innerWidth * 2;
 
+  let controlledNodeId;
+
   // Scroll to center of area after first render
   window.addEventListener("load", () => {
     document.documentElement.scrollLeft = window.innerWidth / 2;
@@ -103,6 +105,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     this.refresh();
   });
 
+  this.addEventListener("controllingNode", ({ detail: { nodeId } }) => {
+    controlledNodeId = nodeId;
+  });
+
   this.addEventListener("nodeActive", ({ detail: { nodeId } }) => {
     mostRecentlyActiveNodeId = nodeId;
   });
@@ -129,17 +135,31 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   });
 
-  // this.addEventListener("setLineType", ({ detail: { shapeId, lineType } }) => {
-  //   setLineType(shapeId, lineType);
-  // });
-
   this.addEventListener("bump", ({ detail: { shapeId, lineType } }) => {
     const shape = setLineType(shapeId, lineType);
     if (shape) {
       const connectedShapes = getShapesConnectedToLineShapeId(shapeId);
       connectedShapes.forEach((s) => {
-        if (s.type === "circle") s.shake = true;
+        if (s.type === "circle") {
+          s.shake = true;
+        }
       });
+
+      // Once we convert to strong lines via bump, delete all short lines
+      const node = getNode(nodes, controlledNodeId);
+      if (node) {
+        node.dependents.forEach((dependent) => {
+          const depShape = getShape(shapes, dependent.shapeId);
+          if (
+            depShape &&
+            depShape.type === "line" &&
+            depShape.lineType === "short"
+          ) {
+            depShape.lineType = "deleted";
+          }
+        });
+      }
+
       setTimeout(() => {
         connectedShapes.forEach((s) => (s.shake = false));
       }, 1000);
@@ -205,6 +225,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       if (coneShapeId) {
         console.warn(`coneShapeId not null at start ${coneShapeId}`);
       }
+      controlledNodeId = nodeId;
       coneShapeId = shapeId;
       coneShapeDepShapeIds = getDependentShapesOfControllerShape(coneShapeId);
       coneSelectColorMode = "static";
