@@ -32,6 +32,15 @@ export function refresh(component) {
   if (!isSyncExecuting(component)) component.refresh();
 }
 
+export function dispatch(component, eventName /*: string */, detail) {
+  component.dispatchEvent(
+    new CustomEvent(eventName, {
+      bubbles: true,
+      detail,
+    })
+  );
+}
+
 /*+
 type Point = {
   x: number,

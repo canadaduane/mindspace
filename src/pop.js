@@ -1,4 +1,4 @@
-import { isSyncExecuting, svg } from "./utils.js";
+import { isSyncExecuting, dispatch, svg } from "./utils.js";
 import { orbSize } from "./constants.js";
 
 export function* Pop({ shapeId, x, y, theta, color }) {
@@ -23,12 +23,7 @@ export function* Pop({ shapeId, x, y, theta, color }) {
 
     if (gap >= Math.PI * 2) {
       animating = false;
-      this.dispatchEvent(
-        new CustomEvent("destroyShape", {
-          bubbles: true,
-          detail: { shapeId },
-        })
-      );
+      dispatch(this, "destroyShape", { shapeId });
     }
 
     if (!isSyncExecuting) this.refresh();

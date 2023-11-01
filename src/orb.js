@@ -1,4 +1,4 @@
-import { html } from "./utils.js";
+import { dispatch, html } from "./utils.js";
 import { makeDraggable } from "./drag.js";
 import {
   orbSize,
@@ -26,24 +26,14 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
     onLongPress: () => {
       orbSelectColorMode = "dynamic";
 
-      this.dispatchEvent(
-        new CustomEvent("setShowColorWheel", {
-          bubbles: true,
-          detail: { enabled: true },
-        })
-      );
+      dispatch(this, "setShowColorWheel", { enabled: true });
     },
     onStart: () => {
       setGlobalIsDragging(true);
       orbSelectColorMode = "static";
       didDrag = false;
 
-      this.dispatchEvent(
-        new CustomEvent("controllingNode", {
-          bubbles: true,
-          detail: { nodeId },
-        })
-      );
+      dispatch(this, "controllingNode", { nodeId });
     },
     onEnd: () => {
       setTimeout(() => setGlobalIsDragging(false), 50);
@@ -52,39 +42,24 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
       }
 
       // if long press enabled the color wheel, hide it
-      this.dispatchEvent(
-        new CustomEvent("setShowColorWheel", {
-          bubbles: true,
-          detail: { enabled: false },
-        })
-      );
+      dispatch(this, "setShowColorWheel", { enabled: false });
     },
     onMove: ({ x, y }) => {
       didDrag = true;
-      this.dispatchEvent(
-        new CustomEvent("nodeMoved", {
-          bubbles: true,
-          detail: {
-            nodeId,
-            ...pos,
-            color:
-              orbSelectColorMode === "dynamic"
-                ? getColorFromWorldCoord(x, y)
-                : undefined,
-          },
-        })
-      );
+      dispatch(this, "nodeMoved", {
+        nodeId,
+        ...pos,
+        color:
+          orbSelectColorMode === "dynamic"
+            ? getColorFromWorldCoord(x, y)
+            : undefined,
+      });
     },
   });
 
   const onKeyDown = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
-      this.dispatchEvent(
-        new CustomEvent("createNode", {
-          bubbles: true,
-          detail: { nodeId },
-        })
-      );
+      dispatch(this, "createNode", { nodeId });
       event.preventDefault();
       // don't allow body to also create a node
       event.stopPropagation();
@@ -95,12 +70,7 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
   const onKey = (event) => {
     if (event.key === "Backspace" || event.key === "Delete") {
       if (content.length === 0) {
-        this.dispatchEvent(
-          new CustomEvent("destroyNode", {
-            bubbles: true,
-            detail: { nodeId },
-          })
-        );
+        dispatch(this, "destroyNode", { nodeId });
         return;
       }
     } else if (event.key === "Escape") {
@@ -118,9 +88,7 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
   this.schedule(() => setTimeout(() => editEl?.focus(), 50));
 
   const onFocus = (event) => {
-    this.dispatchEvent(
-      new CustomEvent("nodeActive", { bubbles: true, detail: { nodeId } })
-    );
+    dispatch(this, "nodeActive", { nodeId });
   };
 
   for (const { x, y, color, shake } of this) {

@@ -1,4 +1,4 @@
-import { calcDistance, sigmoid, svg } from "./utils.js";
+import { calcDistance, dispatch, sigmoid, svg } from "./utils.js";
 import { orbSize, bezierCircleK } from "./constants.js";
 import Color from "colorjs.io";
 import { startAnimation, stopAnimation } from "./animation.js";
@@ -26,15 +26,11 @@ export function* Cone() {
   const setCutMode = (mode /*: boolean */) => {
     if (cutMode === mode) return;
     cutMode = mode;
-    this.dispatchEvent(
-      new CustomEvent("setCutMode", { bubbles: true, detail: { mode } })
-    );
+    dispatch(this, "setCutMode", { mode });
   };
 
   const setCutPath = (path /*: Point[] */, theta /*: number */) => {
-    this.dispatchEvent(
-      new CustomEvent("setCutPath", { bubbles: true, detail: { path, theta } })
-    );
+    dispatch(this, "setCutPath", { path, theta });
   };
 
   startAnimation(this);

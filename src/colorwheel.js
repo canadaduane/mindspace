@@ -1,5 +1,5 @@
 import Color from "colorjs.io";
-import { svg } from "./utils.js";
+import { dispatch, svg } from "./utils.js";
 import { getScroll } from "./drag.js";
 
 export function getColorFromScreenCoord(x, y, w, h) {
@@ -24,12 +24,7 @@ export function* ColorWheel({ w, h }) {
   const selectColor =
     (color) =>
     ({ clientX: x, clientY: y }) => {
-      this.dispatchEvent(
-        new CustomEvent("colorSelected", {
-          bubbles: true,
-          detail: { color, x, y },
-        })
-      );
+      dispatch(this, "colorSelected", { color, x, y });
     };
 
   for ({ w, h } of this) {

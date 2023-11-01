@@ -1,5 +1,5 @@
 import Color from "colorjs.io";
-import { calcDistance, sigmoid, svg } from "./utils.js";
+import { calcDistance, dispatch, sigmoid, svg } from "./utils.js";
 import { lineMaxDistance, lineTransition, orbSize } from "./constants.js";
 
 const opacityThreshold = 0.001;
@@ -45,12 +45,7 @@ export function* Line({
       length < orbSize + 5
     ) {
       canBump = false;
-      this.dispatchEvent(
-        new CustomEvent("bump", {
-          bubbles: true,
-          detail: { shapeId, lineType: promoteLineType(type) },
-        })
-      );
+      dispatch(this, "bump", { shapeId, lineType: promoteLineType(type) });
     } else if (length > orbSize + 20) {
       canBump = true;
     }
