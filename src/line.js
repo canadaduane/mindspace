@@ -100,18 +100,16 @@ export function* Line({ shapeId /*: string */ }) {
       (line && line.opacity >= opacityThreshold) ||
       (nearIndicator && nearIndicator.opacity >= opacityThreshold);
 
+    const path = `M${x1} ${y1} L${x2} ${y2}`;
+
     yield connected &&
       svg`
-        <line
+        <path d=${path}
           onpointerdown=${start}
           onpointerup=${end}
           onpointercancel=${end}
           onpointermove=${move}
           ontouchstart=${touchStart}
-          x1=${x1}
-          y1=${y1}
-          x2=${x2}
-          y2=${y2}
           stroke=${
             selected ? "rgba(240, 240, 240, 0.1)" : "rgba(0, 0, 0, 0.01)"
           } 
@@ -120,12 +118,8 @@ export function* Line({ shapeId /*: string */ }) {
         ${
           line &&
           svg`
-            <line
+            <path d=${path}
               style="pointer-events: none;"
-              x1=${x1}
-              y1=${y1}
-              x2=${x2}
-              y2=${y2}
               stroke=${line.stroke}
               stroke-width=${line.strokeWidth}
             />
@@ -134,12 +128,8 @@ export function* Line({ shapeId /*: string */ }) {
         ${
           nearIndicator &&
           svg`
-            <line
+            <path d=${path}
               style="pointer-events: none;"
-              x1=${x1}
-              y1=${y1}
-              x2=${x2}
-              y2=${y2}
               stroke="rgba(${nearIndicator.stroke})"
               stroke-width=${nearIndicator.strokeWidth}
             />
