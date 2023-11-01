@@ -1,7 +1,7 @@
 import Color from "colorjs.io";
 import { calcDistance, dispatch, sigmoid, svg } from "./utils.js";
 import { lineMaxDistance, lineTransition, orbSize } from "./constants.js";
-import { makeDraggable } from "./drag.js";
+import { getScroll, makeDraggable } from "./drag.js";
 
 const opacityThreshold = 0.001;
 const defaultStroke = "rgba(240, 240, 240, 1)";
@@ -18,22 +18,24 @@ type LineProps = {
 export function* Line({ shapeId /*: string */ }) {
   let canBump = true;
 
-  let didDrag = false;
+  let isDragging = false;
   const pos = { x: 0, y: 0 };
+  const dragPos = { x: 0, y: 0 };
   const { start, end, move, touchStart } = makeDraggable(pos, {
     onLongPress: () => {
       // nothing for now
     },
     onStart: () => {
-      didDrag = false;
       dispatch(this, "selectLine", { shapeId });
     },
     onEnd: () => {
-      if (!didDrag) {
-      }
+      isDragging = false;
     },
     onMove: ({ x, y }) => {
-      didDrag = true;
+      isDragging = true;
+      dragPos.x = x;
+      dragPos.y = y;
+      this.refresh();
     },
   });
 
@@ -100,7 +102,9 @@ export function* Line({ shapeId /*: string */ }) {
       (line && line.opacity >= opacityThreshold) ||
       (nearIndicator && nearIndicator.opacity >= opacityThreshold);
 
-    const path = `M${x1} ${y1} L${x2} ${y2}`;
+    const path = isDragging
+      ? `M${x1} ${y1} Q${dragPos.x} ${dragPos.y}, ${x2} ${y2}`
+      : `M${x1} ${y1} L${x2} ${y2}`;
 
     yield connected &&
       svg`
@@ -110,6 +114,7 @@ export function* Line({ shapeId /*: string */ }) {
           onpointercancel=${end}
           onpointermove=${move}
           ontouchstart=${touchStart}
+          fill="none"
           stroke=${
             selected ? "rgba(240, 240, 240, 0.1)" : "rgba(0, 0, 0, 0.01)"
           } 
@@ -120,6 +125,7 @@ export function* Line({ shapeId /*: string */ }) {
           svg`
             <path d=${path}
               style="pointer-events: none;"
+              fill="none"
               stroke=${line.stroke}
               stroke-width=${line.strokeWidth}
             />
@@ -130,6 +136,7 @@ export function* Line({ shapeId /*: string */ }) {
           svg`
             <path d=${path}
               style="pointer-events: none;"
+              fill="none"
               stroke="rgba(${nearIndicator.stroke})"
               stroke-width=${nearIndicator.strokeWidth}
             />
