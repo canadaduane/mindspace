@@ -143,6 +143,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     this.refresh();
   });
 
+  this.addEventListener("deleteLine", ({ detail: { shapeId } }) => {
+    unselectSelectedLine();
+    setLineType(shapeId, "deleted");
+    this.refresh();
+  });
+
   this.addEventListener("bump", ({ detail: { shapeId, lineType } }) => {
     const shape = setLineType(shapeId, lineType);
     if (shape) {

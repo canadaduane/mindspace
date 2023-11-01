@@ -14,6 +14,65 @@ export function sigmoid(ratio) {
   return 1 - 1 / (1 + Math.pow(Math.E, ratio));
 }
 
+// Similar to sigmoid, but exact bounds [0, 1]; input x is [0, 1]
+export function squash(x, sharpness = 10) {
+  function g(x) {
+    return 1 / (1 + Math.exp(-sharpness * (x - 0.5)));
+  }
+
+  let g0 = g(0);
+  let g1 = g(1);
+
+  return (g(x) - g0) / (g1 - g0);
+}
+
+export function orthogonalVector({ x: x1, y: y1 }, { x: x2, y: y2 }) {
+  // Direction vector
+  let Dx = x2 - x1;
+  let Dy = y2 - y1;
+
+  // Orthogonal vector
+  let Vx = -Dy;
+  let Vy = Dx;
+
+  const magnitude = Math.sqrt(Vx * Vx + Vy * Vy);
+
+  return { x: Vx / magnitude, y: Vy / magnitude };
+}
+
+export function normalizedOrthogonalVectorToPointOnLine(P, lineStart, lineEnd) {
+  const { x: Px, y: Py } = P;
+  const { x: x1, y: y1 } = lineStart;
+  const { x: x2, y: y2 } = lineEnd;
+
+  // Vectors AB and AP
+  let ABx = x2 - x1;
+  let ABy = y2 - y1;
+
+  let APx = Px - x1;
+  let APy = Py - y1;
+
+  // Calculate dot products
+  let dot_AP_AB = APx * ABx + APy * ABy;
+  let dot_AB_AB = ABx * ABx + ABy * ABy;
+
+  // Compute the projection of P onto AB
+  let factor = dot_AP_AB / dot_AB_AB;
+  let projPx = x1 + factor * ABx;
+  let projPy = y1 + factor * ABy;
+
+  // Orthogonal vector from P to the projection
+  let Ox = projPx - Px;
+  let Oy = projPy - Py;
+
+  // Normalize the orthogonal vector
+  let magnitude = Math.sqrt(Ox * Ox + Oy * Oy);
+  let normalizedOx = Ox / magnitude;
+  let normalizedOy = Oy / magnitude;
+
+  return { x: normalizedOx, y: normalizedOy };
+}
+
 function getCrankContext(component) {
   return component[Symbol.for("crank.ContextImpl")];
 }
@@ -67,7 +126,7 @@ export function doesLineIntersectLine(
   return r >= 0 && r <= 1 && s >= 0 && s <= 1;
 }
 
-function distanceFromPointToLine(point, lineStart, lineEnd) {
+export function closestPointOnALineToPoint(point, lineStart, lineEnd) {
   const dx = lineEnd.x - lineStart.x;
   const dy = lineEnd.y - lineStart.y;
   const t =
@@ -81,6 +140,20 @@ function distanceFromPointToLine(point, lineStart, lineEnd) {
   };
 }
 
+export function distanceFromPointToLine({ x, y }, lineStart, lineEnd) {
+  const { x: x1, y: y1 } = lineStart;
+  const { x: x2, y: y2 } = lineEnd;
+  // If the line is a point, return the Euclidean distance.
+  if (x1 === x2 && y1 === y2) {
+    return Math.sqrt((x - x1) ** 2 + (y - y1) ** 2);
+  }
+
+  const numerator = Math.abs((x2 - x1) * (y1 - y) - (x1 - x) * (y2 - y1));
+  const denominator = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+
+  return numerator / denominator;
+}
+
 function distanceBetweenPoints(point1, point2) {
   const dx = point1.x - point2.x;
   const dy = point1.y - point2.y;
@@ -89,7 +162,7 @@ function distanceBetweenPoints(point1, point2) {
 
 export function doesLineIntersectCircle(a, b, c, r) {
   // Find the closest point on the line segment to the circle's center
-  const closest = distanceFromPointToLine(c, a, b);
+  const closest = closestPointOnALineToPoint(c, a, b);
 
   // Check whether this point is within a bounding box defined by the segment endpoints.
   const minX = Math.min(a.x, b.x);

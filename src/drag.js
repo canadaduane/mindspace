@@ -15,6 +15,7 @@ export function makeDraggable(
   { onStart, onEnd, onMove, onLongPress, longPressMs = 1200 }
 ) {
   let dragging = null;
+  let canceled = false;
 
   let longPressTimeout /*: Timeout */;
   let longPressIsPossible = true;
@@ -26,6 +27,8 @@ export function makeDraggable(
     if (button !== 0) return; // left button only
 
     event.stopPropagation();
+
+    canceled = false;
 
     const { left, top } = getScroll();
     const x = clientX + left;
@@ -48,6 +51,8 @@ export function makeDraggable(
   };
 
   const end = (event) => {
+    if (canceled) return;
+
     dragging = null;
 
     const { clientX, clientY } = event;
@@ -62,6 +67,7 @@ export function makeDraggable(
   };
 
   const move = (event) => {
+    if (canceled) return;
     if (!dragging) return;
 
     event.preventDefault();
@@ -90,5 +96,10 @@ export function makeDraggable(
 
   const touchStart = (e) => e.preventDefault();
 
-  return { start, end, move, touchStart };
+  const cancel = () => {
+    canceled = true;
+    clearTimeout(longPressTimeout);
+  };
+
+  return { start, end, move, touchStart, cancel };
 }
