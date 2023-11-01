@@ -15,12 +15,7 @@ type LineProps = {
 }
 */
 
-export function* Line({
-  shapeId /*: string */,
-  progress /*: number */ = 0,
-  progressColor /*: string */ = "red",
-  progressDir /*: "in" | "out" */ = "out",
-}) {
+export function* Line({ shapeId /*: string */ }) {
   let canBump = true;
 
   let didDrag = false;
@@ -135,33 +130,6 @@ export function* Line({
               stroke-width=${line.strokeWidth}
             />
           `
-        }
-        ${
-          line &&
-          progress > 0 &&
-          (progressDir === "out"
-            ? svg`
-            <line
-              style="pointer-events: none;"
-              x1=${x1}
-              y1=${y1}
-              x2=${x1 + (x2 - x1) * progress}
-              y2=${y1 + (y2 - y1) * progress}
-              stroke=${progressColor}
-              stroke-width=${line.strokeWidth}
-            />
-          `
-            : svg`
-            <line
-              style="pointer-events: none;"
-              x1=${x2 + (x1 - x2) * progress}
-              y1=${y2 + (y1 - y2) * progress}
-              x2=${x2}
-              y2=${y2}
-              stroke=${progressColor}
-              stroke-width=${line.strokeWidth}
-            />
-          `)
         }
         ${
           nearIndicator &&
