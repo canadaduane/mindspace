@@ -1,6 +1,7 @@
 import Color from "colorjs.io";
 import { calcDistance, dispatch, sigmoid, svg } from "./utils.js";
 import { lineMaxDistance, lineTransition, orbSize } from "./constants.js";
+import { makeDraggable } from "./drag.js";
 
 const opacityThreshold = 0.001;
 const defaultStroke = "rgba(240, 240, 240, 1)";
@@ -22,10 +23,24 @@ export function* Line({
 }) {
   let canBump = true;
 
-  const onClick = (event) => {
-    event.stopPropagation();
-    dispatch(this, "selectLine", { shapeId });
-  };
+  let didDrag = false;
+  const pos = { x: 0, y: 0 };
+  const { start, end, move, touchStart } = makeDraggable(pos, {
+    onLongPress: () => {
+      // nothing for now
+    },
+    onStart: () => {
+      didDrag = false;
+      dispatch(this, "selectLine", { shapeId });
+    },
+    onEnd: () => {
+      if (!didDrag) {
+      }
+    },
+    onMove: ({ x, y }) => {
+      didDrag = true;
+    },
+  });
 
   for (const { x1, y1, x2, y2, type, selected } of this) {
     if (type === "disabled") {
@@ -93,8 +108,11 @@ export function* Line({
     yield connected &&
       svg`
         <line
-          onpointerdown=${onClick}
-          onpointerup=${(e) => e.stopPropagation()} 
+          onpointerdown=${start}
+          onpointerup=${end}
+          onpointercancel=${end}
+          onpointermove=${move}
+          ontouchstart=${touchStart}
           x1=${x1}
           y1=${y1}
           x2=${x2}
