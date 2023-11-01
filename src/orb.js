@@ -4,7 +4,6 @@ import {
   orbSize,
   orbRectWidth,
   orbRectHeight,
-  setGlobalIsDragging,
   stringLengthTransition,
 } from "./constants.js";
 import { getColorFromWorldCoord } from "./colorwheel.js";
@@ -29,14 +28,12 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
       dispatch(this, "setShowColorWheel", { enabled: true });
     },
     onStart: () => {
-      setGlobalIsDragging(true);
       orbSelectColorMode = "static";
       didDrag = false;
 
       dispatch(this, "controllingNode", { nodeId });
     },
     onEnd: () => {
-      setTimeout(() => setGlobalIsDragging(false), 50);
       if (!didDrag) {
         setTimeout(() => editEl?.focus(), 100);
       }

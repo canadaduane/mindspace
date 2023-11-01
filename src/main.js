@@ -5,7 +5,6 @@ import {
   doesLineIntersectCircle,
 } from "./utils.js";
 import {
-  globalIsDragging,
   scrollbarThickness,
   orbSize,
   spiralRadius,
@@ -392,8 +391,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     y,
     controllerShapeType /*: "circle" | "cone" */ = "circle"
   ) => {
-    if (globalIsDragging) return;
-
     const nodeId = nanoid(12);
     const shapeId = nanoid(12);
 
