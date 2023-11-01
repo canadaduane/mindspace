@@ -24,6 +24,7 @@ type Shape =
       type: "line";
       color: string;
       lineType: "short" | "deleted" | "strong" | "disabled";
+      selected: boolean;
       x1: number;
       y1: number;
       x2: number;

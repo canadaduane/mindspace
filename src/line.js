@@ -15,12 +15,7 @@ type LineProps = {
 */
 
 export function* Line({
-  shapeId /*: number */,
-  x1 /*: number */,
-  y1 /*: number */,
-  x2 /*: number */,
-  y2 /*: number */,
-  type = "short" /*: "short" | "strong" | "deleted" */,
+  shapeId /*: string */,
   progress /*: number */ = 0,
   progressColor /*: string */ = "red",
   progressDir /*: "in" | "out" */ = "out",
@@ -29,9 +24,10 @@ export function* Line({
 
   const onClick = (event) => {
     event.stopPropagation();
+    dispatch(this, "selectLine", { shapeId });
   };
 
-  for ({ x1, y1, x2, y2, type } of this) {
+  for (const { x1, y1, x2, y2, type, selected } of this) {
     if (type === "disabled") {
       yield null;
       continue;
@@ -98,12 +94,15 @@ export function* Line({
       svg`
         <line
           onpointerdown=${onClick}
+          onpointerup=${(e) => e.stopPropagation()} 
           x1=${x1}
           y1=${y1}
           x2=${x2}
           y2=${y2}
-          stroke="rgba(0, 0, 0, 0.01)"
-          stroke-width=${orbSize}
+          stroke=${
+            selected ? "rgba(240, 240, 240, 0.1)" : "rgba(0, 0, 0, 0.01)"
+          } 
+          stroke-width=${(orbSize * 2) / 3}
         />
         ${
           line &&

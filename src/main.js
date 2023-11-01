@@ -54,6 +54,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let minDocW = window.innerWidth * 2;
 
   let controlledNodeId;
+  let selectedLineShapeId;
 
   // Scroll to center of area after first render
   window.addEventListener("load", () => {
@@ -107,6 +108,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   this.addEventListener("controllingNode", ({ detail: { nodeId } }) => {
     controlledNodeId = nodeId;
+    unselectSelectedLine();
+    this.refresh();
   });
 
   this.addEventListener("nodeActive", ({ detail: { nodeId } }) => {
@@ -133,6 +136,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     if (removeShape(shapes, shapeId)) {
       this.refresh();
     }
+  });
+
+  this.addEventListener("selectLine", ({ detail: { shapeId } }) => {
+    unselectSelectedLine();
+    selectLine(shapeId);
+    this.refresh();
   });
 
   this.addEventListener("bump", ({ detail: { shapeId, lineType } }) => {
@@ -179,10 +188,21 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   const onKeyDown = (event) => {
-    if (event.key === "Enter" && event.target.tagName === "BODY") {
+    if (event.target.tagName !== "BODY") return;
+
+    if (event.key === "Enter") {
       if (hasNode(nodes, mostRecentlyActiveNodeId))
         createNodeAroundNode(getNode(nodes, mostRecentlyActiveNodeId));
       else createNode(window.innerWidth, window.innerHeight);
+    } else if (event.key === "Backspace" || event.key === "Delete") {
+      if (selectedLineShapeId) {
+        const lineShape = getShape(shapes, selectedLineShapeId);
+        unselectSelectedLine();
+        lineShape.lineType = "deleted";
+        this.refresh();
+      } else {
+        console.log("No line selected to delete");
+      }
     }
   };
 
@@ -229,6 +249,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       coneShapeId = shapeId;
       coneShapeDepShapeIds = getDependentShapesOfControllerShape(coneShapeId);
       coneSelectColorMode = "static";
+      unselectSelectedLine();
       this.refresh();
     },
     onEnd: () => {
@@ -238,7 +259,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       } else {
         // convert the Cone to an Orb
         const shape = shapes.get(coneShapeId);
-        setShapeValues(shape, { type: "circle" });
+        if (shape) {
+          setShapeValues(shape, { type: "circle" });
+        } else {
+          console.log("no cone?", shape, coneShapeId);
+        }
       }
       showColorWheel = false;
       coneNodeId = undefined;
@@ -345,6 +370,21 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     } else {
       console.warn(`can't set line type, line not found: ${shapeId}`);
     }
+  };
+
+  const unselectSelectedLine = () => {
+    if (selectedLineShapeId) {
+      const shape = shapes.get(selectedLineShapeId);
+      if (shape) shape.selected = false;
+      selectedLineShapeId = null;
+    }
+  };
+
+  const selectLine = (shapeId /*: string */) => {
+    unselectSelectedLine();
+    selectedLineShapeId = shapeId;
+    const shape = shapes.get(selectedLineShapeId);
+    if (shape) shape.selected = true;
   };
 
   const createNode = (
@@ -509,6 +549,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                 return html`<${Line}
                   $key=${shapeId}
                   shapeId=${shapeId}
+                  selected=${shape.selected}
                   x1=${shape.x1}
                   y1=${shape.y1}
                   x2=${shape.x2}
