@@ -12,11 +12,8 @@ dependencies:
     specifier: 5.0.15
     version: 5.0.15
   colorjs.io:
-    specifier: ^0.4.5
+    specifier: 0.4.5
     version: 0.4.5
-  gsap:
-    specifier: 3.12.2
-    version: 3.12.2
   nanoid:
     specifier: 5.0.2
     version: 5.0.2
@@ -284,10 +281,6 @@ packages:
     resolution: {integrity: sha512-x5UJKlgeUiNT8nyo/AcnwLnZuZNcSjSw0kogRB+Whd1fjjFq4B1hySFxSFWWSn4mIBzg3sRNUDFYc4g5gjPoLg==}
     engines: {node: '>=4'}
     dev: true
-
-  /gsap@3.12.2:
-    resolution: {integrity: sha512-EkYnpG8qHgYBFAwsgsGEqvT1WUidX0tt/ijepx7z8EUJHElykg91RvW1XbkT59T0gZzzszOpjQv7SE41XuIXyQ==}
-    dev: false
 
   /kleur@4.1.5:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
