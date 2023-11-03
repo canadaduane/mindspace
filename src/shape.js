@@ -52,6 +52,14 @@ export function getShape(shapes /*: ShapesMap */, shapeId /*: string */) {
   return shape;
 }
 
+export function setShape(
+  shapes /*: ShapesMap */,
+  shapeId /*: string */,
+  shape /*: Shape */
+) {
+  shapes.set(shapeId, shape);
+}
+
 export function removeShape(shapes, shapeId) {
   if (shapes.has(shapeId)) {
     shapes.delete(shapeId);

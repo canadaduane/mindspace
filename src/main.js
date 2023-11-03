@@ -19,6 +19,7 @@ import {
   setShapeValues,
   makeShapesMap,
   getShape,
+  setShape,
 } from "./shape.js";
 import {
   makeNodesMap,
@@ -350,7 +351,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const lineShapeId = nanoid(12);
     const lineShape = { type: "line", lineType: "short" };
 
-    shapes.set(lineShapeId, lineShape);
+    setShape(shapes, lineShapeId, lineShape);
     nodeDependents1.push({ shapeId: lineShapeId, attrs: { x: "x2", y: "y2" } });
     nodeDependents2.push({ shapeId: lineShapeId, attrs: { x: "x1", y: "y1" } });
 
@@ -369,12 +370,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   const setLineType = (shapeId, lineType) => {
-    const shape = shapes.get(shapeId);
-    if (shape) {
-      return setShapeValues(shape, { lineType });
-    } else {
-      console.warn(`can't set line type, line not found: ${shapeId}`);
-    }
+    const shape = getShape(shapes, shapeId);
+    return setShapeValues(shape, { lineType });
   };
 
   const unselectSelectedLine = () => {
