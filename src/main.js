@@ -12,7 +12,7 @@ import {
   spiralAddend,
 } from "./constants.js";
 import { nanoid } from "nanoid";
-import { ColorWheel, getColorFromWorldCoord } from "./colorwheel.js";
+import { getColorFromWorldCoord } from "./colorwheel.js";
 import {
   applyNodeToShapes,
   removeShape,
@@ -30,9 +30,7 @@ import {
   setNodeValues,
   forEachNode,
 } from "./node.js";
-import { Transition } from "./transition.js";
 import { makeDraggable } from "./drag.js";
-import { FirstTime } from "./firsttime.js";
 import { Orb } from "./orb.js";
 import { Line, demoteLineType } from "./line.js";
 import { Cone } from "./cone.js";
@@ -582,15 +580,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
             }
           })}
         </svg>
-        <!-- -->
-        <${Transition}
-          active=${showColorWheel}
-          in=${{ ms: 1000 }}
-          out=${{ ms: 1000 }}
-        >
-          <${ColorWheel} w=${winW} h=${winH} />
-        </${Transition}>
-        <!-- -->
         ${htmlShapes.map(([shapeId, shape]) => {
           switch (shape.type) {
             case "circle":
@@ -614,4 +603,4 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   }
 }
 
-renderer.render(html`<${Svg} /><${FirstTime} />`, document.body);
+renderer.render(html`<${Svg} />`, document.body);

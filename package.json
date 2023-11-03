@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "An experiment in spatial notes",
   "scripts": {
-    "dev": "sirv --dev src/",
+    "dev": "echo 'Open http://localhost:8080/src/ (note trailing slash)' && sirv --no-clear --dev",
     "build": "esbuild --bundle src/main.js --format=esm --minify --external:colorjs.io >dist/bundle.js"
   },
   "keywords": [],
