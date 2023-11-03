@@ -26,20 +26,6 @@ export function squash(x, sharpness = 10) {
   return (g(x) - g0) / (g1 - g0);
 }
 
-export function orthogonalVector({ x: x1, y: y1 }, { x: x2, y: y2 }) {
-  // Direction vector
-  let Dx = x2 - x1;
-  let Dy = y2 - y1;
-
-  // Orthogonal vector
-  let Vx = -Dy;
-  let Vy = Dx;
-
-  const magnitude = Math.sqrt(Vx * Vx + Vy * Vy);
-
-  return { x: Vx / magnitude, y: Vy / magnitude };
-}
-
 export function normalizedOrthogonalVectorToPointOnLine(P, lineStart, lineEnd) {
   const { x: Px, y: Py } = P;
   const { x: x1, y: y1 } = lineStart;

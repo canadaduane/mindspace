@@ -6,7 +6,6 @@ import {
   svg,
   distanceFromPointToLine,
   squash,
-  orthogonalVector,
   normalizedOrthogonalVectorToPointOnLine,
 } from "./utils.js";
 import { lineMaxDistance, lineTransition, orbSize } from "./constants.js";
