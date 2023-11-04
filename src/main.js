@@ -12,7 +12,8 @@ import {
   spiralAddend,
 } from "./constants.js";
 import { nanoid } from "nanoid";
-import { getColorFromWorldCoord } from "./colorwheel.js";
+import { getColorFromWorldCoord } from "./color.js";
+import { RainbowBorder } from "./rainbow-border.js";
 import {
   applyNodeToShapes,
   removeShape,
@@ -580,6 +581,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
             }
           })}
         </svg>
+        <${RainbowBorder} w=${winW} h=${winH} borderWidth=${2} />
         ${htmlShapes.map(([shapeId, shape]) => {
           switch (shape.type) {
             case "circle":

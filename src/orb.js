@@ -6,7 +6,7 @@ import {
   orbRectHeight,
   stringLengthTransition,
 } from "./constants.js";
-import { getColorFromWorldCoord } from "./colorwheel.js";
+import { getColorFromWorldCoord } from "./color.js";
 
 function isFirefox() {
   return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
