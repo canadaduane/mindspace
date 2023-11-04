@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "esbuild": "^0.19.4",
+    "flow-bin": "^0.220.1",
     "sirv-cli": "^2.0.2"
   }
 }
