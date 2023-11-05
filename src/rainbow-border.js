@@ -55,38 +55,43 @@ export function* RainbowBorder() {
     // startAnimation(this, propagate);
   });
 
-  for (const { w, h, borderWidth: border } of this) {
-    const borderLength = (w - border * 2) * 2 + (h - border * 2) * 2;
-    const i1 = Math.floor((w / borderLength) * length);
-    const i2 = i1 + Math.floor((h / borderLength) * length);
-    const i3 = i2 + Math.floor((w / borderLength) * length);
-    const i4 = length - 1;
+  for (const { w, h, borderThickness } of this) {
+    const perimeter =
+      (w - borderThickness * 2) * 2 + (h - borderThickness * 2) * 2;
+    const vecWidth = Math.floor((w / perimeter) * length);
+    const vecHeight = Math.floor((h / perimeter) * length);
+    const vecCorner1 = vecWidth;
+    const vecCorner2 = vecCorner1 + vecHeight;
+    const vecCorner3 = vecCorner2 + vecWidth;
+    const vecCorner4 = length - 1;
 
-    const wu = w / i1;
-    const hu = h / (i2 - i1);
+    // convert vec units to pixels
+    const wu = w / vecWidth;
+    const hu = h / vecHeight;
+
     const path = [].concat(
-      heightMap.slice(0, i1).map((height, i) => {
-        const theta = Math.PI / 4 + ((Math.PI / 2) * i) / i1;
-        const px = border + i * wu + Math.cos(theta) * height;
-        const py = border + Math.sin(theta) * height;
+      heightMap.slice(0, vecCorner1).map((height, i) => {
+        const theta = Math.PI / 4 + ((Math.PI / 2) * i) / vecWidth;
+        const px = borderThickness + i * wu + Math.cos(theta) * height;
+        const py = borderThickness + Math.sin(theta) * height;
         return `${i === 0 ? "M" : "L"}${px},${py}`;
       }),
-      heightMap.slice(i1, i2).map((height, i) => {
-        const theta = (Math.PI * 3) / 4 + ((Math.PI / 2) * i) / (i2 - i1);
-        const px = w - border + Math.cos(theta) * height;
-        const py = border + i * hu + Math.sin(theta) * height;
+      heightMap.slice(vecCorner1, vecCorner2).map((height, i) => {
+        const theta = (Math.PI * 3) / 4 + ((Math.PI / 2) * i) / vecHeight;
+        const px = w - borderThickness + Math.cos(theta) * height;
+        const py = borderThickness + i * hu + Math.sin(theta) * height;
         return `L${px},${py}`;
       }),
-      heightMap.slice(i2, i3).map((height, i) => {
-        const theta = (Math.PI * 5) / 4 + ((Math.PI / 2) * i) / (i3 - i2);
-        const px = w - border - i * wu + Math.cos(theta) * height;
-        const py = h - border + Math.sin(theta) * height;
+      heightMap.slice(vecCorner2, vecCorner3).map((height, i) => {
+        const theta = (Math.PI * 5) / 4 + ((Math.PI / 2) * i) / vecWidth;
+        const px = w - borderThickness - i * wu + Math.cos(theta) * height;
+        const py = h - borderThickness + Math.sin(theta) * height;
         return `L${px},${py}`;
       }),
-      heightMap.slice(i3, i4).map((height, i) => {
-        const theta = (Math.PI * 7) / 4 + ((Math.PI / 2) * i) / (i4 - i3);
-        const px = border + Math.cos(theta) * height;
-        const py = h - border - i * hu + Math.sin(theta) * height;
+      heightMap.slice(vecCorner3, vecCorner4).map((height, i) => {
+        const theta = (Math.PI * 7) / 4 + ((Math.PI / 2) * i) / vecHeight;
+        const px = borderThickness + Math.cos(theta) * height;
+        const py = h - borderThickness - i * hu + Math.sin(theta) * height;
         return `L${px},${py}`;
       })
     );

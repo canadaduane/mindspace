@@ -581,7 +581,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
             }
           })}
         </svg>
-        <${RainbowBorder} w=${winW} h=${winH} borderWidth=${5} />
+        <${RainbowBorder} w=${winW} h=${winH} borderThickness=${5} />
         ${htmlShapes.map(([shapeId, shape]) => {
           switch (shape.type) {
             case "circle":
