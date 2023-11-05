@@ -13,7 +13,7 @@ export function getColorFromScreenCoord(
 ) /*: any */ {
   const a = (x / w - 0.5) * C;
   const b = (y / h - 0.5) * C;
-  return new Color("oklab", [1, a, b]).to("srgb").toString();
+  return new Color("oklab", [1, a, b]).toString();
 }
 
 export function getColorFromPolarCoord(
@@ -22,7 +22,8 @@ export function getColorFromPolarCoord(
 ) /*: any */ {
   const a = C * Math.cos(phi);
   const b = C * Math.sin(phi);
-  return new Color("oklab", [lightness, a, b]).to("srgb").toString();
+  // return new Color("oklab", [lightness, a, b]).to("srgb").toString();
+  return new Color("oklab", [lightness, a, b]).toString();
 }
 
 export function getColorFromWorldCoord(
