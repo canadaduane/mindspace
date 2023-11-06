@@ -1,19 +1,18 @@
 import { html } from "./utils.js";
-import { getColorFromPolarCoord } from "./color.js";
 import { startAnimation } from "./animation.js";
 
 export function* RainbowBorder() {
-  const N = 12;
-  const radians = Array.from({ length: N }, (_, i) => (i * Math.PI * 2) / N);
+  const N = 30;
+  const hues = Array.from({ length: N + 1 }, (_, i) => (i * 360) / N);
 
   const css = html`<style>
     div.gradient {
       width: 100%;
       height: 100%;
       background-image: conic-gradient(
-        from 90deg,
-        ${radians
-          .map((r, i) => `${getColorFromPolarCoord(r)} ${(i / 12) * 100}%`)
+        from 120deg,
+        ${hues
+          .map((hue, i) => `hwb(${hue} 20% 0%) ${(i / N) * 100}%`)
           .join(",\n")}
       );
     }

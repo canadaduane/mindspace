@@ -3,7 +3,7 @@ import Color from "colorjs.io";
 
 import { getScroll } from "./drag.js";
 
-const C = 0.8;
+const C = 0.4;
 
 export function getColorFromScreenCoord(
   x /*: number */,
@@ -11,19 +11,16 @@ export function getColorFromScreenCoord(
   w /*: number */,
   h /*: number */
 ) /*: any */ {
-  const a = (x / w - 0.5) * C;
-  const b = (y / h - 0.5) * C;
-  return new Color("oklab", [1, a, b]).toString();
+  const hue = ((-Math.atan2(x - w / 2, y - h / 2) / Math.PI) * 180 + 60) % 360;
+  return getColorFromPolarCoord(hue, 0.2, 0);
 }
 
 export function getColorFromPolarCoord(
-  phi /*: number */,
-  lightness /*: number */ = 1.0
+  hue /*: number */,
+  white /*: number */,
+  black /*: number */
 ) /*: any */ {
-  const a = C * Math.cos(phi);
-  const b = C * Math.sin(phi);
-  // return new Color("oklab", [lightness, a, b]).to("srgb").toString();
-  return new Color("oklab", [lightness, a, b]).toString();
+  return `hwb(${hue} ${white * 100}% ${black * 100}%)`;
 }
 
 export function getColorFromWorldCoord(
