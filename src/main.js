@@ -214,13 +214,33 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   window.addEventListener("pointermove", (event) => {
-    dragPos.x = event.clientX;
-    dragPos.y = event.clientY;
+    const threshold = 50;
+    const x = event.clientX;
+    const y = event.clientY;
 
-    focusTop = {
-      x: dragPos.x ?? 0,
-      magnitude: Math.max(0, 50 - dragPos.y ?? 0),
-    };
+    const ratio = winW / winH;
+    const diagFall = (winW - x) / (winH - y);
+    const diagRise = x / (winH - y);
+
+    focusTop = undefined;
+    focusRight = undefined;
+    focusLeft = undefined;
+    focusBottom = undefined;
+    if (diagFall < ratio && diagRise < ratio) {
+      focusTop = { x, magnitude: Math.max(0, 2 * Math.min(25, 50 - y)) };
+    } else if (diagFall < ratio && diagRise > ratio) {
+      focusRight = {
+        y,
+        magnitude: Math.max(0, 2 * Math.min(25, 50 - (winW - x))),
+      };
+    } else if (diagFall > ratio && diagRise < ratio) {
+      focusLeft = { y, magnitude: Math.max(0, 2 * Math.min(25, 50 - x)) };
+    } else if (diagFall > ratio && diagRise > ratio) {
+      focusBottom = {
+        x,
+        magnitude: Math.max(0, 2 * Math.min(25, 50 - (winH - y))),
+      };
+    }
 
     this.refresh();
   });
@@ -232,7 +252,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let coneShapeDepShapeIds = [];
   let coneSelectColorMode /*: "static" | "dynamic" */ = "static";
   const conePos = { x: 0, y: 0 };
-  const dragPos = { x: 0, y: 0 };
   const shapeIdsCutThisMotion = new Set();
 
   const enableDisableConeLines = () => {
@@ -601,6 +620,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           h=${winH}
           borderThickness=${5}
           focusTop=${focusTop}
+          focusRight=${focusRight}
+          focusLeft=${focusLeft}
+          focusBottom=${focusBottom}
         />
         ${htmlShapes.map(([shapeId, shape]) => {
           switch (shape.type) {

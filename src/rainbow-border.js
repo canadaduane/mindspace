@@ -56,9 +56,15 @@ export function* RainbowBorder() {
     startAnimation(this, propagate);
   });
 
-  for (const { w, h, borderThickness, focusTop } of this) {
-    // const focusTop = w / 2;
-
+  for (const {
+    w,
+    h,
+    borderThickness,
+    focusTop,
+    focusRight,
+    focusLeft,
+    focusBottom,
+  } of this) {
     const perimeter =
       (w - borderThickness * 2) * 2 + (h - borderThickness * 2) * 2;
     const vecWidth = Math.floor((w / perimeter) * length);
@@ -82,6 +88,45 @@ export function* RainbowBorder() {
           maxHeight - (maxHeight * (dist * dist)) / vecWidth
         );
         if (height > 0) heightMap[i] = height;
+      }
+    }
+
+    if (focusRight !== undefined) {
+      const maxHeight = focusRight.magnitude;
+      const vecFocusRight = focusRight.y / hu;
+      for (let i = 0; i < vecHeight; i++) {
+        const dist = Math.abs(i - vecFocusRight);
+        const height = Math.max(
+          0,
+          maxHeight - (maxHeight * (dist * dist)) / vecHeight
+        );
+        if (height > 0) heightMap[vecCorner1 + i] = height;
+      }
+    }
+
+    if (focusLeft !== undefined) {
+      const maxHeight = focusLeft.magnitude;
+      const vecFocusLeft = focusLeft.y / hu;
+      for (let i = 0; i < vecHeight; i++) {
+        const dist = Math.abs(i - vecFocusLeft);
+        const height = Math.max(
+          0,
+          maxHeight - (maxHeight * (dist * dist)) / vecHeight
+        );
+        if (height > 0) heightMap[vecCorner4 - i] = height;
+      }
+    }
+
+    if (focusBottom !== undefined) {
+      const maxHeight = focusBottom.magnitude;
+      const vecFocusBottom = focusBottom.x / wu;
+      for (let i = 0; i < vecWidth; i++) {
+        const dist = Math.abs(i - vecFocusBottom);
+        const height = Math.max(
+          0,
+          maxHeight - (maxHeight * (dist * dist)) / vecWidth
+        );
+        if (height > 0) heightMap[vecCorner3 - i] = height;
       }
     }
 
