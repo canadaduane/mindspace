@@ -55,6 +55,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let controlledNodeId;
   let selectedLineShapeId;
 
+  let focusTop, focusRight, focusBottom, focusLeft;
+
   // Scroll to center of area after first render
   window.addEventListener("load", () => {
     document.documentElement.scrollLeft = window.innerWidth / 2;
@@ -211,6 +213,18 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   };
 
+  window.addEventListener("pointermove", (event) => {
+    dragPos.x = event.clientX;
+    dragPos.y = event.clientY;
+
+    focusTop = {
+      x: dragPos.x ?? 0,
+      magnitude: Math.max(0, 50 - dragPos.y ?? 0),
+    };
+
+    this.refresh();
+  });
+
   document.body.addEventListener("keydown", onKeyDown);
 
   let coneNodeId;
@@ -218,6 +232,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let coneShapeDepShapeIds = [];
   let coneSelectColorMode /*: "static" | "dynamic" */ = "static";
   const conePos = { x: 0, y: 0 };
+  const dragPos = { x: 0, y: 0 };
   const shapeIdsCutThisMotion = new Set();
 
   const enableDisableConeLines = () => {
@@ -581,7 +596,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
             }
           })}
         </svg>
-        <${RainbowBorder} w=${winW} h=${winH} borderThickness=${5} />
+        <${RainbowBorder}
+          w=${winW}
+          h=${winH}
+          borderThickness=${5}
+          focusTop=${focusTop}
+        />
         ${htmlShapes.map(([shapeId, shape]) => {
           switch (shape.type) {
             case "circle":

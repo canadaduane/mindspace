@@ -19,7 +19,7 @@ export function* RainbowBorder() {
     }
   </style>`;
 
-  const length = 200;
+  const length = 500;
   const heightMap = Array.from({ length }, () => 0);
   const velocityMap = Array.from({ length }, () => 0);
   let perturbTimeout = 1000;
@@ -33,9 +33,10 @@ export function* RainbowBorder() {
     setTimeout(perturb, perturbTimeout);
     if (perturbTimeout > 100) perturbTimeout -= 100;
   };
-  perturb();
+  // perturb();
 
   // heightMap[150] = 20;
+  const viscosity = 0.9;
 
   const propagate = () => {
     let left = heightMap[length - 1];
@@ -44,7 +45,7 @@ export function* RainbowBorder() {
       const preservedLeft = heightMap[i];
       heightMap[i] = (heightMap[i] + left + right) / 3 + velocityMap[i];
       velocityMap[i] -= heightMap[i] / 12;
-      velocityMap[i] *= 0.97;
+      velocityMap[i] *= viscosity;
       left = preservedLeft;
       right = heightMap[(i + 2) % length];
     }
@@ -52,10 +53,12 @@ export function* RainbowBorder() {
   };
 
   this.schedule(() => {
-    // startAnimation(this, propagate);
+    startAnimation(this, propagate);
   });
 
-  for (const { w, h, borderThickness } of this) {
+  for (const { w, h, borderThickness, focusTop } of this) {
+    // const focusTop = w / 2;
+
     const perimeter =
       (w - borderThickness * 2) * 2 + (h - borderThickness * 2) * 2;
     const vecWidth = Math.floor((w / perimeter) * length);
@@ -68,6 +71,19 @@ export function* RainbowBorder() {
     // convert vec units to pixels
     const wu = w / vecWidth;
     const hu = h / vecHeight;
+
+    if (focusTop !== undefined) {
+      const maxHeight = focusTop.magnitude;
+      const vecFocusTop = focusTop.x / wu;
+      for (let i = 0; i < vecWidth; i++) {
+        const dist = Math.abs(i - vecFocusTop);
+        const height = Math.max(
+          0,
+          maxHeight - (maxHeight * (dist * dist)) / vecWidth
+        );
+        if (height > 0) heightMap[i] = height;
+      }
+    }
 
     const path = [].concat(
       heightMap.slice(0, vecCorner1).map((height, i) => {
