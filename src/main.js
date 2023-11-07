@@ -250,7 +250,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let coneNodeId;
   let coneShapeId;
   let coneShapeDepShapeIds = [];
-  let coneSelectColorMode /*: "static" | "dynamic" */ = "static";
   const conePos = { x: 0, y: 0 };
   const shapeIdsCutThisMotion = new Set();
 
@@ -275,7 +274,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   const { start, end, move, touchStart } = makeDraggable(conePos, {
     onLongPress: ({ x, y }) => {
       showColorWheel = true;
-      coneSelectColorMode = "dynamic";
       this.refresh();
     },
     onStart: ({ x, y }) => {
@@ -287,7 +285,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       controlledNodeId = nodeId;
       coneShapeId = shapeId;
       coneShapeDepShapeIds = getDependentShapesOfControllerShape(coneShapeId);
-      coneSelectColorMode = "static";
       unselectSelectedLine();
       this.refresh();
     },
@@ -369,10 +366,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       const node = getNode(nodes, coneNodeId);
       node.x = x;
       node.y = y;
-
-      if (coneSelectColorMode === "dynamic") {
-        node.color = getColorFromWorldCoord(x, y);
-      }
 
       this.refresh();
     },
