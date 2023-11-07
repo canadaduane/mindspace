@@ -1,5 +1,5 @@
 import { renderer } from "@b9g/crank/dom";
-import { html } from "./utils.js";
+import { html, closestSide } from "./utils.js";
 import { doesLineIntersectLine, doesLineIntersectCircle } from "./trig.js";
 import { Vector2 } from "./math/vector2.js";
 import {
@@ -198,32 +198,36 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   window.addEventListener("pointermove", (event) => {
-    const threshold = 50;
-    const x = event.clientX;
-    const y = event.clientY;
-
-    const ratio = winW / winH;
-    const diagFall = (winW - x) / (winH - y);
-    const diagRise = x / (winH - y);
+    const pos = new Vector2(event.clientX, event.clientY);
+    const size = new Vector2(winW, winH);
+    const side = closestSide(pos, size);
 
     focusTop = undefined;
     focusRight = undefined;
     focusLeft = undefined;
     focusBottom = undefined;
-    if (diagFall < ratio && diagRise < ratio) {
-      focusTop = { x, magnitude: Math.max(0, 2 * Math.min(25, 50 - y)) };
-    } else if (diagFall < ratio && diagRise > ratio) {
-      focusRight = {
-        y,
-        magnitude: Math.max(0, 2 * Math.min(25, 50 - (winW - x))),
-      };
-    } else if (diagFall > ratio && diagRise < ratio) {
-      focusLeft = { y, magnitude: Math.max(0, 2 * Math.min(25, 50 - x)) };
-    } else if (diagFall > ratio && diagRise > ratio) {
-      focusBottom = {
-        x,
-        magnitude: Math.max(0, 2 * Math.min(25, 50 - (winH - y))),
-      };
+
+    const threshold = 50;
+    const magnitude = Math.max(
+      0,
+      2 * Math.min(threshold / 2, threshold - side.distance)
+    );
+    switch (side.side) {
+      case "top":
+        focusTop = { x: pos.x, magnitude };
+        break;
+
+      case "bottom":
+        focusBottom = { x: pos.x, magnitude };
+        break;
+
+      case "left":
+        focusLeft = { y: pos.y, magnitude };
+        break;
+
+      case "right":
+        focusRight = { y: pos.y, magnitude };
+        break;
     }
 
     this.refresh();
