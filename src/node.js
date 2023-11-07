@@ -1,6 +1,10 @@
+// @flow
 import { nanoid } from "nanoid";
 
-/*+
+/*::
+
+type NodeInitial = Node & { nodeId: string };
+
 type Node = {
   x: number; // The global X coordinate for this node
   y: number; // The global Y coordinate for this node
@@ -19,7 +23,9 @@ type NodeMap = Map<string, Node>;
 
 */
 
-export function makeNodesMap(initNodes /*: Node[] */) {
+export function makeNodesMap(
+  initNodes /*: NodeInitial[] */
+) /*: Map<string, Node> */ {
   return new Map(
     initNodes.map(({ nodeId, ...node }) => {
       return [nodeId ?? nanoid(12), node];
@@ -27,7 +33,10 @@ export function makeNodesMap(initNodes /*: Node[] */) {
   );
 }
 
-export function getNode(nodes /*: NodeMap */, nodeId /*: string */) {
+export function getNode(
+  nodes /*: NodeMap */,
+  nodeId /*: string */
+) /*: Node */ {
   const node = nodes.get(nodeId);
   if (!node) throw new Error(`can't get node ${nodeId}`);
   return node;
@@ -41,7 +50,10 @@ export function setNode(
   nodes.set(nodeId, node);
 }
 
-export function removeNode(nodes /*: NodeMap */, nodeId /*: string */) {
+export function removeNode(
+  nodes /*: NodeMap */,
+  nodeId /*: string */
+) /*: boolean */ {
   if (nodes.has(nodeId)) {
     nodes.delete(nodeId);
     return true;
@@ -58,10 +70,13 @@ export function forEachNode(
   }
 }
 
-export function hasNode(nodes /*: NodeMap */, nodeId /*: string */) {
+export function hasNode(
+  nodes /*: NodeMap */,
+  nodeId /*: string */
+) /*: boolean */ {
   return nodes.has(nodeId);
 }
 
-export function setNodeValues(node /*: Node */, values) {
+export function setNodeValues(node /*: Node */, values /*: any */) {
   Object.assign(node, values);
 }
