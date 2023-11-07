@@ -1,9 +1,6 @@
 import { renderer } from "@b9g/crank/dom";
-import {
-  html,
-  doesLineIntersectLine,
-  doesLineIntersectCircle,
-} from "./utils.js";
+import { html } from "./utils.js";
+import { doesLineIntersectLine, doesLineIntersectCircle } from "./trig.js";
 import {
   scrollbarThickness,
   orbSize,
@@ -56,12 +53,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   let focusTop, focusRight, focusBottom, focusLeft;
 
-  // Scroll to center of area after first render
-  window.addEventListener("load", () => {
-    document.documentElement.scrollLeft = window.innerWidth / 2;
-    document.documentElement.scrollTop = window.innerHeight / 2;
-  });
-
   const matchWorkAreaSizesWithoutRefresh = () => {
     winW = window.innerWidth;
     winH = window.innerHeight;
@@ -82,6 +73,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   /** Event Listeners */
+
+  window.addEventListener("load", () => {
+    // Scroll to center of area after first render
+    document.documentElement.scrollLeft = window.innerWidth / 2;
+    document.documentElement.scrollTop = window.innerHeight / 2;
+  });
 
   window.addEventListener("resize", matchWorkAreaSizes);
 

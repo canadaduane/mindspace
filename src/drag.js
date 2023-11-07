@@ -1,4 +1,4 @@
-import { calcDistance } from "./utils.js";
+import { calcDistance } from "./trig.js";
 
 const longPressMaxDrift = 3;
 

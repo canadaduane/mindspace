@@ -1,13 +1,10 @@
 import Color from "colorjs.io";
+import { dispatch, sigmoid, svg, squash } from "./utils.js";
 import {
   calcDistance,
-  dispatch,
-  sigmoid,
-  svg,
   distanceFromPointToLine,
-  squash,
   normalizedOrthogonalVectorToPointOnLine,
-} from "./utils.js";
+} from "./trig.js";
 import { lineMaxDistance, lineTransition, orbSize } from "./constants.js";
 import { makeDraggable } from "./drag.js";
 

@@ -1,4 +1,5 @@
-import { calcDistance, dispatch, sigmoid, svg } from "./utils.js";
+import { dispatch, sigmoid, svg } from "./utils.js";
+import { calcDistance } from "./trig.js";
 import { orbSize, bezierCircleK } from "./constants.js";
 import Color from "colorjs.io";
 import { startAnimation, stopAnimation } from "./animation.js";
