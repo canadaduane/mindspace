@@ -41,7 +41,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let nodes = makeNodesMap(initNodes);
   let shapes = makeShapesMap(initShapes);
 
-  let showColorWheel = false;
   let mostRecentlyActiveNodeId;
 
   let coneCutPath /*: Point[] */ = [];
@@ -89,22 +88,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   this.addEventListener("setCutMode", ({ detail: { mode } }) => {
     coneCutMode = mode;
     enableDisableConeLines();
-    if (coneCutMode) {
-      showColorWheel = false;
-    } else if (!coneCutMode && coneNodeId) {
-      showColorWheel = true;
-    }
     // no need to refresh because we're animating "cone"
   });
 
   this.addEventListener("setCutPath", ({ detail: { path, theta } }) => {
     coneCutTheta = theta;
     coneCutPath = path;
-  });
-
-  this.addEventListener("setShowColorWheel", ({ detail: { enabled } }) => {
-    showColorWheel = enabled;
-    this.refresh();
   });
 
   this.addEventListener("controllingNode", ({ detail: { nodeId } }) => {
@@ -273,7 +262,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   const { start, end, move, touchStart } = makeDraggable(conePos, {
     onLongPress: ({ x, y }) => {
-      showColorWheel = true;
       this.refresh();
     },
     onStart: ({ x, y }) => {
@@ -301,7 +289,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           console.log("no cone?", shape, coneShapeId);
         }
       }
-      showColorWheel = false;
       coneNodeId = undefined;
       coneShapeId = undefined;
       shapeIdsCutThisMotion.clear();

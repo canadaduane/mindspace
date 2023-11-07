@@ -22,11 +22,6 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
   let orbSelectColorMode /*: "static" | "dynamic" */ = "static";
 
   const { start, end, move, touchStart } = makeDraggable(pos, {
-    onLongPress: () => {
-      orbSelectColorMode = "dynamic";
-
-      dispatch(this, "setShowColorWheel", { enabled: true });
-    },
     onStart: () => {
       orbSelectColorMode = "static";
       didDrag = false;
@@ -37,9 +32,6 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
       if (!didDrag) {
         setTimeout(() => editEl?.focus(), 100);
       }
-
-      // if long press enabled the color wheel, hide it
-      dispatch(this, "setShowColorWheel", { enabled: false });
     },
     onMove: ({ x, y }) => {
       didDrag = true;
