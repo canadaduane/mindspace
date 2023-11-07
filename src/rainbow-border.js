@@ -1,5 +1,24 @@
-import { html } from "./utils.js";
+import { html, closestSide } from "./utils.js";
 import { startAnimation } from "./animation.js";
+
+export function getRainbowFocus(pos, size) {
+  const closest = closestSide(pos, size);
+
+  const threshold = 50;
+  const magnitude = Math.max(
+    0,
+    2 * Math.min(threshold / 2, threshold - closest.distance)
+  );
+  switch (closest.side) {
+    case "top":
+    case "bottom":
+      return { side: closest.side, point: pos.x, magnitude };
+
+    case "left":
+    case "right":
+      return { side: closest.side, point: pos.y, magnitude };
+  }
+}
 
 export function* RainbowBorder() {
   const N = 30;
@@ -55,15 +74,7 @@ export function* RainbowBorder() {
     startAnimation(this, propagate);
   });
 
-  for (const {
-    w,
-    h,
-    borderThickness,
-    focusTop,
-    focusRight,
-    focusLeft,
-    focusBottom,
-  } of this) {
+  for (const { w, h, borderThickness, focus } of this) {
     const perimeter =
       (w - borderThickness * 2) * 2 + (h - borderThickness * 2) * 2;
     const vecWidth = Math.floor((w / perimeter) * length);
@@ -77,55 +88,34 @@ export function* RainbowBorder() {
     const wu = w / vecWidth;
     const hu = h / vecHeight;
 
-    if (focusTop !== undefined) {
-      const maxHeight = focusTop.magnitude;
-      const vecFocusTop = focusTop.x / wu;
-      for (let i = 0; i < vecWidth; i++) {
-        const dist = Math.abs(i - vecFocusTop);
-        const height = Math.max(
-          0,
-          maxHeight - (maxHeight * (dist * dist)) / vecWidth
-        );
-        if (height > 0) heightMap[i] = height;
+    if (focus) {
+      let vecPoint;
+      let vecMax;
+      let getIdx;
+      if (focus.side === "top") {
+        vecPoint = focus.point / wu;
+        vecMax = vecWidth;
+        getIdx = (i) => i;
+      } else if (focus.side === "bottom") {
+        vecPoint = focus.point / wu;
+        vecMax = vecWidth;
+        getIdx = (i) => vecCorner3 - i;
+      } else if (focus.side === "left") {
+        vecPoint = focus.point / hu;
+        vecMax = vecHeight;
+        getIdx = (i) => vecCorner4 - i;
+      } else if (focus.side === "right") {
+        vecPoint = focus.point / hu;
+        vecMax = vecHeight;
+        getIdx = (i) => vecCorner1 + i;
       }
-    }
 
-    if (focusRight !== undefined) {
-      const maxHeight = focusRight.magnitude;
-      const vecFocusRight = focusRight.y / hu;
-      for (let i = 0; i < vecHeight; i++) {
-        const dist = Math.abs(i - vecFocusRight);
-        const height = Math.max(
-          0,
-          maxHeight - (maxHeight * (dist * dist)) / vecHeight
-        );
-        if (height > 0) heightMap[vecCorner1 + i] = height;
-      }
-    }
+      const m = focus.magnitude;
 
-    if (focusLeft !== undefined) {
-      const maxHeight = focusLeft.magnitude;
-      const vecFocusLeft = focusLeft.y / hu;
-      for (let i = 0; i < vecHeight; i++) {
-        const dist = Math.abs(i - vecFocusLeft);
-        const height = Math.max(
-          0,
-          maxHeight - (maxHeight * (dist * dist)) / vecHeight
-        );
-        if (height > 0) heightMap[vecCorner4 - i] = height;
-      }
-    }
-
-    if (focusBottom !== undefined) {
-      const maxHeight = focusBottom.magnitude;
-      const vecFocusBottom = focusBottom.x / wu;
-      for (let i = 0; i < vecWidth; i++) {
-        const dist = Math.abs(i - vecFocusBottom);
-        const height = Math.max(
-          0,
-          maxHeight - (maxHeight * (dist * dist)) / vecWidth
-        );
-        if (height > 0) heightMap[vecCorner3 - i] = height;
+      for (let i = 0; i < vecMax; i++) {
+        const dist = Math.abs(i - vecPoint);
+        const height = Math.max(0, m - (m * (dist * dist)) / vecMax);
+        if (height > 0) heightMap[getIdx(i)] = height;
       }
     }
 
