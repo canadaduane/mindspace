@@ -1,13 +1,18 @@
+import { Vector2 } from "./math/vector2.js";
 import { calcDistance } from "./trig.js";
 
 const longPressMaxDrift = 3;
 
+const scrollPos = new Vector2();
 export function getScroll() {
   const doc = document.documentElement;
-  const left = doc.scrollLeft - (doc.clientLeft || 0);
-  const top = doc.scrollTop - (doc.clientTop || 0);
 
-  return { left, top };
+  scrollPos.set(
+    doc.scrollLeft - (doc.clientLeft || 0),
+    doc.scrollTop - (doc.clientTop || 0)
+  );
+
+  return scrollPos;
 }
 
 export function makeDraggable(
@@ -19,7 +24,7 @@ export function makeDraggable(
 
   let longPressTimeout /*: Timeout */;
   let longPressIsPossible = true;
-  const longPressInitialPos = { x: 0, y: 0 };
+  const longPressInitialPos = new Vector2();
 
   const start = (event) => {
     const { target, clientX, clientY, pointerId, button } = event;
@@ -30,13 +35,12 @@ export function makeDraggable(
 
     canceled = false;
 
-    const { left, top } = getScroll();
-    const x = clientX + left;
-    const y = clientY + top;
+    const scroll = getScroll();
+    const x = clientX + scroll.x;
+    const y = clientY + scroll.y;
 
     longPressIsPossible = true;
-    longPressInitialPos.x = x;
-    longPressInitialPos.y = y;
+    longPressInitialPos.set(x, y);
 
     longPressTimeout = setTimeout(() => {
       if (!longPressIsPossible) return;
@@ -57,9 +61,9 @@ export function makeDraggable(
 
     const { clientX, clientY } = event;
 
-    const { left, top } = getScroll();
-    const x = clientX + left;
-    const y = clientY + top;
+    const scroll = getScroll();
+    const x = clientX + scroll.x;
+    const y = clientY + scroll.y;
 
     clearTimeout(longPressTimeout);
 
@@ -74,9 +78,9 @@ export function makeDraggable(
 
     const { clientX, clientY } = event;
 
-    const { left, top } = getScroll();
-    const x = clientX + left;
-    const y = clientY + top;
+    const scroll = getScroll();
+    const x = clientX + scroll.x;
+    const y = clientY + scroll.y;
 
     const longPressDriftDistance = calcDistance(
       x,
