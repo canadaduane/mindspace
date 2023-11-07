@@ -23,6 +23,7 @@ export function makeDraggable(
   let canceled = false;
   // pixel offset from center of object being dragged
   const offset = new Vector2();
+  const worldPos = new Vector2();
 
   let longPressTimeout /*: Timeout */;
   let longPressIsPossible = true;
@@ -37,22 +38,20 @@ export function makeDraggable(
 
     canceled = false;
 
-    const scroll = getScroll();
-    const x = clientX + scroll.x;
-    const y = clientY + scroll.y;
+    worldPos.set(clientX, clientY).add(getScroll());
 
     longPressIsPossible = true;
-    longPressInitialPos.set(x, y);
+    longPressInitialPos.copy(worldPos);
 
     longPressTimeout = setTimeout(() => {
       if (!longPressIsPossible) return;
-      onLongPress?.({ x, y });
+      onLongPress?.({ x: worldPos.x, y: worldPos.y });
     }, longPressMs);
 
     isDragging = true;
-    offset.set(pos.x - x, pos.y - y);
+    offset.copy(pos).sub(worldPos);
 
-    const allow = onStart?.({ event, x, y, offset });
+    const allow = onStart?.({ event, x: worldPos.x, y: worldPos.y, offset });
     if (allow === true || allow === undefined) {
       target.setPointerCapture(pointerId);
     }
@@ -65,13 +64,11 @@ export function makeDraggable(
 
     const { clientX, clientY } = event;
 
-    const scroll = getScroll();
-    const x = clientX + scroll.x;
-    const y = clientY + scroll.y;
+    worldPos.set(clientX, clientY).add(getScroll());
 
     clearTimeout(longPressTimeout);
 
-    onEnd?.({ event, x, y });
+    onEnd?.({ event, x: worldPos.x, y: worldPos.y });
   };
 
   const move = (event) => {
@@ -82,24 +79,18 @@ export function makeDraggable(
 
     const { clientX, clientY } = event;
 
-    const scroll = getScroll();
-    const x = clientX + scroll.x;
-    const y = clientY + scroll.y;
+    worldPos.set(clientX, clientY).add(getScroll());
 
-    const longPressDriftDistance = calcDistance(
-      x,
-      y,
-      longPressInitialPos.x,
-      longPressInitialPos.y
-    );
+    const longPressDriftDistance = worldPos.distanceTo(longPressInitialPos);
     if (longPressDriftDistance >= longPressMaxDrift) {
       longPressIsPossible = false;
     }
 
-    pos.x = x + offset.x;
-    pos.y = y + offset.y;
+    pos.x = worldPos.x + offset.x;
+    pos.y = worldPos.y + offset.y;
+    // pos.copy(worldPos).add(offset);
 
-    onMove?.({ event, x, y, offset });
+    onMove?.({ event, x: worldPos.x, y: worldPos.y, offset });
   };
 
   const touchStart = (e) => e.preventDefault();
