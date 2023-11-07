@@ -1,4 +1,4 @@
-import { Vector2 } from "./math/utils.js";
+import { Vector2 } from "./math/vector2.js";
 import { dispatch, html } from "./utils.js";
 import { makeDraggable } from "./drag.js";
 import {
@@ -20,11 +20,9 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
   let shape = "circle";
   let didDrag = false;
   let content = "";
-  let orbSelectColorMode /*: "static" | "dynamic" */ = "static";
 
   const { start, end, move, touchStart } = makeDraggable(pos, {
     onStart: () => {
-      orbSelectColorMode = "static";
       didDrag = false;
 
       dispatch(this, "controllingNode", { nodeId });
@@ -36,14 +34,7 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
     },
     onMove: ({ x, y }) => {
       didDrag = true;
-      dispatch(this, "nodeMoved", {
-        nodeId,
-        ...pos,
-        color:
-          orbSelectColorMode === "dynamic"
-            ? getColorFromWorldCoord(x, y)
-            : undefined,
-      });
+      dispatch(this, "nodeMoved", { nodeId, ...pos });
     },
   });
 

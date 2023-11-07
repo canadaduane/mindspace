@@ -103,13 +103,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     mostRecentlyActiveNodeId = nodeId;
   });
 
-  this.addEventListener("nodeMoved", ({ detail: { nodeId, x, y, color } }) => {
+  this.addEventListener("nodeMoved", ({ detail: { nodeId, x, y } }) => {
     const node = getNode(nodes, nodeId);
     node.x = x;
     node.y = y;
-    if (color !== undefined) {
-      node.color = color;
-    }
     this.refresh();
   });
 
