@@ -19,8 +19,10 @@ export function makeDraggable(
   pos /*: {x: number, y: number} */,
   { onStart, onEnd, onMove, onLongPress, longPressMs = 1200 }
 ) {
-  let dragging = null;
+  let isDragging = false;
   let canceled = false;
+  // pixel offset from center of object being dragged
+  const offset = new Vector2();
 
   let longPressTimeout /*: Timeout */;
   let longPressIsPossible = true;
@@ -47,8 +49,10 @@ export function makeDraggable(
       onLongPress?.({ x, y });
     }, longPressMs);
 
-    dragging = { dx: pos.x - x, dy: pos.y - y };
-    const allow = onStart?.({ event, x, y, dx: dragging.dx, dy: dragging.dy });
+    isDragging = true;
+    offset.set(pos.x - x, pos.y - y);
+
+    const allow = onStart?.({ event, x, y, offset });
     if (allow === true || allow === undefined) {
       target.setPointerCapture(pointerId);
     }
@@ -57,7 +61,7 @@ export function makeDraggable(
   const end = (event) => {
     if (canceled) return;
 
-    dragging = null;
+    isDragging = false;
 
     const { clientX, clientY } = event;
 
@@ -72,7 +76,7 @@ export function makeDraggable(
 
   const move = (event) => {
     if (canceled) return;
-    if (!dragging) return;
+    if (!isDragging) return;
 
     event.preventDefault();
 
@@ -92,10 +96,10 @@ export function makeDraggable(
       longPressIsPossible = false;
     }
 
-    pos.x = x + dragging.dx;
-    pos.y = y + dragging.dy;
+    pos.x = x + offset.x;
+    pos.y = y + offset.y;
 
-    onMove?.({ event, x, y, dx: dragging.dx, dy: dragging.dy });
+    onMove?.({ event, x, y, offset });
   };
 
   const touchStart = (e) => e.preventDefault();
