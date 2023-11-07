@@ -1,6 +1,7 @@
 import { renderer } from "@b9g/crank/dom";
 import { html } from "./utils.js";
 import { doesLineIntersectLine, doesLineIntersectCircle } from "./trig.js";
+import { Vector2 } from "./math/vector2.js";
 import {
   scrollbarThickness,
   orbSize,
@@ -404,7 +405,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const nodeId = nanoid(12);
     const shapeId = nanoid(12);
 
-    const color = getColorFromWorldCoord(x, y);
+    const p = new Vector2(x, y);
+    const color = getColorFromWorldCoord(p);
 
     // Create a circle or cone that controls the node
     const controllerShape = {
