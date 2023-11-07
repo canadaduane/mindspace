@@ -1,4 +1,5 @@
 import Color from "colorjs.io";
+import { Vector2 } from "./math/vector2.js";
 import { dispatch, sigmoid, svg, squash } from "./utils.js";
 import {
   calcDistance,
@@ -12,11 +13,11 @@ const opacityThreshold = 0.001;
 const defaultStroke = "rgba(240, 240, 240, 1)";
 const warnColor = "rgba(240, 60, 30, 1)";
 
-/*+
+/*::
 type LineProps = {
-  opacity: number 
-  strokeWidth: number
-  stroke: string
+  opacity: number;
+  strokeWidth: number;
+  stroke: string;
 }
 */
 
@@ -26,8 +27,8 @@ export function* Line({ shapeId /*: string */ }) {
   let brokenRatio = 0;
 
   let isDragging = false;
-  const pos = { x: 0, y: 0 };
-  const dragPos = { x: 0, y: 0 };
+  const pos = new Vector2(0, 0);
+  const dragPos = new Vector2(0, 0);
   const {
     start,
     end,
@@ -46,19 +47,23 @@ export function* Line({ shapeId /*: string */ }) {
     },
     onMove: ({ x, y }) => {
       isDragging = true;
-      dragPos.x = x;
-      dragPos.y = y;
+      dragPos.set(x, y);
       this.refresh();
     },
   });
 
+  const p1 = new Vector2();
+  const p2 = new Vector2();
   for (const { x1, y1, x2, y2, type, selected } of this) {
     if (type === "disabled") {
       yield null;
       continue;
     }
 
-    const length = calcDistance(x1, y1, x2, y2);
+    p1.set(x1, y1);
+    p2.set(x2, y2);
+
+    const length = p1.distanceTo(p2);
 
     if (
       canBump &&
@@ -118,13 +123,9 @@ export function* Line({ shapeId /*: string */ }) {
     let path;
 
     if (isDragging && line) {
-      path = `M${x1} ${y1} Q${dragPos.x} ${dragPos.y}, ${x2} ${y2}`;
+      path = `M${p1.x} ${p1.y} Q${dragPos.x} ${dragPos.y}, ${p2.x} ${p2.y}`;
 
-      const perpDist = distanceFromPointToLine(
-        dragPos,
-        { x: x1, y: y1 },
-        { x: x2, y: y2 }
-      );
+      const perpDist = distanceFromPointToLine(dragPos, p1, p2);
 
       const maxDist = 150;
       const rate = broken
@@ -139,11 +140,7 @@ export function* Line({ shapeId /*: string */ }) {
         // isDragging = false;
         cancelDrag();
         broken = true;
-        const vec = normalizedOrthogonalVectorToPointOnLine(
-          dragPos,
-          { x: x1, y: y1 },
-          { x: x2, y: y2 }
-        );
+        const vec = normalizedOrthogonalVectorToPointOnLine(dragPos, p1, p2);
         const incrBrokenRatio = () => {
           brokenRatio += 0.1;
           dragPos.x += (vec.x * 10) / brokenRatio;
@@ -161,7 +158,7 @@ export function* Line({ shapeId /*: string */ }) {
         requestAnimationFrame(incrBrokenRatio);
       }
     } else {
-      path = `M${x1} ${y1} L${x2} ${y2}`;
+      path = `M${p1.x} ${p1.y} L${p2.x} ${p2.y}`;
     }
 
     yield connected &&

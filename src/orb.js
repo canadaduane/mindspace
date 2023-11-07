@@ -1,3 +1,4 @@
+import { Vector2 } from "./math/utils.js";
 import { dispatch, html } from "./utils.js";
 import { makeDraggable } from "./drag.js";
 import {
@@ -13,7 +14,7 @@ function isFirefox() {
 }
 
 export function* Orb({ nodeId, x = 0, y = 0 }) {
-  const pos = { x, y };
+  const pos = new Vector2(x, y);
 
   let editEl;
   let shape = "circle";
@@ -81,8 +82,7 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
   };
 
   for (const { x, y, color, shake } of this) {
-    pos.x = x;
-    pos.y = y;
+    pos.set(x, y);
 
     yield html` <style>
         .orb {
