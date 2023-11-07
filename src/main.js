@@ -45,7 +45,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let coneCutTheta /*: number */ = 0;
   let coneCutMode = false;
 
-  let winW, winH, docW, docH;
+  const winSize = new Vector2();
+  let docW, docH;
   let minDocH = window.innerHeight * 2;
   let minDocW = window.innerWidth * 2;
 
@@ -55,8 +56,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let rainbowFocus;
 
   const matchWorkAreaSizesWithoutRefresh = () => {
-    winW = window.innerWidth;
-    winH = window.innerHeight;
+    winSize.set(window.innerWidth, window.innerHeight);
     if (minDocW < document.documentElement.scrollWidth) {
       minDocW = document.documentElement.scrollWidth;
     }
@@ -199,9 +199,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   window.addEventListener("pointermove", (event) => {
     const pos = new Vector2(event.clientX, event.clientY);
-    const size = new Vector2(winW, winH);
 
-    rainbowFocus = getRainbowFocus(pos, size);
+    rainbowFocus = getRainbowFocus(pos, winSize);
 
     this.refresh();
   });
@@ -569,8 +568,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           })}
         </svg>
         <${RainbowBorder}
-          w=${winW}
-          h=${winH}
+          size=${winSize}
           borderThickness=${5}
           focus=${rainbowFocus}
         />

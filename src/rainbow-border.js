@@ -74,19 +74,20 @@ export function* RainbowBorder() {
     startAnimation(this, propagate);
   });
 
-  for (const { w, h, borderThickness, focus } of this) {
+  for (const { size, borderThickness, focus } of this) {
     const perimeter =
-      (w - borderThickness * 2) * 2 + (h - borderThickness * 2) * 2;
-    const vecWidth = Math.floor((w / perimeter) * length);
-    const vecHeight = Math.floor((h / perimeter) * length);
+      (size.width - borderThickness * 2) * 2 +
+      (size.height - borderThickness * 2) * 2;
+    const vecWidth = Math.floor((size.width / perimeter) * length);
+    const vecHeight = Math.floor((size.height / perimeter) * length);
     const vecCorner1 = vecWidth;
     const vecCorner2 = vecCorner1 + vecHeight;
     const vecCorner3 = vecCorner2 + vecWidth;
     const vecCorner4 = length - 1;
 
     // convert vec units to pixels
-    const wu = w / vecWidth;
-    const hu = h / vecHeight;
+    const wu = size.width / vecWidth;
+    const hu = size.height / vecHeight;
 
     if (focus) {
       let vecPoint;
@@ -128,20 +129,22 @@ export function* RainbowBorder() {
       }),
       heightMap.slice(vecCorner1, vecCorner2).map((height, i) => {
         const theta = (Math.PI * 3) / 4 + ((Math.PI / 2) * i) / vecHeight;
-        const px = w - borderThickness + Math.cos(theta) * height;
+        const px = size.width - borderThickness + Math.cos(theta) * height;
         const py = borderThickness + i * hu + Math.sin(theta) * height;
         return `L${px},${py}`;
       }),
       heightMap.slice(vecCorner2, vecCorner3).map((height, i) => {
         const theta = (Math.PI * 5) / 4 + ((Math.PI / 2) * i) / vecWidth;
-        const px = w - borderThickness - i * wu + Math.cos(theta) * height;
-        const py = h - borderThickness + Math.sin(theta) * height;
+        const px =
+          size.width - borderThickness - i * wu + Math.cos(theta) * height;
+        const py = size.height - borderThickness + Math.sin(theta) * height;
         return `L${px},${py}`;
       }),
       heightMap.slice(vecCorner3, vecCorner4).map((height, i) => {
         const theta = (Math.PI * 7) / 4 + ((Math.PI / 2) * i) / vecHeight;
         const px = borderThickness + Math.cos(theta) * height;
-        const py = h - borderThickness - i * hu + Math.sin(theta) * height;
+        const py =
+          size.height - borderThickness - i * hu + Math.sin(theta) * height;
         return `L${px},${py}`;
       })
     );
@@ -149,10 +152,10 @@ export function* RainbowBorder() {
     yield html`
       ${css}
       <svg
-        viewBox="0 0 ${w} ${h}"
+        viewBox="0 0 ${size.width} ${size.height}"
         style=${{
-          "width": `${w}px`,
-          "height": `${h}px`,
+          "width": `${size.width}px`,
+          "height": `${size.height}px`,
           "pointer-events": "none",
           "position": "fixed",
           "left": 0,
@@ -161,7 +164,13 @@ export function* RainbowBorder() {
         xmlns="http://www.w3.org/2000/svg"
       >
         <mask id="mask">
-          <rect x="0" y="0" width=${w} height=${h} fill="white" />
+          <rect
+            x="0"
+            y="0"
+            width=${size.width}
+            height=${size.height}
+            fill="white"
+          />
 
           <path d=${path.join(" ")} />
         </mask>
