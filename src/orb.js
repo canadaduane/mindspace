@@ -95,6 +95,7 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
           align-items: center;
 
           overflow-y: auto;
+          cursor: default;
         }
         .orb:focus-within {
           outline-width: 9px;
