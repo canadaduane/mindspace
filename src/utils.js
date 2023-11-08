@@ -6,6 +6,10 @@ import { Vector2 } from "./math/vector2.js";
 export const html = jsx;
 export const svg = jsx;
 
+export function isFirefox() /*: boolean */ {
+  return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
+}
+
 export function sigmoid(ratio /*: number */) /*: number */ {
   return 1 - 1 / (1 + Math.pow(Math.E, ratio));
 }

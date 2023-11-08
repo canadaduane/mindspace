@@ -1,6 +1,6 @@
 import { Vector2 } from "../math/vector2.js";
 import { css } from "../styles.js";
-import { dispatch, html } from "../utils.js";
+import { dispatch, html, isFirefox } from "../utils.js";
 import { makeDraggable } from "../drag.js";
 import {
   orbSize,
@@ -9,10 +9,6 @@ import {
   stringLengthTransition,
 } from "../constants.js";
 import { getColorFromWorldCoord } from "../color.js";
-
-function isFirefox() {
-  return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
-}
 
 export function* Circle({ nodeId, x = 0, y = 0 }) {
   const pos = new Vector2(x, y);

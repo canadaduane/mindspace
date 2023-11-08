@@ -63,8 +63,8 @@ css`
     border-radius: 100%;
     outline-width: 0px;
     outline-style: solid;
-    transition: width 0.9s ease-in-out, height 0.9s ease-in-out,
-      background-color 0.9s ease-in-out;
+    transition: width 0.2s ease-in-out, height 0.2s ease-in-out,
+      background-color 0.2s ease-in-out;
 
     display: flex;
     justify-content: center;

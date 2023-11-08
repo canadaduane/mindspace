@@ -233,15 +233,22 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     onStart: ({ x, y }) => {
       const now = new Date().valueOf();
       const interval = now - lastStartedAt;
-      if (interval < doubleTapMs && !isDoubleTap) {
+      if (interval >= 0 && interval < doubleTapMs && !isDoubleTap) {
         console.log("double tap detected");
         isDoubleTap = true;
         const shape = getShape(shapes, tapShapeId);
         setShapeValues(shape, { x, y, tapState: "creating" });
 
         setTimeout(() => {
-          createNode(x, y, "circle");
-        }, 900);
+          removeShape(shapes, tapShapeId);
+          const { nodeId, shapeId } = createNode(x, y, "circle");
+          console.log({
+            nodeId,
+            shapeId,
+            nodes: nodes.size,
+            shapes: shapes.size,
+          });
+        }, 200);
 
         this.refresh();
         return;
@@ -251,10 +258,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
       lastStartedAt = now;
 
-      if (tapShapeId) {
-        console.log("remove shape 1");
-        removeShape(shapes, tapShapeId);
-      }
       clearTimeout(endTimeout);
 
       tapShapeId = createShape(shapes, {
@@ -272,9 +275,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       if (isDoubleTap) return;
 
       clearTimeout(endTimeout);
-
-      // console.log("remove shape 2");
-      // removeShape(shapes, tapShapeId);
 
       if (coneCutMode) {
         console.log("remove cone node", coneNodeId);
