@@ -1,7 +1,7 @@
 import { Vector2 } from "./math/vector2.js";
 import { calcDistance } from "./trig.js";
 
-const longPressMaxDrift = 3;
+const defaultMaxDrift = 3;
 
 const scrollPos = new Vector2();
 export function getScroll() {
@@ -17,7 +17,14 @@ export function getScroll() {
 
 export function makeDraggable(
   pos /*: {x: number, y: number} */,
-  { onStart, onEnd, onMove, onLongPress, longPressMs = 1200 }
+  {
+    onStart,
+    onEnd,
+    onMove,
+    onLongPress,
+    longPressMs = 1200,
+    maxDrift = defaultMaxDrift,
+  }
 ) {
   let isDragging = false;
   let canceled = false;
@@ -82,7 +89,7 @@ export function makeDraggable(
     worldPos.set(clientX, clientY).add(getScroll());
 
     const longPressDriftDistance = worldPos.distanceTo(longPressInitialPos);
-    if (longPressDriftDistance >= longPressMaxDrift) {
+    if (longPressDriftDistance >= maxDrift) {
       longPressIsPossible = false;
     }
 
