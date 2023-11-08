@@ -1,5 +1,5 @@
-import { isSyncExecuting, dispatch, svg } from "./utils.js";
-import { orbSize } from "./constants.js";
+import { isSyncExecuting, dispatch, svg } from "../utils.js";
+import { orbSize } from "../constants.js";
 
 export function* Pop({ shapeId, x, y, theta, color }) {
   let gapGrowthRate = 0;

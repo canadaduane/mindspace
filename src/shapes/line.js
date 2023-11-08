@@ -1,13 +1,13 @@
 import Color from "colorjs.io";
-import { Vector2 } from "./math/vector2.js";
-import { dispatch, sigmoid, svg, squash } from "./utils.js";
+import { Vector2 } from "../math/vector2.js";
+import { dispatch, sigmoid, svg, squash } from "../utils.js";
 import {
   calcDistance,
   distanceFromPointToLine,
   normalizedOrthogonalVectorToPointOnLine,
-} from "./trig.js";
-import { lineMaxDistance, lineTransition, orbSize } from "./constants.js";
-import { makeDraggable } from "./drag.js";
+} from "../trig.js";
+import { lineMaxDistance, lineTransition, orbSize } from "../constants.js";
+import { makeDraggable } from "../drag.js";
 
 const opacityThreshold = 0.001;
 const defaultStroke = "rgba(240, 240, 240, 1)";

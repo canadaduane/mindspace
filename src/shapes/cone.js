@@ -1,8 +1,8 @@
-import { dispatch, sigmoid, svg } from "./utils.js";
-import { calcDistance } from "./trig.js";
-import { orbSize, bezierCircleK } from "./constants.js";
 import Color from "colorjs.io";
-import { startAnimation, stopAnimation } from "./animation.js";
+import { dispatch, sigmoid, svg } from "../utils.js";
+import { calcDistance } from "../trig.js";
+import { orbSize, bezierCircleK } from "../constants.js";
+import { startAnimation, stopAnimation } from "../animation.js";
 
 // Constant used for bezier control points to approximate circle
 const spikeColor = "rgba(240, 60, 30, 1)";

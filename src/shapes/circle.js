@@ -1,13 +1,13 @@
-import { Vector2 } from "./math/vector2.js";
-import { dispatch, html } from "./utils.js";
-import { makeDraggable } from "./drag.js";
+import { Vector2 } from "../math/vector2.js";
+import { dispatch, html } from "../utils.js";
+import { makeDraggable } from "../drag.js";
 import {
   orbSize,
   orbRectWidth,
   orbRectHeight,
   stringLengthTransition,
-} from "./constants.js";
-import { getColorFromWorldCoord } from "./color.js";
+} from "../constants.js";
+import { getColorFromWorldCoord } from "../color.js";
 
 function isFirefox() {
   return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;

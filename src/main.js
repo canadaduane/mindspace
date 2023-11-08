@@ -1,4 +1,5 @@
 import { renderer } from "@b9g/crank/dom";
+import { nanoid } from "nanoid";
 import { html } from "./utils.js";
 import { doesLineIntersectLine, doesLineIntersectCircle } from "./trig.js";
 import { Vector2 } from "./math/vector2.js";
@@ -9,9 +10,8 @@ import {
   spiralInitial,
   spiralAddend,
 } from "./constants.js";
-import { nanoid } from "nanoid";
 import { getColorFromWorldCoord } from "./color.js";
-import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
+import { makeDraggable } from "./drag.js";
 import {
   applyNodeToShapes,
   removeShape,
@@ -29,10 +29,10 @@ import {
   setNodeValues,
   forEachNode,
 } from "./node.js";
-import { makeDraggable } from "./drag.js";
-import { Circle } from "./circle.js";
-import { Line, demoteLineType } from "./line.js";
-import { Pop } from "./pop.js";
+import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
+import { Circle } from "./shapes/circle.js";
+import { Line, demoteLineType } from "./shapes/line.js";
+import { Pop } from "./shapes/pop.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let nodes = makeNodesMap(initNodes);
