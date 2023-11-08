@@ -2,43 +2,6 @@ import { html, closestSide } from "./utils.js";
 import { css } from "./styles.js";
 import { startAnimation } from "./animation.js";
 
-export function getRainbowFocus(pos, size) {
-  const closest = closestSide(pos, size);
-
-  const threshold = 50;
-  const magnitude = Math.max(
-    0,
-    2 * Math.min(threshold / 2, threshold - closest.distance)
-  );
-  switch (closest.side) {
-    case "top":
-    case "bottom":
-      return { side: closest.side, point: pos.x, magnitude };
-
-    case "left":
-    case "right":
-      return { side: closest.side, point: pos.y, magnitude };
-  }
-}
-
-function styles() {
-  const N = 30;
-  const hues = Array.from({ length: N + 1 }, (_, i) => (i * 360) / N);
-
-  css`
-    div.gradient {
-      width: 100%;
-      height: 100%;
-      background-image: conic-gradient(
-        from 120deg,
-        ${hues
-          .map((hue, i) => `hwb(${hue} 20% 0%) ${(i / N) * 100}%`)
-          .join(",\n")}
-      );
-    }
-  `;
-}
-
 export function* RainbowBorder() {
   const length = 500;
   const heightMap = Array.from({ length }, () => 0);
@@ -181,9 +144,46 @@ export function* RainbowBorder() {
         </mask>
 
         <foreignObject width="100%" height="100%" mask="url(#mask)">
-          <div class="gradient" xmlns="http://www.w3.org/1999/xhtml"></div>
+          <div class="gradient" xmlns="http://www.w3.org/1999/xhtml" />
         </foreignObject>
       </svg>
     `;
   }
+}
+
+export function getRainbowFocus(pos, size) {
+  const closest = closestSide(pos, size);
+
+  const threshold = 50;
+  const magnitude = Math.max(
+    0,
+    2 * Math.min(threshold / 2, threshold - closest.distance)
+  );
+  switch (closest.side) {
+    case "top":
+    case "bottom":
+      return { side: closest.side, point: pos.x, magnitude };
+
+    case "left":
+    case "right":
+      return { side: closest.side, point: pos.y, magnitude };
+  }
+}
+
+function styles() {
+  const N = 30;
+  const hues = Array.from({ length: N + 1 }, (_, i) => (i * 360) / N);
+
+  css`
+    div.gradient {
+      width: 100%;
+      height: 100%;
+      background-image: conic-gradient(
+        from 120deg,
+        ${hues
+          .map((hue, i) => `hwb(${hue} 20% 0%) ${(i / N) * 100}%`)
+          .join(",\n")}
+      );
+    }
+  `;
 }
