@@ -29,10 +29,12 @@ import {
   setNodeValues,
   forEachNode,
 } from "./node.js";
+import { styles } from "./styles.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 import { Circle } from "./shapes/circle.js";
 import { Line, demoteLineType } from "./shapes/line.js";
 import { Pop } from "./shapes/pop.js";
+import { Tap } from "./shapes/tap.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let nodes = makeNodesMap(initNodes);
@@ -76,8 +78,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   window.addEventListener("load", () => {
     // Scroll to center of area after first render
-    document.documentElement.scrollLeft = window.innerWidth / 2;
-    document.documentElement.scrollTop = window.innerHeight / 2;
+    // document.documentElement.scrollLeft = window.innerWidth / 2;
+    // document.documentElement.scrollTop = window.innerHeight / 2;
   });
 
   window.addEventListener("resize", matchWorkAreaSizes);
@@ -536,7 +538,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
             default:
               throw new Error(`unknown html shape type: ${shape.type}`);
           }
-        })}`;
+        })}
+        <${Tap} x=${200} y=${200} color="red" />
+        <${Tap} x=${210} y=${240} color="red" /> `;
     }
   } finally {
     document.body.removeEventListener("keydown", onKeyDown);
@@ -544,3 +548,5 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 }
 
 renderer.render(html`<${Svg} />`, document.body);
+
+renderer.render(html`${[...styles]}`, document.getElementById("styles"));
