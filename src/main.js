@@ -274,7 +274,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     onEnd: ({ doubleTapMsLeft }) => {
       if (isDoubleTap) return;
 
-      clearTimeout(endTimeout);
+      // clearTimeout(endTimeout);
 
       if (coneCutMode) {
         console.log("remove cone node", coneNodeId);
@@ -578,7 +578,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         </svg>
         <${RainbowBorder}
           size=${winSize}
-          borderThickness=${5}
+          borderThickness=${3}
           focus=${rainbowFocus}
         />
         ${htmlShapes.map(([shapeId, shape]) => {
