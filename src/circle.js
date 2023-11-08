@@ -13,7 +13,7 @@ function isFirefox() {
   return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
 }
 
-export function* Orb({ nodeId, x = 0, y = 0 }) {
+export function* Circle({ nodeId, x = 0, y = 0 }) {
   const pos = new Vector2(x, y);
 
   let editEl;
@@ -76,7 +76,7 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
     pos.set(x, y);
 
     yield html` <style>
-        .orb {
+        .circle {
           position: absolute;
           transform: translate(-50%, -50%);
 
@@ -97,20 +97,20 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
           overflow-y: auto;
           cursor: default;
         }
-        .orb:focus-within {
+        .circle:focus-within {
           outline-width: 9px;
           transition: outline-width 0.15s ease-in-out;
         }
-        .orb .edit {
+        .circle .edit {
           padding: 8px;
           flex-grow: 1;
           margin: auto;
           text-align: center;
         }
-        .orb .edit:focus-visible {
+        .circle .edit:focus-visible {
           outline: 0;
         }
-        .orb .edit.circle {
+        .circle .edit.circle {
           font-size: 48px;
           line-height: 48px;
           margin-bottom: 14px;
@@ -118,17 +118,17 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
           white-space: nowrap;
         }
 
-        .orb--rect {
-          animation: orb--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
+        .circle--rect {
+          animation: circle--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
         }
-        .orb--shake {
-          animation: orb--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        .circle--shake {
+          animation: circle--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
         }
-        .orb--rect-shake {
-          animation: orb--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards,
-            orb--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        .circle--rect-shake {
+          animation: circle--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards,
+            circle--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
         }
-        @keyframes orb--rect {
+        @keyframes circle--rect {
           0% {
             border-radius: 100%;
             width: ${orbSize}px;
@@ -146,7 +146,7 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
           }
         }
 
-        @keyframes orb--shake {
+        @keyframes circle--shake {
           10%,
           90% {
             transform: translate(-51%, -50%);
@@ -174,10 +174,10 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
         <style>
           /* CSS hackery to get around bug where contenteditable with
            centered text does not show caret in correct position */
-          .orb .edit:focus:empty {
+          .circle .edit:focus:empty {
             caret-color: transparent;
           }
-          .orb .edit:focus:empty::after {
+          .circle .edit:focus:empty::after {
             content: "";
             display: inline-block;
             width: 3.5px;
@@ -188,7 +188,7 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
             opacity: 1;
             animation: blink 1.2s steps(2, jump-none) reverse infinite;
           }
-          .orb .edit:focus::after {
+          .circle .edit:focus::after {
             display: none;
           }
         </style>
@@ -199,12 +199,12 @@ export function* Orb({ nodeId, x = 0, y = 0 }) {
         onpointercancel=${end}
         onpointermove=${move}
         ontouchstart=${touchStart}
-        class="orb ${shake && shape === "rect"
-          ? "orb--rect-shake"
+        class="circle ${shake && shape === "rect"
+          ? "circle--rect-shake"
           : shape === "rect"
-          ? "orb--rect"
+          ? "circle--rect"
           : shake
-          ? "orb--shake"
+          ? "circle--shake"
           : ""}"
         style=${{
           "left": `${pos.x}px`,

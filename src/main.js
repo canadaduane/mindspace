@@ -30,7 +30,7 @@ import {
   forEachNode,
 } from "./node.js";
 import { makeDraggable } from "./drag.js";
-import { Orb } from "./orb.js";
+import { Circle } from "./circle.js";
 import { Line, demoteLineType } from "./line.js";
 import { Pop } from "./pop.js";
 
@@ -524,7 +524,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           switch (shape.type) {
             case "circle":
               return html`
-                <${Orb}
+                <${Circle}
                   $key=${shapeId}
                   nodeId=${shape.controlsNodeId}
                   x=${shape.cx}
