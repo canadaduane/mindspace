@@ -32,7 +32,6 @@ import {
 import { makeDraggable } from "./drag.js";
 import { Orb } from "./orb.js";
 import { Line, demoteLineType } from "./line.js";
-import { Cone } from "./cone.js";
 import { Pop } from "./pop.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
@@ -213,37 +212,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   const conePos = { x: 0, y: 0 };
   const shapeIdsCutThisMotion = new Set();
 
-  const enableDisableConeLines = () => {
-    if (coneCutMode) {
-      // Disable lines from Cone when in "cutter" mode
-      for (const depShape of coneShapeDepShapeIds) {
-        if (depShape.type === "line" && depShape.lineType !== "disabled") {
-          depShape.lineType = "disabled";
-        }
-      }
-    } else {
-      // Enable lines to Cone when in "create" mode
-      for (const depShape of coneShapeDepShapeIds) {
-        if (depShape.type === "line" && depShape.lineType === "disabled") {
-          depShape.lineType = "short";
-        }
-      }
-    }
-  };
-
   const { start, end, move, touchStart } = makeDraggable(conePos, {
-    onLongPress: ({ x, y }) => {
-      this.refresh();
-    },
     onStart: ({ x, y }) => {
-      const { nodeId, shapeId } = createNode(x, y, "cone");
-      coneNodeId = nodeId;
-      if (coneShapeId) {
-        console.warn(`coneShapeId not null at start ${coneShapeId}`);
-      }
-      controlledNodeId = nodeId;
-      coneShapeId = shapeId;
-      coneShapeDepShapeIds = getDependentShapesOfControllerShape(coneShapeId);
       unselectSelectedLine();
       this.refresh();
     },
@@ -251,23 +221,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       if (coneCutMode) {
         console.log("remove cone node", coneNodeId);
         destroyNode(coneNodeId);
-      } else {
-        // convert the Cone to an Orb
-        const shape = shapes.get(coneShapeId);
-        if (shape) {
-          setShapeValues(shape, { type: "circle" });
-        } else {
-          console.log("no cone?", shape, coneShapeId);
-        }
       }
-      coneNodeId = undefined;
-      coneShapeId = undefined;
-      shapeIdsCutThisMotion.clear();
-      coneCutMode = false;
       this.refresh();
     },
     onMove: ({ x, y }) => {
-      enableDisableConeLines();
       if (coneCutMode) {
         // Delete lines and orbs when in "cutter" mode
         for (let [shapeId, shape] of shapes.entries()) {
@@ -509,7 +466,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         if (shape.type === "line") {
           svgShapes.unshift([shapeId, shape]);
         }
-        if (shape.type === "cone" || shape.type === "pop") {
+        if (shape.type === "pop") {
           svgShapes.push([shapeId, shape]);
         }
         if (shape.type === "circle") {
@@ -542,16 +499,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                   y2=${shape.y2}
                   type=${shape.lineType}
                 />`;
-              case "cone":
-                return html`
-                  <${Cone}
-                    $key=${shapeId}
-                    x=${shape.cx}
-                    y=${shape.cy}
-                    color=${shape.color}
-                    forceCutMode=${shape.forceCutMode}
-                  />
-                `;
               case "pop":
                 return html`
                   <${Pop}
