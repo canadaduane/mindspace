@@ -1,4 +1,5 @@
 import { html, closestSide } from "./utils.js";
+import { css } from "./styles.js";
 import { startAnimation } from "./animation.js";
 
 export function getRainbowFocus(pos, size) {
@@ -20,11 +21,11 @@ export function getRainbowFocus(pos, size) {
   }
 }
 
-export function* RainbowBorder() {
+function styles() {
   const N = 30;
   const hues = Array.from({ length: N + 1 }, (_, i) => (i * 360) / N);
 
-  const css = html`<style>
+  css`
     div.gradient {
       width: 100%;
       height: 100%;
@@ -35,8 +36,10 @@ export function* RainbowBorder() {
           .join(",\n")}
       );
     }
-  </style>`;
+  `;
+}
 
+export function* RainbowBorder() {
   const length = 500;
   const heightMap = Array.from({ length }, () => 0);
   const velocityMap = Array.from({ length }, () => 0);
@@ -73,6 +76,8 @@ export function* RainbowBorder() {
   this.schedule(() => {
     startAnimation(this, propagate);
   });
+
+  styles();
 
   for (const { size, borderThickness, focus } of this) {
     const perimeter =

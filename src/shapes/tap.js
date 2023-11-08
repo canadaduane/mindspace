@@ -1,5 +1,5 @@
 import { Portal } from "@b9g/crank/standalone";
-import { html, getCrankContext } from "../utils.js";
+import { html } from "../utils.js";
 import { css } from "../styles.js";
 import { tapSize } from "../constants.js";
 
@@ -30,7 +30,6 @@ export function* Tap() {
   for (const { x, y, color } of this) {
     yield html`
       <div
-        onpointerdown=${click}
         class="tap"
         style=${{
           "left": `${x}px`,

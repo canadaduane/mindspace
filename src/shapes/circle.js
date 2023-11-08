@@ -1,4 +1,5 @@
 import { Vector2 } from "../math/vector2.js";
+import { css } from "../styles.js";
 import { dispatch, html } from "../utils.js";
 import { makeDraggable } from "../drag.js";
 import {
@@ -72,127 +73,129 @@ export function* Circle({ nodeId, x = 0, y = 0 }) {
     dispatch(this, "nodeActive", { nodeId });
   };
 
+  css`
+    .circle {
+      position: absolute;
+      transform: translate(-50%, -50%);
+
+      border-radius: 100%;
+      outline-width: 3px;
+      outline-style: solid;
+      transition: outline-width 0.2s ease-in-out;
+
+      width: ${orbSize}px;
+      height: ${orbSize}px;
+      color: var(--brightText);
+      background-color: var(--defaultOrbFill);
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      overflow-y: auto;
+      cursor: default;
+    }
+    .circle:focus-within {
+      outline-width: 9px;
+      transition: outline-width 0.15s ease-in-out;
+    }
+    .circle .edit {
+      padding: 8px;
+      flex-grow: 1;
+      margin: auto;
+      text-align: center;
+    }
+    .circle .edit:focus-visible {
+      outline: 0;
+    }
+    .circle .edit.circle {
+      font-size: 48px;
+      line-height: 48px;
+      margin-bottom: 14px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .circle--rect {
+      animation: circle--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
+    }
+    .circle--shake {
+      animation: circle--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+    .circle--rect-shake {
+      animation: circle--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards,
+        circle--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+    @keyframes circle--rect {
+      0% {
+        border-radius: 100%;
+        width: ${orbSize}px;
+        height: ${orbSize}px;
+      }
+      40% {
+        border-radius: 9px;
+        width: ${orbSize}px;
+        height: ${orbSize}px;
+      }
+      100% {
+        border-radius: 9px;
+        width: ${orbRectWidth}px;
+        height: ${orbRectHeight}px;
+      }
+    }
+
+    @keyframes circle--shake {
+      10%,
+      90% {
+        transform: translate(-51%, -50%);
+      }
+
+      20%,
+      80% {
+        transform: translate(-48%, -50%);
+      }
+
+      30%,
+      50%,
+      70% {
+        transform: translate(-54%, -50%);
+      }
+
+      40%,
+      60% {
+        transform: translate(-46%, -50%);
+      }
+    }
+  `;
+
+  if (isFirefox()) {
+    css`
+      /* CSS hackery to get around bug where contenteditable with
+           centered text does not show caret in correct position */
+      .circle .edit:focus:empty {
+        caret-color: transparent;
+      }
+      .circle .edit:focus:empty::after {
+        content: "";
+        display: inline-block;
+        width: 3.5px;
+        height: 64px;
+        margin-bottom: -8px;
+        vertical-align: text-bottom;
+        background: #ccc;
+        opacity: 1;
+        animation: blink 1.2s steps(2, jump-none) reverse infinite;
+      }
+      .circle .edit:focus::after {
+        display: none;
+      }
+    `;
+  }
+
   for (const { x, y, color, shake } of this) {
     pos.set(x, y);
 
-    yield html` <style>
-        .circle {
-          position: absolute;
-          transform: translate(-50%, -50%);
-
-          border-radius: 100%;
-          outline-width: 3px;
-          outline-style: solid;
-          transition: outline-width 0.2s ease-in-out;
-
-          width: ${orbSize}px;
-          height: ${orbSize}px;
-          color: var(--brightText);
-          background-color: var(--defaultOrbFill);
-
-          display: flex;
-          justify-content: center;
-          align-items: center;
-
-          overflow-y: auto;
-          cursor: default;
-        }
-        .circle:focus-within {
-          outline-width: 9px;
-          transition: outline-width 0.15s ease-in-out;
-        }
-        .circle .edit {
-          padding: 8px;
-          flex-grow: 1;
-          margin: auto;
-          text-align: center;
-        }
-        .circle .edit:focus-visible {
-          outline: 0;
-        }
-        .circle .edit.circle {
-          font-size: 48px;
-          line-height: 48px;
-          margin-bottom: 14px;
-          overflow: hidden;
-          white-space: nowrap;
-        }
-
-        .circle--rect {
-          animation: circle--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
-        }
-        .circle--shake {
-          animation: circle--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-        }
-        .circle--rect-shake {
-          animation: circle--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards,
-            circle--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-        }
-        @keyframes circle--rect {
-          0% {
-            border-radius: 100%;
-            width: ${orbSize}px;
-            height: ${orbSize}px;
-          }
-          40% {
-            border-radius: 9px;
-            width: ${orbSize}px;
-            height: ${orbSize}px;
-          }
-          100% {
-            border-radius: 9px;
-            width: ${orbRectWidth}px;
-            height: ${orbRectHeight}px;
-          }
-        }
-
-        @keyframes circle--shake {
-          10%,
-          90% {
-            transform: translate(-51%, -50%);
-          }
-
-          20%,
-          80% {
-            transform: translate(-48%, -50%);
-          }
-
-          30%,
-          50%,
-          70% {
-            transform: translate(-54%, -50%);
-          }
-
-          40%,
-          60% {
-            transform: translate(-46%, -50%);
-          }
-        }
-      </style>
-      ${isFirefox() &&
-      html`
-        <style>
-          /* CSS hackery to get around bug where contenteditable with
-           centered text does not show caret in correct position */
-          .circle .edit:focus:empty {
-            caret-color: transparent;
-          }
-          .circle .edit:focus:empty::after {
-            content: "";
-            display: inline-block;
-            width: 3.5px;
-            height: 64px;
-            margin-bottom: -8px;
-            vertical-align: text-bottom;
-            background: #ccc;
-            opacity: 1;
-            animation: blink 1.2s steps(2, jump-none) reverse infinite;
-          }
-          .circle .edit:focus::after {
-            display: none;
-          }
-        </style>
-      `}
+    yield html` <style></style>
       <div
         onpointerdown=${start}
         onpointerup=${end}
