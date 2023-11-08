@@ -46,7 +46,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let coneCutMode = false;
 
   const winSize = new Vector2();
-  let docW, docH;
+  const docSize = new Vector2();
   let minDocH = window.innerHeight * 2;
   let minDocW = window.innerWidth * 2;
 
@@ -60,11 +60,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     if (minDocW < document.documentElement.scrollWidth) {
       minDocW = document.documentElement.scrollWidth;
     }
-    docW = Math.max(minDocW, document.documentElement.scrollWidth);
+    docSize.width = Math.max(minDocW, document.documentElement.scrollWidth);
     if (minDocH < document.documentElement.scrollHeight) {
       minDocH = document.documentElement.scrollHeight;
     }
-    docH = Math.max(minDocH, document.documentElement.scrollHeight);
+    docSize.height = Math.max(minDocH, document.documentElement.scrollHeight);
   };
   matchWorkAreaSizesWithoutRefresh();
 
@@ -519,8 +519,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
       yield html`<!-- -->
         <svg
-          viewBox="0 0 ${docW} ${docH - scrollbarThickness}"
-          style="width: ${docW}px; height: ${docH - scrollbarThickness}px;"
+          viewBox="0 0 ${docSize.width} ${docSize.height - scrollbarThickness}"
+          style="width: ${docSize.width}px; height: ${docSize.height -
+          scrollbarThickness}px;"
           xmlns="http://www.w3.org/2000/svg"
           onpointerdown=${start}
           onpointerup=${end}
