@@ -85,6 +85,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   window.addEventListener("resize", matchWorkAreaSizes);
 
+  window.addEventListener("mouseout", () => {
+    rainbowFocus = undefined;
+    this.refresh();
+  });
+
   this.addEventListener("setCutMode", ({ detail: { mode } }) => {
     coneCutMode = mode;
     enableDisableConeLines();
