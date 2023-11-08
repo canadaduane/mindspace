@@ -1,9 +1,55 @@
 import { Portal } from "@b9g/crank/standalone";
+import { Vector2 } from "../math/vector2.js";
 import { html } from "../utils.js";
 import { css } from "../styles.js";
 import { tapSize } from "../constants.js";
+import { makeDraggable } from "../drag.js";
 
-export function* Tap() {
+export function* Tap({ x, y, color }) {
+  const pos = new Vector2(x, y);
+  const {
+    start,
+    end,
+    move,
+    touchStart,
+    cancel: cancelDrag,
+  } = makeDraggable(pos, {
+    onStart: () => {
+      // dispatch(this, "selectLine", { shapeId });
+    },
+    onEnd: ({ didDrift }) => {
+      if (!didDrift) {
+        // this is a click
+      }
+    },
+    onMove: ({ x, y }) => {
+      this.refresh();
+    },
+  });
+
+  styles();
+
+  for (const { x, y, color } of this) {
+    yield html`
+      <div
+        onpointerdown=${start}
+        onpointerup=${end}
+        onpointercancel=${end}
+        onpointermove=${move}
+        ontouchstart=${touchStart}
+        class="tap"
+        style=${{
+          "left": `${pos.x}px`,
+          "top": `${pos.y}px`,
+          "border-color": color,
+          "outline-color": color,
+        }}
+      />
+    `;
+  }
+}
+
+function styles() {
   css`
     .tap {
       position: absolute;
@@ -26,18 +72,4 @@ export function* Tap() {
       cursor: default;
     }
   `;
-
-  for (const { x, y, color } of this) {
-    yield html`
-      <div
-        class="tap"
-        style=${{
-          "left": `${x}px`,
-          "top": `${y}px`,
-          "border-color": color,
-          "outline-color": color,
-        }}
-      />
-    `;
-  }
 }

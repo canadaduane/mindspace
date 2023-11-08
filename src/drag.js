@@ -1,6 +1,8 @@
 import { Vector2 } from "./math/vector2.js";
 import { calcDistance } from "./trig.js";
 
+// How far can the drag movement drift from the start position before
+// it registers as a "movement" and, e.g. cancels long-press?
 const defaultMaxDrift = 3;
 
 const scrollPos = new Vector2();
@@ -31,10 +33,10 @@ export function makeDraggable(
   // pixel offset from center of object being dragged
   const offset = new Vector2();
   const worldPos = new Vector2();
+  const initialWorldPos = new Vector2();
 
   let longPressTimeout /*: Timeout */;
-  let longPressIsPossible = true;
-  const longPressInitialPos = new Vector2();
+  let didDrift = false;
 
   const start = (event) => {
     const { target, clientX, clientY, pointerId, button } = event;
@@ -46,12 +48,11 @@ export function makeDraggable(
     canceled = false;
 
     worldPos.set(clientX, clientY).add(getScroll());
+    initialWorldPos.copy(worldPos);
 
-    longPressIsPossible = true;
-    longPressInitialPos.copy(worldPos);
-
+    didDrift = false;
     longPressTimeout = setTimeout(() => {
-      if (!longPressIsPossible) return;
+      if (didDrift) return;
       onLongPress?.({ x: worldPos.x, y: worldPos.y });
     }, longPressMs);
 
@@ -75,7 +76,7 @@ export function makeDraggable(
 
     clearTimeout(longPressTimeout);
 
-    onEnd?.({ event, x: worldPos.x, y: worldPos.y });
+    onEnd?.({ event, x: worldPos.x, y: worldPos.y, offset, didDrift });
   };
 
   const move = (event) => {
@@ -88,16 +89,16 @@ export function makeDraggable(
 
     worldPos.set(clientX, clientY).add(getScroll());
 
-    const longPressDriftDistance = worldPos.distanceTo(longPressInitialPos);
-    if (longPressDriftDistance >= maxDrift) {
-      longPressIsPossible = false;
+    const driftDistance = worldPos.distanceTo(initialWorldPos);
+    if (driftDistance >= maxDrift) {
+      didDrift = true;
     }
 
     pos.x = worldPos.x + offset.x;
     pos.y = worldPos.y + offset.y;
     // pos.copy(worldPos).add(offset);
 
-    onMove?.({ event, x: worldPos.x, y: worldPos.y, offset });
+    onMove?.({ event, x: worldPos.x, y: worldPos.y, offset, didDrift });
   };
 
   const touchStart = (e) => e.preventDefault();
