@@ -2,10 +2,9 @@
 import { nanoid } from "nanoid";
 
 /*::
-
 type NodeInitial = Node & { nodeId: string };
 
-type Node = {
+export type Node = {
   x: number; // The global X coordinate for this node
   y: number; // The global Y coordinate for this node
   color: string; // The color chosen for this node
@@ -14,13 +13,12 @@ type Node = {
   dependents: Dependent[]; // A list of dependent shapes
 };
 
-type Dependent = {
-  shapeId: number; // The ID of the shape that depends on the node
+export type Dependent = {
+  shapeId: string; // The ID of the shape that depends on the node
   attrs: Record<string, string>; // A mapping from Node attributes to Shape attributes
 };
 
-type NodeMap = Map<string, Node>;
-
+export type NodeMap = Map<string, Node>;
 */
 
 export function makeNodesMap(

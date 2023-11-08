@@ -1,7 +1,10 @@
+// @flow
 import { nanoid } from "nanoid";
 
-/*+
-type InitialShape = Shape & { shapeId: string };
+/*::
+import type { Node } from "./node.js";
+
+type ShapeInitial = Shape & { shapeId: string };
 
 type Shape =
   | {
@@ -35,10 +38,22 @@ type Shape =
       color: string;
       x: number;
       y: number;
-    };
+    }
+  | {
+      type: "tap";
+      tapState: TapState;
+      x: number;
+      y: number;
+  };
+ 
+export type ShapeMap = Map<string, Shape>;
+
+export type TapState = "create" | "creating" | "select" | "delete"
 */
 
-export function makeShapesMap(initShapes /*: InitialShape[] */) {
+export function makeShapesMap(
+  initShapes /*: ShapeInitial[] */
+) /*: ShapeMap */ {
   return new Map(
     initShapes.map(({ shapeId, ...shape }) => {
       return [shapeId ?? nanoid(12), shape];
@@ -46,21 +61,36 @@ export function makeShapesMap(initShapes /*: InitialShape[] */) {
   );
 }
 
-export function getShape(shapes /*: ShapesMap */, shapeId /*: string */) {
+export function createShape(
+  shapes /*: ShapeMap */,
+  shape /*: Shape */
+) /*: string */ {
+  const shapeId = nanoid(12);
+  setShape(shapes, shapeId, shape);
+  return shapeId;
+}
+
+export function getShape(
+  shapes /*: ShapeMap */,
+  shapeId /*: string */
+) /*: Shape */ {
   const shape = shapes.get(shapeId);
   if (!shape) throw new Error(`can't get shape ${shapeId}`);
   return shape;
 }
 
 export function setShape(
-  shapes /*: ShapesMap */,
+  shapes /*: ShapeMap */,
   shapeId /*: string */,
   shape /*: Shape */
 ) {
   shapes.set(shapeId, shape);
 }
 
-export function removeShape(shapes, shapeId) {
+export function removeShape(
+  shapes /*: ShapeMap */,
+  shapeId /*: string */
+) /*: boolean */ {
   if (shapes.has(shapeId)) {
     shapes.delete(shapeId);
     return true;
@@ -68,7 +98,10 @@ export function removeShape(shapes, shapeId) {
   return false;
 }
 
-export function setShapeValues(shape /*: Shape */, values) {
+export function setShapeValues(
+  shape /*: Shape */,
+  values /*: any */
+) /*: Shape */ {
   const definedValues = Object.assign({}, values);
   for (var k in definedValues) {
     if (definedValues[k] === undefined) delete definedValues[k];
@@ -88,6 +121,7 @@ export function applyNodeToShapes(
     if (shape) {
       for (let fromAttr in attrs) {
         let toAttr = attrs[fromAttr];
+        // $FlowIgnore
         shape[toAttr] = node[fromAttr];
       }
     }
