@@ -40,8 +40,6 @@ export function* RainbowBorder() {
     startAnimation(this, propagate);
   });
 
-  styles();
-
   for (const { size, borderThickness, focus } of this) {
     const perimeter =
       (size.width - borderThickness * 2) * 2 +
@@ -118,7 +116,6 @@ export function* RainbowBorder() {
     );
 
     yield html`
-      ${css}
       <svg
         viewBox="0 0 ${size.width} ${size.height}"
         style=${{
@@ -187,3 +184,5 @@ function styles() {
     }
   `;
 }
+
+styles();
