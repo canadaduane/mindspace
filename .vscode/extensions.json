@@ -1,3 +1,12 @@
 {
-  "recommendations": ["bierner.lit-html"]
+  "recommendations": [
+    // Syntax highlight HTML and SVG within html`` and svg`` tags:
+    "bierner.lit-html",
+
+    // Syntax highlight flow types within comments:
+    "mgmcdermott.vscode-language-babel",
+
+    // Type annotations and suggestions:
+    "flowtype.flow-for-vscode"
+  ]
 }
