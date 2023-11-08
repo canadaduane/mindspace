@@ -73,6 +73,44 @@ export function* Circle({ nodeId, x = 0, y = 0 }) {
     dispatch(this, "nodeActive", { nodeId });
   };
 
+  for (const { x, y, color, shake } of this) {
+    pos.set(x, y);
+
+    yield html`<!-- circle -->
+      <div
+        onpointerdown=${start}
+        onpointerup=${end}
+        onpointercancel=${end}
+        onpointermove=${move}
+        ontouchstart=${touchStart}
+        class="circle ${shake && shape === "rect"
+          ? "circle--rect-shake"
+          : shape === "rect"
+          ? "circle--rect"
+          : shake
+          ? "circle--shake"
+          : ""}"
+        style=${{
+          "left": `${pos.x}px`,
+          "top": `${pos.y}px`,
+          "border-color": color,
+          "outline-color": color,
+        }}
+      >
+        <div
+          class="edit ${shape === "circle" && "edit-circle"}"
+          spellcheck=${shape === "rect" ? "true" : "false"}
+          contenteditable="true"
+          onkeydown=${onKeyDown}
+          onkeyup=${onKey}
+          onfocus=${onFocus}
+          c-ref=${(el) => (editEl = el)}
+        ></div>
+      </div>`;
+  }
+}
+
+function styles() {
   css`
     .circle {
       position: absolute;
@@ -108,7 +146,7 @@ export function* Circle({ nodeId, x = 0, y = 0 }) {
     .circle .edit:focus-visible {
       outline: 0;
     }
-    .circle .edit.circle {
+    .circle .edit.edit-circle {
       font-size: 48px;
       line-height: 48px;
       margin-bottom: 14px;
@@ -191,40 +229,6 @@ export function* Circle({ nodeId, x = 0, y = 0 }) {
       }
     `;
   }
-
-  for (const { x, y, color, shake } of this) {
-    pos.set(x, y);
-
-    yield html` <style></style>
-      <div
-        onpointerdown=${start}
-        onpointerup=${end}
-        onpointercancel=${end}
-        onpointermove=${move}
-        ontouchstart=${touchStart}
-        class="circle ${shake && shape === "rect"
-          ? "circle--rect-shake"
-          : shape === "rect"
-          ? "circle--rect"
-          : shake
-          ? "circle--shake"
-          : ""}"
-        style=${{
-          "left": `${pos.x}px`,
-          "top": `${pos.y}px`,
-          "border-color": color,
-          "outline-color": color,
-        }}
-      >
-        <div
-          class="edit ${shape === "circle" && "circle"}"
-          spellcheck=${shape === "rect" ? "true" : "false"}
-          contenteditable="true"
-          onkeydown=${onKeyDown}
-          onkeyup=${onKey}
-          onfocus=${onFocus}
-          c-ref=${(el) => (editEl = el)}
-        ></div>
-      </div>`;
-  }
 }
+
+styles();

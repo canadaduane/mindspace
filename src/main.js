@@ -19,6 +19,7 @@ import {
   makeShapesMap,
   getShape,
   setShape,
+  createShape,
 } from "./shape.js";
 import {
   makeNodesMap,
@@ -211,22 +212,76 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let coneNodeId;
   let coneShapeId;
   let coneShapeDepShapeIds = [];
+
+  let tapShapeId;
+  let endTimeout;
+
   const conePos = { x: 0, y: 0 };
   const shapeIdsCutThisMotion = new Set();
 
+  const doubleTapMs = 500;
+  const doubleTapReleaseMs = 1000;
+  let isDoubleTap = false;
+  let lastStartedAt = 0;
+
   const { start, end, move, touchStart } = makeDraggable(conePos, {
     onStart: ({ x, y }) => {
+      const now = new Date().valueOf();
+      const interval = now - lastStartedAt;
+      if (interval < doubleTapMs && !isDoubleTap) {
+        console.log("double tap detected");
+        isDoubleTap = true;
+        const shape = getShape(shapes, tapShapeId);
+        setShapeValues(shape, { x, y, tapState: "creating" });
+
+        setTimeout(() => {
+          createNode(x, y, "circle");
+        }, 900);
+
+        this.refresh();
+        return;
+      } else if (isDoubleTap && interval > doubleTapReleaseMs) {
+        isDoubleTap = false;
+      }
+
+      lastStartedAt = now;
+
+      if (tapShapeId) {
+        console.log("remove shape 1");
+        removeShape(shapes, tapShapeId);
+      }
+      clearTimeout(endTimeout);
+
+      tapShapeId = createShape(shapes, {
+        type: "tap",
+        tapState: "create",
+        x,
+        y,
+      });
+
       unselectSelectedLine();
+
       this.refresh();
     },
-    onEnd: () => {
+    onEnd: ({ doubleTapMsLeft }) => {
+      if (isDoubleTap) return;
+
+      clearTimeout(endTimeout);
+
+      // console.log("remove shape 2");
+      // removeShape(shapes, tapShapeId);
+
       if (coneCutMode) {
         console.log("remove cone node", coneNodeId);
         destroyNode(coneNodeId);
       }
+
       this.refresh();
     },
     onMove: ({ x, y }) => {
+      const shape = getShape(shapes, tapShapeId);
+      setShapeValues(shape, { x, y, tapState: "select" });
+
       if (coneCutMode) {
         // Delete lines and orbs when in "cutter" mode
         for (let [shapeId, shape] of shapes.entries()) {
@@ -280,9 +335,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         }
       }
 
-      const node = getNode(nodes, coneNodeId);
-      node.x = x;
-      node.y = y;
+      // const node = getNode(nodes, coneNodeId);
+      // node.x = x;
+      // node.y = y;
 
       this.refresh();
     },
@@ -291,10 +346,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   /** Create Functions */
 
   const createLine = (nodeDependents1, nodeDependents2) => {
-    const lineShapeId = nanoid(12);
-    const lineShape = { type: "line", lineType: "short" };
+    const lineShape = { type: "line", lineType: "short", selected: false };
+    const lineShapeId = createShape(shapes, lineShape);
 
-    setShape(shapes, lineShapeId, lineShape);
     nodeDependents1.push({ shapeId: lineShapeId, attrs: { x: "x2", y: "y2" } });
     nodeDependents2.push({ shapeId: lineShapeId, attrs: { x: "x1", y: "y1" } });
 
@@ -471,12 +525,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         if (shape.type === "pop") {
           svgShapes.push([shapeId, shape]);
         }
-        if (shape.type === "circle") {
+        if (shape.type === "circle" || shape.type === "tap") {
           htmlShapes.push([shapeId, shape]);
         }
       }
 
-      yield html`<!-- -->
+      yield html`<!-- begin -->
         <svg
           viewBox="0 0 ${docSize.width} ${docSize.height - scrollbarThickness}"
           style="width: ${docSize.width}px; height: ${docSize.height -
@@ -535,12 +589,20 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                   shake=${shape.shake}
                 />
               `;
+            case "tap":
+              return html`
+                <${Tap}
+                  $key=${shapeId}
+                  x=${shape.x}
+                  y=${shape.y}
+                  tapState=${shape.tapState}
+                />
+              `;
             default:
               throw new Error(`unknown html shape type: ${shape.type}`);
           }
         })}
-        <${Tap} x=${200} y=${200} color="red" />
-        <${Tap} x=${210} y=${240} color="red" /> `;
+        <!-- end -->`;
     }
   } finally {
     document.body.removeEventListener("keydown", onKeyDown);

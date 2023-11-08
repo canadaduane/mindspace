@@ -23,7 +23,7 @@ export function makeDraggable(
     onStart,
     onEnd,
     onMove,
-    onLongPress,
+    onLongPress = undefined,
     longPressMs = 1200,
     maxDrift = defaultMaxDrift,
   }
@@ -45,16 +45,17 @@ export function makeDraggable(
 
     event.stopPropagation();
 
-    canceled = false;
-
     worldPos.set(clientX, clientY).add(getScroll());
     initialWorldPos.copy(worldPos);
 
     didDrift = false;
+
     longPressTimeout = setTimeout(() => {
       if (didDrift) return;
       onLongPress?.({ x: worldPos.x, y: worldPos.y });
     }, longPressMs);
+
+    canceled = false;
 
     isDragging = true;
     offset.copy(pos).sub(worldPos);
@@ -76,7 +77,13 @@ export function makeDraggable(
 
     clearTimeout(longPressTimeout);
 
-    onEnd?.({ event, x: worldPos.x, y: worldPos.y, offset, didDrift });
+    onEnd?.({
+      event,
+      x: worldPos.x,
+      y: worldPos.y,
+      offset,
+      didDrift,
+    });
   };
 
   const move = (event) => {
