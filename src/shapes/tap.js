@@ -21,8 +21,8 @@ export function* Tap({ x, y, tapState }) {
     }, 10);
   });
 
-  for (const { x, y, tapState } of this) {
-    const color = getColorFromTapState(tapState);
+  for (const { x, y, color, tapState } of this) {
+    const bgColor = getColorFromTapState(tapState, color);
     const size = initialDot ? 5 : getSizeFromTapState(tapState);
     yield html`
       <div
@@ -30,7 +30,7 @@ export function* Tap({ x, y, tapState }) {
         style=${{
           "left": `${x}px`,
           "top": `${y}px`,
-          "background-color": color,
+          "background-color": bgColor,
           "width": `${size}px`,
           "height": `${size}px`,
         }}
@@ -39,16 +39,23 @@ export function* Tap({ x, y, tapState }) {
   }
 }
 
-function getColorFromTapState(tapState /*: TapState */) {
+function getColorFromTapState(
+  tapState /*: TapState */,
+  color /*: string */
+) /*: string */ {
   switch (tapState) {
     case "create":
       return "oklch(85% 0.2 140)";
     case "creating":
       return "var(--defaultOrbFill)";
+    case "color":
+      return color;
     case "select":
       return "oklch(85% 0.2 92)";
     case "delete":
       return "oklch(85% 0.2 18)";
+    case "destroying":
+      return "var(--defaultOrbFill)";
   }
 }
 
@@ -58,6 +65,8 @@ function getSizeFromTapState(tapState /*: TapState */) {
       return tapSize;
     case "creating":
       return orbSize;
+    case "color":
+      return tapSize / 2;
     case "select":
       return tapSize / 2;
     case "delete":

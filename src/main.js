@@ -1,6 +1,6 @@
 import { renderer } from "@b9g/crank/dom";
 import { nanoid } from "nanoid";
-import { html } from "./utils.js";
+import { html, closestSide } from "./utils.js";
 import { doesLineIntersectLine, doesLineIntersectCircle } from "./trig.js";
 import { Vector2 } from "./math/vector2.js";
 import {
@@ -10,7 +10,7 @@ import {
   spiralInitial,
   spiralAddend,
 } from "./constants.js";
-import { getColorFromWorldCoord } from "./color.js";
+import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
 import { makeDraggable } from "./drag.js";
 import {
   applyNodeToShapes,
@@ -222,7 +222,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   let tapShapeId;
   let singleClickTimeout;
-  let singleTapPos; /*: Vector2 | undefined */
+  let singleTapPos /*: Vector2 | undefined */;
+  let dragColor /*: string | undefined */;
 
   const conePos = { x: 0, y: 0 };
   const shapeIdsCutThisMotion = new Set();
@@ -255,6 +256,21 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   const { start, end, move, touchStart } = makeDraggable(conePos, {
     onStart: ({ x, y }) => {
       unselectSelectedLine();
+
+      const side = closestSide({ x, y }, winSize);
+      if (side.distance < 40) {
+        dragColor = getColorFromScreenCoord({ x, y }, winSize);
+
+        console.log("create color");
+        tapShapeId = createShape(shapes, {
+          type: "tap",
+          tapState: "color",
+          color: dragColor,
+          x,
+          y,
+        });
+        return;
+      }
 
       const doubleTapDistance = singleTapPos
         ? singleTapPos.distanceTo({ x, y })
@@ -297,6 +313,14 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       this.refresh();
     },
     onEnd: ({ x, y, didDrift }) => {
+      if (dragColor) {
+        const circleColor = dragColor;
+        removeTap(false).then(() => {
+          createNode(x, y, "circle", circleColor);
+        });
+        dragColor = undefined;
+      }
+
       if (isDoubleTap) {
         isDoubleTap = false;
         singleTapPos = undefined;
@@ -327,7 +351,13 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
       if (tapShapeId) {
         const shape = getShape(shapes, tapShapeId);
-        setShapeValues(shape, { x, y, tapState: "select" });
+
+        if (shape.tapState === "color") {
+          setShapeValues(shape, { x, y });
+        } else {
+          setShapeValues(shape, { x, y, tapState: "select" });
+        }
+        this.refresh();
       }
 
       if (coneCutMode) {
@@ -447,12 +477,14 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   const createNode = (
     x,
     y,
-    controllerShapeType /*: "circle" | "cone" */ = "circle"
+    controllerShapeType /*: "circle" | "cone" */ = "circle",
+    colorOverride /*: string | void */
   ) => {
     const nodeId = nanoid(12);
 
     const p = new Vector2(x, y);
-    const color = getColorFromNearestNode(p) || getColorFromWorldCoord(p);
+    const color =
+      colorOverride || getColorFromNearestNode(p) || getColorFromWorldCoord(p);
 
     // Create a circle or cone that controls the node
     const controllerShape = {
@@ -653,6 +685,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                   x=${shape.x}
                   y=${shape.y}
                   tapState=${shape.tapState}
+                  color=${shape.color}
                 />
               `;
             default:

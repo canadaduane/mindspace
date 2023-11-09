@@ -42,13 +42,21 @@ type Shape =
   | {
       type: "tap";
       tapState: TapState;
+      color?: string; 
       x: number;
       y: number;
   };
  
 export type ShapeMap = Map<string, Shape>;
 
-export type TapState = "create" | "creating" | "select" | "delete" | "destroying"
+export type TapState = 
+  | "create"
+  | "creating"
+  | "color"
+  | "select"
+  | "delete"
+  | "destroying";
+  
 */
 
 export function makeShapesMap(
