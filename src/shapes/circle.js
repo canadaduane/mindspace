@@ -115,7 +115,8 @@ function styles() {
       border-radius: 100%;
       outline-width: 3px;
       outline-style: solid;
-      transition: outline-width 0.2s ease-in-out;
+      transition: outline-width 200s ease-in-out,
+        outline-color 600ms linear;
 
       width: ${orbSize}px;
       height: ${orbSize}px;

@@ -1,5 +1,7 @@
 // @flow
 import { nanoid } from "nanoid";
+import { Vector2 } from "./math/vector2.js";
+import { orbSize } from "./constants.js";
 
 /*::
 type NodeInitial = Node & { nodeId: string };
@@ -77,4 +79,16 @@ export function hasNode(
 
 export function setNodeValues(node /*: Node */, values /*: any */) {
   Object.assign(node, values);
+}
+
+export function findNodeAtPosition(
+  nodes /*: NodeMap */,
+  pos /*: Vector2 */
+) /*: Node | void */ {
+  for (let [nodeId, node] of nodes.entries()) {
+    // $FlowIgnore
+    if (pos.distanceTo(node) <= orbSize / 2) {
+      return node;
+    }
+  }
 }

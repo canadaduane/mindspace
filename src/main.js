@@ -29,6 +29,7 @@ import {
   removeNode,
   setNodeValues,
   forEachNode,
+  findNodeAtPosition,
 } from "./node.js";
 import { styles } from "./styles.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
@@ -316,7 +317,13 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       if (dragColor) {
         const circleColor = dragColor;
         removeTap(false).then(() => {
-          createNode(x, y, "circle", circleColor);
+          const node = findNodeAtPosition(nodes, new Vector2(x, y));
+          if (node) {
+            node.color = circleColor;
+          } else {
+            createNode(x, y, "circle", circleColor);
+          }
+          this.refresh();
         });
         dragColor = undefined;
       }
@@ -334,10 +341,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         removeTap(true);
         singleClickTimeout = undefined;
       }, doubleTapMs);
-
-      if (didDrift) {
-        // removeTap();
-      }
 
       // if (coneCutMode) {
       //   console.log("remove cone node", coneNodeId);
