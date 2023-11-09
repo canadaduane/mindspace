@@ -434,6 +434,16 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     if (shape) shape.selected = true;
   };
 
+  const getColorFromNearestNode = (p /*: Vector2 */) /*: string */ => {
+    const sorted = [...nodes.values()].sort(
+      (a, b) => p.distanceTo(a) - p.distanceTo(b)
+    );
+    const node = sorted[0];
+    if (node) return node.color;
+
+    // if no nodes, return undefined
+  };
+
   const createNode = (
     x,
     y,
@@ -442,7 +452,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const nodeId = nanoid(12);
 
     const p = new Vector2(x, y);
-    const color = getColorFromWorldCoord(p);
+    const color = getColorFromNearestNode(p) || getColorFromWorldCoord(p);
 
     // Create a circle or cone that controls the node
     const controllerShape = {
