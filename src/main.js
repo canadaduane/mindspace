@@ -35,11 +35,13 @@ import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 import { Circle } from "./shapes/circle.js";
 import { Line, demoteLineType } from "./shapes/line.js";
 import { Pop } from "./shapes/pop.js";
-import { Tap } from "./shapes/tap.js";
+import { Tap, tapAnimationMs } from "./shapes/tap.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let nodes = makeNodesMap(initNodes);
+  window.nodes = nodes;
   let shapes = makeShapesMap(initShapes);
+  window.shapes = shapes;
 
   let mostRecentlyActiveNodeId;
 
@@ -219,7 +221,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let coneShapeDepShapeIds = [];
 
   let tapShapeId;
-  let endTimeout;
+  let singleClickTimeout;
+  let singleTapPos; /*: Vector2 | undefined */
 
   const conePos = { x: 0, y: 0 };
   const shapeIdsCutThisMotion = new Set();
@@ -227,65 +230,105 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   const doubleTapMs = 500;
   const doubleTapReleaseMs = 1000;
   let isDoubleTap = false;
-  let lastStartedAt = 0;
+
+  const removeTap = async (animate = false) => {
+    if (!tapShapeId) return;
+
+    if (animate) {
+      const shape = getShape(shapes, tapShapeId);
+      setShapeValues(shape, { tapState: "destroying" });
+      this.refresh();
+    }
+
+    const tapShapeIdToRemove = tapShapeId;
+
+    // This Tap is done, no one can access it from here on
+    tapShapeId = undefined;
+
+    await new Promise((resolve) => setTimeout(resolve, tapAnimationMs));
+
+    removeShape(shapes, tapShapeIdToRemove);
+
+    this.refresh();
+  };
 
   const { start, end, move, touchStart } = makeDraggable(conePos, {
     onStart: ({ x, y }) => {
-      const now = new Date().valueOf();
-      const interval = now - lastStartedAt;
-      if (interval >= 0 && interval < doubleTapMs && !isDoubleTap) {
-        console.log("double tap detected");
+      unselectSelectedLine();
+
+      const doubleTapDistance = singleTapPos
+        ? singleTapPos.distanceTo({ x, y })
+        : 0;
+
+      if (singleClickTimeout && !isDoubleTap && doubleTapDistance < 5) {
+        if (!tapShapeId) return;
+
         isDoubleTap = true;
+
+        clearTimeout(singleClickTimeout);
+        singleClickTimeout = undefined;
+
         const shape = getShape(shapes, tapShapeId);
         setShapeValues(shape, { x, y, tapState: "creating" });
 
         setTimeout(() => {
-          removeShape(shapes, tapShapeId);
-          const { nodeId, shapeId } = createNode(x, y, "circle");
-          console.log({
-            nodeId,
-            shapeId,
-            nodes: nodes.size,
-            shapes: shapes.size,
+          removeTap(false).then(() => {
+            createNode(x, y, "circle");
           });
-        }, 200);
+        }, tapAnimationMs - 50);
 
         this.refresh();
-        return;
-      } else if (isDoubleTap && interval > doubleTapReleaseMs) {
-        isDoubleTap = false;
+      } else {
+        const createNewTap = () => {
+          tapShapeId = createShape(shapes, {
+            type: "tap",
+            tapState: "create",
+            x,
+            y,
+          });
+        };
+        if (tapShapeId) {
+          removeTap(false).then(createNewTap);
+        } else {
+          createNewTap();
+        }
       }
-
-      lastStartedAt = now;
-
-      clearTimeout(endTimeout);
-
-      tapShapeId = createShape(shapes, {
-        type: "tap",
-        tapState: "create",
-        x,
-        y,
-      });
-
-      unselectSelectedLine();
 
       this.refresh();
     },
-    onEnd: ({ doubleTapMsLeft }) => {
-      if (isDoubleTap) return;
-
-      // clearTimeout(endTimeout);
-
-      if (coneCutMode) {
-        console.log("remove cone node", coneNodeId);
-        destroyNode(coneNodeId);
+    onEnd: ({ x, y, didDrift }) => {
+      if (isDoubleTap) {
+        isDoubleTap = false;
+        singleTapPos = undefined;
+        return;
       }
+
+      singleTapPos = new Vector2(x, y);
+
+      // Clean up Tap shape if needed
+      singleClickTimeout = setTimeout(() => {
+        removeTap(true);
+        singleClickTimeout = undefined;
+      }, doubleTapMs);
+
+      if (didDrift) {
+        // removeTap();
+      }
+
+      // if (coneCutMode) {
+      //   console.log("remove cone node", coneNodeId);
+      //   destroyNode(coneNodeId);
+      // }
 
       this.refresh();
     },
     onMove: ({ x, y }) => {
-      const shape = getShape(shapes, tapShapeId);
-      setShapeValues(shape, { x, y, tapState: "select" });
+      clearTimeout(singleClickTimeout);
+
+      if (tapShapeId) {
+        const shape = getShape(shapes, tapShapeId);
+        setShapeValues(shape, { x, y, tapState: "select" });
+      }
 
       if (coneCutMode) {
         // Delete lines and orbs when in "cutter" mode
@@ -397,7 +440,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     controllerShapeType /*: "circle" | "cone" */ = "circle"
   ) => {
     const nodeId = nanoid(12);
-    const shapeId = nanoid(12);
 
     const p = new Vector2(x, y);
     const color = getColorFromWorldCoord(p);
@@ -409,7 +451,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       cy: y,
       controlsNodeId: nodeId,
     };
-    shapes.set(shapeId, controllerShape);
+    const shapeId = createShape(shapes, controllerShape);
 
     const dependents = [];
     // Create lines from this node to all other nodes

@@ -9,10 +9,21 @@ import { makeDraggable } from "../drag.js";
 import type { TapState } from "../shapes.js"
 */
 
+export const tapAnimationMs = 200;
+
 export function* Tap({ x, y, tapState }) {
+  let initialDot = true;
+
+  this.schedule(() => {
+    setTimeout(() => {
+      initialDot = false;
+      this.refresh();
+    }, 10);
+  });
+
   for (const { x, y, tapState } of this) {
     const color = getColorFromTapState(tapState);
-    const size = getSizeFromTapState(tapState);
+    const size = initialDot ? 5 : getSizeFromTapState(tapState);
     yield html`
       <div
         class="tap"
@@ -51,6 +62,8 @@ function getSizeFromTapState(tapState /*: TapState */) {
       return tapSize / 2;
     case "delete":
       return tapSize;
+    case "destroying":
+      return 5;
   }
 }
 
@@ -63,8 +76,12 @@ css`
     border-radius: 100%;
     outline-width: 0px;
     outline-style: solid;
-    transition: width 0.2s ease-in-out, height 0.2s ease-in-out,
-      background-color 0.2s ease-in-out;
+
+    /* prettier-ignore */
+    transition:
+      width ${tapAnimationMs}ms ease-in-out,
+      height ${tapAnimationMs}ms ease-in-out,
+      background-color ${tapAnimationMs}ms ease-in-out;
 
     display: flex;
     justify-content: center;

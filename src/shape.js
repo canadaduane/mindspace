@@ -48,7 +48,7 @@ type Shape =
  
 export type ShapeMap = Map<string, Shape>;
 
-export type TapState = "create" | "creating" | "select" | "delete"
+export type TapState = "create" | "creating" | "select" | "delete" | "destroying"
 */
 
 export function makeShapesMap(
