@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@b9g/crank':
-    specifier: 0.5.6
-    version: 0.5.6
+    specifier: 0.5.4
+    version: 0.5.4
   '@fontsource/yantramanav':
     specifier: 5.0.15
     version: 5.0.15
@@ -31,8 +31,8 @@ devDependencies:
 
 packages:
 
-  /@b9g/crank@0.5.6:
-    resolution: {integrity: sha512-+3PQYFttLncjH5mnhfd8njFuVG0LfhZJFqTz61xO6e6ajm6jI1Q5GaIk1tQaTtAuR1e+dUbBTDYdSGMpnONNbg==}
+  /@b9g/crank@0.5.4:
+    resolution: {integrity: sha512-k1rRYKNl6nG0Wxt7ua0J2laXwjZZ7abTNIVJeNTVGLirQ397duTE75G7N0EU4hbRebUg+4tfG2sZAJQ+FvMi1Q==}
     dev: false
 
   /@esbuild/android-arm64@0.19.4:
