@@ -81,19 +81,24 @@ export function* RainbowBorder() {
       }
     }
 
-    const cornerBoost = perimeter / 220;
+    const cornerRadiusVec = 10;
+    const cornerBoostMax = perimeter / (220 / (cornerRadiusVec / 10));
     const cornerHeightBoost = (i, max) => {
       const p = 2;
-      if (i < 10) {
+      if (i < cornerRadiusVec) {
         return (
-          Math.pow(1 + Math.cos(Math.PI / 2 + ((i / 10) * Math.PI) / 2), p) *
-          cornerBoost
+          Math.pow(
+            1 + Math.cos(Math.PI / 2 + ((i / cornerRadiusVec) * Math.PI) / 2),
+            p
+          ) * cornerBoostMax
         );
-      } else if (i >= max - 10) {
+      } else if (i >= max - cornerRadiusVec) {
         const k = max - i;
         return (
-          Math.pow(1 + Math.cos(Math.PI / 2 + ((k / 10) * Math.PI) / 2), p) *
-          cornerBoost
+          Math.pow(
+            1 + Math.cos(Math.PI / 2 + ((k / cornerRadiusVec) * Math.PI) / 2),
+            p
+          ) * cornerBoostMax
         );
       } else {
         return 0;
@@ -101,35 +106,58 @@ export function* RainbowBorder() {
     };
 
     const path = [].concat(
+      // Top
       heightMap.slice(0, vecCorner1).map((height, i) => {
-        const theta = DEG2RAD * (45 + (90 * i) / vecWidth);
-        const mag = height + cornerHeightBoost(i, vecWidth);
+        const boost = cornerHeightBoost(i, vecWidth);
+        const theta =
+          DEG2RAD *
+          (i < vecWidth / 2
+            ? 90 - (45 * boost) / cornerBoostMax
+            : 90 + (45 * boost) / cornerBoostMax);
+        const mag = height + boost;
         const px = borderThickness + i * wu + Math.cos(theta) * mag;
         const py = borderThickness + Math.sin(theta) * mag;
         return `${i === 0 ? "M" : "L"}${px},${py}`;
       }),
+      // Right
       heightMap.slice(vecCorner1, vecCorner2).map((height, i) => {
-        const theta = DEG2RAD * (135 + (90 * i) / vecHeight);
-        const mag = height + cornerHeightBoost(i, vecHeight);
+        const boost = cornerHeightBoost(i, vecHeight);
+        const theta =
+          DEG2RAD *
+          (i < vecHeight / 2
+            ? 180 - (45 * boost) / cornerBoostMax
+            : 180 + (45 * boost) / cornerBoostMax);
+        const mag = height + boost;
         const px = size.width - borderThickness + Math.cos(theta) * mag;
         const py = borderThickness + i * hu + Math.sin(theta) * mag;
         return `L${px},${py}`;
       }),
+      // Bottom
       heightMap.slice(vecCorner2, vecCorner3).map((height, i) => {
-        const theta = DEG2RAD * (225 + (90 * i) / vecWidth);
-        const mag = height + cornerHeightBoost(i, vecWidth);
+        const boost = cornerHeightBoost(i, vecWidth);
+        const theta =
+          DEG2RAD *
+          (i < vecHeight / 2
+            ? 270 - (45 * boost) / cornerBoostMax
+            : 270 + (45 * boost) / cornerBoostMax);
+        const mag = height + boost;
         const px =
           size.width - borderThickness - i * wu + Math.cos(theta) * mag;
         const py = size.height - borderThickness + Math.sin(theta) * mag;
         return `L${px},${py}`;
       }),
+      // Left
       heightMap.slice(vecCorner3, vecCorner4).map((height, i) => {
-        const theta = DEG2RAD * (315 + (90 * i) / vecHeight);
-        const mag = height + cornerHeightBoost(i, vecHeight);
+        const boost = cornerHeightBoost(i, vecHeight);
+        const theta =
+          DEG2RAD *
+          (i < vecHeight / 2
+            ? 360 - (45 * boost) / cornerBoostMax
+            : 0 + (45 * boost) / cornerBoostMax);
+        const mag = height + boost;
         const px = borderThickness + Math.cos(theta) * mag;
         const py =
           size.height - borderThickness - i * hu + Math.sin(theta) * mag;
-        // return i === vecHeight - 1 ? "z" : `L${px},${py}`;
         return `L${px},${py}`;
       })
     );
