@@ -37,47 +37,38 @@ export function* RainbowBorder() {
   for (const { size, borderThickness, focus } of this) {
     const innerWidth = size.width - borderThickness * 2;
     const innerHeight = size.height - borderThickness * 2;
-
     const perimeter = innerWidth * 2 + innerHeight * 2;
+
     const vecWidth = Math.floor((innerWidth / perimeter) * length);
     const vecHeight = Math.floor((innerHeight / perimeter) * length);
+
+    // we'll use corners, in vector units, as partial perimeter checkpoints as we draw
     const vecCorner1 = vecWidth;
     const vecCorner2 = vecCorner1 + vecHeight;
     const vecCorner3 = vecCorner2 + vecWidth;
     const vecCorner4 = vecCorner3 + vecHeight;
 
     // convert vec units to pixels
-    const wu = innerWidth / vecWidth;
-    const hu = innerHeight / vecHeight;
+    const vU = perimeter / vecCorner4;
 
     if (focus) {
       let vecPoint;
-      let vecMax;
-      let getIdx;
       if (focus.side === "top") {
-        vecPoint = (focus.point - borderThickness) / wu;
-        vecMax = vecWidth;
-        getIdx = (i) => wrapIdx(i, length);
-      } else if (focus.side === "bottom") {
-        vecPoint = (focus.point - borderThickness) / wu;
-        vecMax = vecWidth;
-        getIdx = (i) => wrapIdx(vecCorner3 - i, length);
-      } else if (focus.side === "left") {
-        vecPoint = (focus.point - borderThickness) / hu;
-        vecMax = vecHeight;
-        getIdx = (i) => wrapIdx(vecCorner4 - i, length);
+        vecPoint = (focus.point - borderThickness) / vU;
       } else if (focus.side === "right") {
-        vecPoint = (focus.point - borderThickness) / hu;
-        vecMax = vecHeight;
-        getIdx = (i) => wrapIdx(vecCorner1 + i, length);
+        vecPoint = vecCorner1 + (focus.point - borderThickness) / vU;
+      } else if (focus.side === "bottom") {
+        vecPoint = vecCorner3 - (focus.point - borderThickness) / vU;
+      } else if (focus.side === "left") {
+        vecPoint = vecCorner4 - (focus.point - borderThickness) / vU;
       }
 
       const m = focus.magnitude;
 
-      for (let i = -40; i < vecMax + 40; i++) {
-        const dist = Math.abs(i - vecPoint);
-        const height = Math.max(0, m - (m * (dist * dist)) / vecMax);
-        if (height > 0) heightMap[getIdx(i)] = height;
+      for (let i = 0; i < vecCorner4; i++) {
+        const dist = i - vecPoint;
+        const height = Math.max(0, m - (m * (dist * dist) * vU) / 800);
+        if (height > 0) heightMap[i] = height;
       }
     }
 
@@ -115,7 +106,7 @@ export function* RainbowBorder() {
             ? 90 - (45 * boost) / cornerBoostMax
             : 90 + (45 * boost) / cornerBoostMax);
         const mag = height + boost;
-        const px = borderThickness + i * wu + Math.cos(theta) * mag;
+        const px = borderThickness + i * vU + Math.cos(theta) * mag;
         const py = borderThickness + Math.sin(theta) * mag;
         return `${i === 0 ? "M" : "L"}${px},${py}`;
       }),
@@ -129,7 +120,7 @@ export function* RainbowBorder() {
             : 180 + (45 * boost) / cornerBoostMax);
         const mag = height + boost;
         const px = size.width - borderThickness + Math.cos(theta) * mag;
-        const py = borderThickness + i * hu + Math.sin(theta) * mag;
+        const py = borderThickness + i * vU + Math.sin(theta) * mag;
         return `L${px},${py}`;
       }),
       // Bottom
@@ -142,7 +133,7 @@ export function* RainbowBorder() {
             : 270 + (45 * boost) / cornerBoostMax);
         const mag = height + boost;
         const px =
-          size.width - borderThickness - i * wu + Math.cos(theta) * mag;
+          size.width - borderThickness - i * vU + Math.cos(theta) * mag;
         const py = size.height - borderThickness + Math.sin(theta) * mag;
         return `L${px},${py}`;
       }),
@@ -157,7 +148,7 @@ export function* RainbowBorder() {
         const mag = height + boost;
         const px = borderThickness + Math.cos(theta) * mag;
         const py =
-          size.height - borderThickness - i * hu + Math.sin(theta) * mag;
+          size.height - borderThickness - i * vU + Math.sin(theta) * mag;
         return `L${px},${py}`;
       })
     );
@@ -195,14 +186,23 @@ export function* RainbowBorder() {
   }
 }
 
+// Given a threshold t, and two distances that may or may not be within that
+// threshold, calculate a magnitude of influence
+function calculateMagnitude(t, d1, d2) {
+  const m1 = Math.max(0, 2 * Math.min(t / 2, t - d1));
+  const m2 = Math.max(0, 2 * Math.min(t / 2, t - d2));
+  return Math.min(t, Math.sqrt(m1 * m1 + m2 * m2));
+}
+
 export function getRainbowFocus(pos, size, threshold = 50) {
   const closest = closestSide(pos, size);
   const nextClosest = closestSide(pos, size, closest.side);
 
-  const t = threshold;
-  const m1 = Math.max(0, 2 * Math.min(t / 2, t - closest.distance));
-  const m2 = Math.max(0, 2 * Math.min(t / 2, t - nextClosest.distance));
-  const magnitude = Math.sqrt(m1 * m1 + m2 * m2);
+  const magnitude = calculateMagnitude(
+    threshold,
+    closest.distance,
+    nextClosest.distance
+  );
   switch (closest.side) {
     case "top":
     case "bottom": {
