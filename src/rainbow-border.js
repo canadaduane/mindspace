@@ -1,6 +1,7 @@
 import { html, closestSide } from "./utils.js";
 import { css } from "./styles.js";
 import { startAnimation } from "./animation.js";
+import { DEG2RAD } from "./math/utils.js";
 
 const viscosity = 0.9;
 
@@ -76,26 +77,26 @@ export function* RainbowBorder() {
 
     const path = [].concat(
       heightMap.slice(0, vecCorner1).map((height, i) => {
-        const theta = Math.PI / 4 + ((Math.PI / 2) * i) / vecWidth;
+        const theta = DEG2RAD * (45 + (90 * i) / vecWidth);
         const px = borderThickness + i * wu + Math.cos(theta) * height;
         const py = borderThickness + Math.sin(theta) * height;
         return `${i === 0 ? "M" : "L"}${px},${py}`;
       }),
       heightMap.slice(vecCorner1, vecCorner2).map((height, i) => {
-        const theta = (Math.PI * 3) / 4 + ((Math.PI / 2) * i) / vecHeight;
+        const theta = DEG2RAD * (135 + (90 * i) / vecHeight);
         const px = size.width - borderThickness + Math.cos(theta) * height;
         const py = borderThickness + i * hu + Math.sin(theta) * height;
         return `L${px},${py}`;
       }),
       heightMap.slice(vecCorner2, vecCorner3).map((height, i) => {
-        const theta = (Math.PI * 5) / 4 + ((Math.PI / 2) * i) / vecWidth;
+        const theta = DEG2RAD * (225 + (90 * i) / vecWidth);
         const px =
           size.width - borderThickness - i * wu + Math.cos(theta) * height;
         const py = size.height - borderThickness + Math.sin(theta) * height;
         return `L${px},${py}`;
       }),
       heightMap.slice(vecCorner3, vecCorner4).map((height, i) => {
-        const theta = (Math.PI * 7) / 4 + ((Math.PI / 2) * i) / vecHeight;
+        const theta = DEG2RAD * (315 + (90 * i) / vecHeight);
         const px = borderThickness + Math.cos(theta) * height;
         const py =
           size.height - borderThickness - i * hu + Math.sin(theta) * height;
