@@ -2,25 +2,12 @@ import { html, closestSide } from "./utils.js";
 import { css } from "./styles.js";
 import { startAnimation } from "./animation.js";
 
+const viscosity = 0.9;
+
 export function* RainbowBorder() {
   const length = 500;
   const heightMap = Array.from({ length }, () => 0);
   const velocityMap = Array.from({ length }, () => 0);
-  let perturbTimeout = 1000;
-  const perturb = () => {
-    const idx = Math.floor(Math.random() * length);
-    velocityMap[idx - 2] += 20;
-    velocityMap[idx - 1] += 30;
-    velocityMap[idx] += 40;
-    velocityMap[idx + 1] += 30;
-    velocityMap[idx + 2] += 20;
-    setTimeout(perturb, perturbTimeout);
-    if (perturbTimeout > 100) perturbTimeout -= 100;
-  };
-  // perturb();
-
-  // heightMap[150] = 20;
-  const viscosity = 0.9;
 
   const propagate = () => {
     let left = heightMap[length - 1];
