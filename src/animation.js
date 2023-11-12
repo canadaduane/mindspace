@@ -4,25 +4,43 @@ import { isUnmounted, refresh } from "./utils.js";
 const animations = new Map();
 let animating = false;
 
-const loop = () => {
-  if (!animating) return;
+async function* nextFrame(fps) {
+  let then = performance.now();
+  const interval = 1000 / fps;
+  let delta = 0;
 
-  for (const [component, action] of animations.entries()) {
-    if (isUnmounted(component)) {
-      console.warn("unmounted while animating, stopping animation", component);
-      stopAnimation(component);
-      continue;
-    }
-    try {
-      action();
-    } catch (e) {
-      console.warn("error while animating", component);
-      stopAnimation(component);
-      throw e;
+  while (true) {
+    let now = await new Promise(requestAnimationFrame);
+    if (now - then < interval - delta) continue;
+    delta = Math.min(interval, delta + now - then - interval);
+    then = now;
+
+    yield now;
+  }
+}
+
+const loop = async (fps = 60) => {
+  for await (const time of nextFrame(fps)) {
+    if (!animating) return;
+
+    for (const [component, action] of animations.entries()) {
+      if (isUnmounted(component)) {
+        console.warn(
+          "unmounted while animating, stopping animation",
+          component
+        );
+        stopAnimation(component);
+        continue;
+      }
+      try {
+        action();
+      } catch (e) {
+        console.warn("error while animating", component);
+        stopAnimation(component);
+        throw e;
+      }
     }
   }
-
-  requestAnimationFrame(loop);
 };
 
 export function startAnimation(
