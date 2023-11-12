@@ -18,7 +18,6 @@ import {
   setShapeValues,
   makeShapesMap,
   getShape,
-  setShape,
   createShape,
 } from "./shape.js";
 import {
