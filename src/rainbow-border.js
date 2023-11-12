@@ -167,14 +167,14 @@ export function* RainbowBorder() {
   }
 }
 
-export function getRainbowFocus(pos, size) {
+export function getRainbowFocus(pos, size, threshold = 50) {
   const closest = closestSide(pos, size);
+  const nextClosest = closestSide(pos, size, closest.side);
 
-  const threshold = 50;
-  const magnitude = Math.max(
-    0,
-    2 * Math.min(threshold / 2, threshold - closest.distance)
-  );
+  const t = threshold;
+  const m1 = Math.max(0, 2 * Math.min(t / 2, t - closest.distance));
+  const m2 = Math.max(0, 2 * Math.min(t / 2, t - nextClosest.distance));
+  const magnitude = Math.sqrt(m1 * m1 + m2 * m2);
   switch (closest.side) {
     case "top":
     case "bottom": {

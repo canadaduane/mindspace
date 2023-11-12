@@ -69,21 +69,17 @@ type Side = {
 
 export function closestSide(
   pos /*: Vector2 */,
-  size /*: Vector2 */
+  size /*: Vector2 */,
+  discard /*: Side["side"] | void */
 ) /*: Side */ {
-  const ratio = size.width / size.height;
-  const diagFall = (size.width - pos.x) / (size.height - pos.y);
-  const diagRise = pos.x / (size.height - pos.y);
+  const sides = [];
+  if (discard !== "top") sides.push({ side: "top", distance: pos.y });
+  if (discard !== "right")
+    sides.push({ side: "right", distance: size.width - pos.x });
+  if (discard !== "left") sides.push({ side: "left", distance: pos.x });
+  if (discard !== "bottom")
+    sides.push({ side: "bottom", distance: size.height - pos.y });
+  sides.sort((a, b) => a.distance - b.distance);
 
-  if (diagFall < ratio && diagRise < ratio) {
-    return { side: "top", distance: pos.y };
-  } else if (diagFall < ratio && diagRise > ratio) {
-    return { side: "right", distance: size.width - pos.x };
-  } else if (diagFall > ratio && diagRise < ratio) {
-    return { side: "left", distance: pos.x };
-  } else if (diagFall > ratio && diagRise > ratio) {
-    return { side: "bottom", distance: size.height - pos.y };
-  }
-
-  throw new Error("impossible side");
+  return sides[0];
 }
