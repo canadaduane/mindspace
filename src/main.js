@@ -9,6 +9,7 @@ import {
   spiralRadius,
   spiralInitial,
   spiralAddend,
+  rainbowBorderThickness,
 } from "./constants.js";
 import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
 import { makeDraggable } from "./drag.js";
@@ -209,7 +210,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   window.addEventListener("pointermove", (event) => {
     const pos = new Vector2(event.clientX, event.clientY);
 
-    rainbowFocus = getRainbowFocus(pos, winSize);
+    rainbowFocus = getRainbowFocus(pos, winSize, rainbowBorderThickness);
 
     this.refresh();
   });
@@ -664,7 +665,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         </svg>
         <${RainbowBorder}
           size=${winSize}
-          borderThickness=${3}
+          borderThickness=${rainbowBorderThickness}
           focus=${rainbowFocus}
         />
         ${htmlShapes.map(([shapeId, shape]) => {

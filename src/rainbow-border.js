@@ -1,7 +1,7 @@
 import { html, closestSide } from "./utils.js";
 import { css } from "./styles.js";
 import { startAnimation } from "./animation.js";
-import { DEG2RAD } from "./math/utils.js";
+import { DEG2RAD, clamp } from "./math/utils.js";
 
 const viscosity = 0.9;
 
@@ -16,7 +16,7 @@ export function* RainbowBorder() {
   const heightMap = Array.from({ length }, () => 0);
   const velocityMap = Array.from({ length }, () => 0);
 
-  const propagate = () => {
+  const propagateWaves = () => {
     let left = heightMap[length - 1];
     let right = heightMap[1];
     for (let i = 0; i < length; i++) {
@@ -31,16 +31,16 @@ export function* RainbowBorder() {
   };
 
   this.schedule(() => {
-    startAnimation(this, propagate);
+    startAnimation(this, propagateWaves);
   });
 
-  for (const { size, borderThickness, focus } of this) {
-    const innerWidth = size.width - borderThickness * 2;
-    const innerHeight = size.height - borderThickness * 2;
+  for (const { size, borderThickness: th, focus } of this) {
+    const innerWidth = size.width - th * 2;
+    const innerHeight = size.height - th * 2;
     const perimeter = innerWidth * 2 + innerHeight * 2;
 
-    const vecWidth = Math.floor((innerWidth / perimeter) * length);
-    const vecHeight = Math.floor((innerHeight / perimeter) * length);
+    const vecWidth = (innerWidth / perimeter) * length;
+    const vecHeight = (innerHeight / perimeter) * length;
 
     // we'll use corners, in vector units, as partial perimeter checkpoints as we draw
     const vecCorner1 = vecWidth;
@@ -51,24 +51,32 @@ export function* RainbowBorder() {
     // convert vec units to pixels
     const vU = perimeter / vecCorner4;
 
+    const getPosTop = (i) => ({ x: th + i * vU, y: th });
+    const getPosRight = (i) => ({ x: size.width - th, y: th + i * vU });
+    const getPosBottom = (i) => ({
+      x: size.width - th - i * vU,
+      y: size.height - th,
+    });
+    const getPosLeft = (i) => ({ x: th, y: size.height - th - i * vU });
+
     if (focus) {
-      let vecPoint;
+      let vecFocusPoint;
       if (focus.side === "top") {
-        vecPoint = (focus.point - borderThickness) / vU;
+        vecFocusPoint = focus.point / vU;
       } else if (focus.side === "right") {
-        vecPoint = vecCorner1 + (focus.point - borderThickness) / vU;
+        vecFocusPoint = vecCorner1 + focus.point / vU;
       } else if (focus.side === "bottom") {
-        vecPoint = vecCorner3 - (focus.point - borderThickness) / vU;
+        vecFocusPoint = vecCorner3 - focus.point / vU;
       } else if (focus.side === "left") {
-        vecPoint = vecCorner4 - (focus.point - borderThickness) / vU;
+        vecFocusPoint = vecCorner4 - focus.point / vU;
       }
 
       const m = focus.magnitude;
 
-      for (let i = 0; i < vecCorner4; i++) {
-        const dist = i - vecPoint;
+      for (let i = -40; i < vecCorner4 + 40; i++) {
+        const dist = i - vecFocusPoint;
         const height = Math.max(0, m - (m * (dist * dist) * vU) / 800);
-        if (height > 0) heightMap[i] = height;
+        if (height > 0) heightMap[wrapIdx(i, length)] = height;
       }
     }
 
@@ -96,61 +104,44 @@ export function* RainbowBorder() {
       }
     };
 
+    const toBorder = (getPos, slice, size, degStart) =>
+      slice.map((height, i) => {
+        const boost = cornerHeightBoost(i, size);
+        const theta =
+          DEG2RAD *
+          (i < size / 2
+            ? degStart - (45 * boost) / cornerBoostMax
+            : degStart + (45 * boost) / cornerBoostMax);
+        const mag = height + boost;
+        const { x, y } = getPos(i);
+        return `${x + Math.cos(theta) * mag},${y + Math.sin(theta) * mag}`;
+      });
+
     const path = [].concat(
-      // Top
-      heightMap.slice(0, vecCorner1).map((height, i) => {
-        const boost = cornerHeightBoost(i, vecWidth);
-        const theta =
-          DEG2RAD *
-          (i < vecWidth / 2
-            ? 90 - (45 * boost) / cornerBoostMax
-            : 90 + (45 * boost) / cornerBoostMax);
-        const mag = height + boost;
-        const px = borderThickness + i * vU + Math.cos(theta) * mag;
-        const py = borderThickness + Math.sin(theta) * mag;
-        return `${i === 0 ? "M" : "L"}${px},${py}`;
-      }),
-      // Right
-      heightMap.slice(vecCorner1, vecCorner2).map((height, i) => {
-        const boost = cornerHeightBoost(i, vecHeight);
-        const theta =
-          DEG2RAD *
-          (i < vecHeight / 2
-            ? 180 - (45 * boost) / cornerBoostMax
-            : 180 + (45 * boost) / cornerBoostMax);
-        const mag = height + boost;
-        const px = size.width - borderThickness + Math.cos(theta) * mag;
-        const py = borderThickness + i * vU + Math.sin(theta) * mag;
-        return `L${px},${py}`;
-      }),
-      // Bottom
-      heightMap.slice(vecCorner2, vecCorner3).map((height, i) => {
-        const boost = cornerHeightBoost(i, vecWidth);
-        const theta =
-          DEG2RAD *
-          (i < vecHeight / 2
-            ? 270 - (45 * boost) / cornerBoostMax
-            : 270 + (45 * boost) / cornerBoostMax);
-        const mag = height + boost;
-        const px =
-          size.width - borderThickness - i * vU + Math.cos(theta) * mag;
-        const py = size.height - borderThickness + Math.sin(theta) * mag;
-        return `L${px},${py}`;
-      }),
-      // Left
-      heightMap.slice(vecCorner3, vecCorner4).map((height, i) => {
-        const boost = cornerHeightBoost(i, vecHeight);
-        const theta =
-          DEG2RAD *
-          (i < vecHeight / 2
-            ? 360 - (45 * boost) / cornerBoostMax
-            : 0 + (45 * boost) / cornerBoostMax);
-        const mag = height + boost;
-        const px = borderThickness + Math.cos(theta) * mag;
-        const py =
-          size.height - borderThickness - i * vU + Math.sin(theta) * mag;
-        return `L${px},${py}`;
-      })
+      /* Top */ toBorder(
+        getPosTop,
+        heightMap.slice(0, Math.floor(vecCorner1)),
+        vecWidth,
+        90
+      ),
+      /* Right */ toBorder(
+        getPosRight,
+        heightMap.slice(Math.floor(vecCorner1), Math.floor(vecCorner2)),
+        vecHeight,
+        180
+      ),
+      /* Bottom */ toBorder(
+        getPosBottom,
+        heightMap.slice(Math.floor(vecCorner2), Math.floor(vecCorner3)),
+        vecWidth,
+        270
+      ),
+      /* Left */ toBorder(
+        getPosLeft,
+        heightMap.slice(Math.floor(vecCorner3), Math.floor(vecCorner4)),
+        vecHeight,
+        360
+      )
     );
 
     yield html`
@@ -175,7 +166,7 @@ export function* RainbowBorder() {
             fill="white"
           />
 
-          <path d=${path.join(" ")} />
+          <path d=${"M" + path.join("L")} />
         </mask>
 
         <foreignObject width="100%" height="100%" mask="url(#mask)">
@@ -194,7 +185,7 @@ function calculateMagnitude(t, d1, d2) {
   return Math.min(t, Math.sqrt(m1 * m1 + m2 * m2));
 }
 
-export function getRainbowFocus(pos, size, threshold = 50) {
+export function getRainbowFocus(pos, size, borderThickness, threshold = 50) {
   const closest = closestSide(pos, size);
   const nextClosest = closestSide(pos, size, closest.side);
 
@@ -203,16 +194,18 @@ export function getRainbowFocus(pos, size, threshold = 50) {
     closest.distance,
     nextClosest.distance
   );
+
+  const th = borderThickness;
   switch (closest.side) {
     case "top":
     case "bottom": {
-      const point = pos.x;
+      const point = clamp(pos.x - th, 0, size.width - th * 2);
       return { side: closest.side, point, magnitude };
     }
 
     case "left":
     case "right": {
-      const point = pos.y;
+      const point = clamp(pos.y - th, 0, size.height - th * 2);
       return { side: closest.side, point, magnitude };
     }
   }
