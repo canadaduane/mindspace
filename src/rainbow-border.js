@@ -199,13 +199,23 @@ export function getRainbowFocus(pos, size, borderThickness, threshold = 50) {
   switch (closest.side) {
     case "top":
     case "bottom": {
-      const point = clamp(pos.x - th, 0, size.width - th * 2);
+      const y = closest.side === "bottom" ? size.height - pos.y : pos.y;
+      const center = pos.x - size.width / 2;
+      const innerWidth = size.width - th * 2;
+      const radialWidth = size.width - y * 2;
+      const pointScaled = (center / radialWidth) * innerWidth;
+      const point = pointScaled + innerWidth / 2;
       return { side: closest.side, point, magnitude };
     }
 
     case "left":
     case "right": {
-      const point = clamp(pos.y - th, 0, size.height - th * 2);
+      const x = closest.side === "right" ? size.width - pos.x : pos.x;
+      const center = pos.y - size.height / 2;
+      const innerHeight = size.height - th * 2;
+      const radialHeight = size.height - x * 2;
+      const pointScaled = (center / radialHeight) * innerHeight;
+      const point = pointScaled + innerHeight / 2;
       return { side: closest.side, point, magnitude };
     }
   }
