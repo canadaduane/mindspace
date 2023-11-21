@@ -1,11 +1,9 @@
 import { renderer } from "@b9g/crank/dom";
 import { nanoid } from "nanoid";
 import { html, closestSide } from "./utils.js";
-import { doesLineIntersectLine, doesLineIntersectCircle } from "./math/trig.js";
 import { Vector2 } from "./math/vector2.js";
 import {
   scrollbarThickness,
-  orbSize,
   spiralRadius,
   spiralInitial,
   spiralAddend,
@@ -34,7 +32,7 @@ import {
 import { styles } from "./styles.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 import { Circle } from "./shapes/circle.js";
-import { Line, demoteLineType } from "./shapes/line.js";
+import { Line } from "./shapes/line.js";
 import { Pop } from "./shapes/pop.js";
 import { Tap, tapAnimationMs } from "./shapes/tap.js";
 
@@ -45,10 +43,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   window.shapes = shapes;
 
   let mostRecentlyActiveNodeId;
-
-  let coneCutPath /*: Point[] */ = [];
-  let coneCutTheta /*: number */ = 0;
-  let coneCutMode = false;
 
   const winSize = new Vector2();
   const docSize = new Vector2();
@@ -91,17 +85,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   window.addEventListener("mouseout", () => {
     rainbowFocus = undefined;
     this.refresh();
-  });
-
-  this.addEventListener("setCutMode", ({ detail: { mode } }) => {
-    coneCutMode = mode;
-    enableDisableConeLines();
-    // no need to refresh because we're animating "cone"
-  });
-
-  this.addEventListener("setCutPath", ({ detail: { path, theta } }) => {
-    coneCutTheta = theta;
-    coneCutPath = path;
   });
 
   this.addEventListener("controllingNode", ({ detail: { nodeId } }) => {
@@ -217,20 +200,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   document.body.addEventListener("keydown", onKeyDown);
 
-  let coneNodeId;
-  let coneShapeId;
-  let coneShapeDepShapeIds = [];
-
   let tapShapeId;
   let singleClickTimeout;
   let singleTapPos /*: Vector2 | undefined */;
   let dragColor /*: string | undefined */;
 
-  const conePos = { x: 0, y: 0 };
-  const shapeIdsCutThisMotion = new Set();
-
   const doubleTapMs = 500;
-  const doubleTapReleaseMs = 1000;
   let isDoubleTap = false;
 
   const removeTap = async (animate = false) => {
@@ -254,175 +229,116 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     this.refresh();
   };
 
-  const { start, end, move, touchStart } = makeDraggable(conePos, {
-    onStart: ({ x, y }) => {
-      unselectSelectedLine();
+  const { start, end, move, touchStart } = makeDraggable(
+    { x: 0, y: 0 },
+    {
+      onStart: ({ x, y }) => {
+        unselectSelectedLine();
 
-      const side = closestSide({ x, y }, winSize);
-      if (side.distance < 40) {
-        dragColor = getColorFromScreenCoord({ x, y }, winSize);
+        const side = closestSide({ x, y }, winSize);
+        if (side.distance < 40) {
+          dragColor = getColorFromScreenCoord({ x, y }, winSize);
 
-        console.log("create color");
-        tapShapeId = createShape(shapes, {
-          type: "tap",
-          tapState: "color",
-          color: dragColor,
-          x,
-          y,
-        });
-        return;
-      }
-
-      const doubleTapDistance = singleTapPos
-        ? singleTapPos.distanceTo({ x, y })
-        : 0;
-
-      if (singleClickTimeout && !isDoubleTap && doubleTapDistance < 5) {
-        if (!tapShapeId) return;
-
-        isDoubleTap = true;
-
-        clearTimeout(singleClickTimeout);
-        singleClickTimeout = undefined;
-
-        const shape = getShape(shapes, tapShapeId);
-        setShapeValues(shape, { x, y, tapState: "creating" });
-
-        setTimeout(() => {
-          removeTap(false).then(() => {
-            createNode(x, y, "circle");
-          });
-        }, tapAnimationMs - 50);
-
-        this.refresh();
-      } else {
-        const createNewTap = () => {
+          console.log("create color");
           tapShapeId = createShape(shapes, {
             type: "tap",
-            tapState: "create",
+            tapState: "color",
+            color: dragColor,
             x,
             y,
           });
-        };
-        if (tapShapeId) {
-          removeTap(false).then(createNewTap);
-        } else {
-          createNewTap();
+          return;
         }
-      }
 
-      this.refresh();
-    },
-    onEnd: ({ x, y, didDrift }) => {
-      if (dragColor) {
-        const circleColor = dragColor;
-        removeTap(false).then(() => {
-          const node = findNodeAtPosition(nodes, new Vector2(x, y));
-          if (node) {
-            node.color = circleColor;
+        const doubleTapDistance = singleTapPos
+          ? singleTapPos.distanceTo({ x, y })
+          : 0;
+
+        if (singleClickTimeout && !isDoubleTap && doubleTapDistance < 5) {
+          if (!tapShapeId) return;
+
+          isDoubleTap = true;
+
+          clearTimeout(singleClickTimeout);
+          singleClickTimeout = undefined;
+
+          const shape = getShape(shapes, tapShapeId);
+          setShapeValues(shape, { x, y, tapState: "creating" });
+
+          setTimeout(() => {
+            removeTap(false).then(() => {
+              createNode(x, y, "circle");
+            });
+          }, tapAnimationMs - 50);
+
+          this.refresh();
+        } else {
+          const createNewTap = () => {
+            tapShapeId = createShape(shapes, {
+              type: "tap",
+              tapState: "create",
+              x,
+              y,
+            });
+          };
+          if (tapShapeId) {
+            removeTap(false).then(createNewTap);
           } else {
-            createNode(x, y, "circle", circleColor);
+            createNewTap();
+          }
+        }
+
+        this.refresh();
+      },
+      onEnd: ({ x, y }) => {
+        if (dragColor) {
+          const circleColor = dragColor;
+          removeTap(false).then(() => {
+            const node = findNodeAtPosition(nodes, new Vector2(x, y));
+            if (node) {
+              node.color = circleColor;
+            } else {
+              createNode(x, y, "circle", circleColor);
+            }
+            this.refresh();
+          });
+          dragColor = undefined;
+        }
+
+        if (isDoubleTap) {
+          isDoubleTap = false;
+          singleTapPos = undefined;
+          return;
+        }
+
+        singleTapPos = new Vector2(x, y);
+
+        // Clean up Tap shape if needed
+        singleClickTimeout = setTimeout(() => {
+          removeTap(true);
+          singleClickTimeout = undefined;
+        }, doubleTapMs);
+
+        this.refresh();
+      },
+      onMove: ({ x, y }) => {
+        clearTimeout(singleClickTimeout);
+
+        if (tapShapeId) {
+          const shape = getShape(shapes, tapShapeId);
+
+          if (shape.tapState === "color") {
+            setShapeValues(shape, { x, y });
+          } else {
+            setShapeValues(shape, { x, y, tapState: "select" });
           }
           this.refresh();
-        });
-        dragColor = undefined;
-      }
-
-      if (isDoubleTap) {
-        isDoubleTap = false;
-        singleTapPos = undefined;
-        return;
-      }
-
-      singleTapPos = new Vector2(x, y);
-
-      // Clean up Tap shape if needed
-      singleClickTimeout = setTimeout(() => {
-        removeTap(true);
-        singleClickTimeout = undefined;
-      }, doubleTapMs);
-
-      // if (coneCutMode) {
-      //   console.log("remove cone node", coneNodeId);
-      //   destroyNode(coneNodeId);
-      // }
-
-      this.refresh();
-    },
-    onMove: ({ x, y }) => {
-      clearTimeout(singleClickTimeout);
-
-      if (tapShapeId) {
-        const shape = getShape(shapes, tapShapeId);
-
-        if (shape.tapState === "color") {
-          setShapeValues(shape, { x, y });
-        } else {
-          setShapeValues(shape, { x, y, tapState: "select" });
         }
+
         this.refresh();
-      }
-
-      if (coneCutMode) {
-        // Delete lines and orbs when in "cutter" mode
-        for (let [shapeId, shape] of shapes.entries()) {
-          // Skip self-cutting Cone
-          if (
-            shapeId === coneShapeId ||
-            (shape.type === "line" && shape.lineType === "disabled")
-          ) {
-            continue;
-          }
-
-          // Skip shapes we've already deleted during this "cutter" session
-          if (shapeIdsCutThisMotion.has(shapeId)) {
-            continue;
-          }
-
-          if (shape.type === "circle") {
-            const c = { x: shape.cx, y: shape.cy };
-            coneCutPath.slice(1).forEach((p, i) => {
-              const q = coneCutPath[i];
-              if (doesLineIntersectCircle(q, p, c, orbSize / 2 - 1)) {
-                if (!shapeIdsCutThisMotion.has(shapeId)) {
-                  if (destroyNode(shape.controlsNodeId)) {
-                    shapeIdsCutThisMotion.add(shapeId);
-                    createPop(
-                      shape.cx,
-                      shape.cy,
-                      coneCutTheta + Math.PI,
-                      shape.color
-                    );
-                    return;
-                  }
-                }
-              }
-            });
-          } else if (shape.type === "line") {
-            const p1 = { x: shape.x1, y: shape.y1 };
-            const p2 = { x: shape.x2, y: shape.y2 };
-            coneCutPath.slice(1).forEach((p, i) => {
-              const q = coneCutPath[i];
-              // (q, p) is this part of the cut path segment
-              // (p1, p2) is the line we are currently testing
-              if (doesLineIntersectLine(q, p, p1, p2)) {
-                shapeIdsCutThisMotion.add(shapeId);
-                const demoted = demoteLineType(shape.lineType);
-                setLineType(shapeId, demoted);
-                return;
-              }
-            });
-          }
-        }
-      }
-
-      // const node = getNode(nodes, coneNodeId);
-      // node.x = x;
-      // node.y = y;
-
-      this.refresh();
-    },
-  });
+      },
+    }
+  );
 
   /** Create Functions */
 
@@ -434,17 +350,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     nodeDependents2.push({ shapeId: lineShapeId, attrs: { x: "x1", y: "y1" } });
 
     return { shape: lineShape, shapeId: lineShapeId };
-  };
-
-  const createPop = (x, y, theta, color) => {
-    const popShapeId = nanoid(12);
-    shapes.set(popShapeId, {
-      type: "pop",
-      color,
-      x,
-      y,
-      theta,
-    });
   };
 
   const setLineType = (shapeId, lineType) => {
@@ -477,21 +382,16 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     // if no nodes, return undefined
   };
 
-  const createNode = (
-    x,
-    y,
-    controllerShapeType /*: "circle" | "cone" */ = "circle",
-    colorOverride /*: string | void */
-  ) => {
+  const createNode = (x, y, colorOverride /*: string | void */) => {
     const nodeId = nanoid(12);
 
     const p = new Vector2(x, y);
     const color =
       colorOverride || getColorFromNearestNode(p) || getColorFromWorldCoord(p);
 
-    // Create a circle or cone that controls the node
+    // Create a circle that controls the node
     const controllerShape = {
-      type: controllerShapeType,
+      type: "circle",
       cx: x,
       cy: y,
       controlsNodeId: nodeId,
@@ -539,25 +439,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     } else {
       console.warn("can't set node movement", nodeId);
       return false;
-    }
-  };
-
-  const getDependentShapesOfControllerShape = (shapeId /*: string */) => {
-    const shape = shapes.get(shapeId);
-    if (shape) {
-      const node = getNode(nodes, shape.controlsNodeId);
-      const shapeIds = [];
-      if (node) {
-        for (let dep of node.dependents) {
-          const depShape = shapes.get(dep.shapeId);
-          if (depShape) {
-            shapeIds.push(depShape);
-          }
-        }
-      }
-      return shapeIds;
-    } else {
-      throw new Error(`can't find shape: ${shapeId}`);
     }
   };
 

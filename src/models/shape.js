@@ -16,14 +16,6 @@ type Shape =
       cy: number;
     }
   | {
-      type: "cone";
-      controlsNodeId: number;
-      forceCutMode: boolean;
-      color: string;
-      cx: number;
-      cy: number;
-    }
-  | {
       type: "line";
       color: string;
       lineType: "short" | "deleted" | "strong" | "disabled";
@@ -135,3 +127,22 @@ export function applyNodeToShapes(
     }
   }
 }
+
+// const getDependentShapesOfControllerShape = (shapeId /*: string */) => {
+//   const shape = shapes.get(shapeId);
+//   if (shape) {
+//     const node = getNode(nodes, shape.controlsNodeId);
+//     const shapeIds = [];
+//     if (node) {
+//       for (let dep of node.dependents) {
+//         const depShape = shapes.get(dep.shapeId);
+//         if (depShape) {
+//           shapeIds.push(depShape);
+//         }
+//       }
+//     }
+//     return shapeIds;
+//   } else {
+//     throw new Error(`can't find shape: ${shapeId}`);
+//   }
+// };
