@@ -1,6 +1,6 @@
 import { createElement, Copy } from "@b9g/crank/standalone";
 
-function equals(props, newProps) {
+function shallowEquals(props, newProps) {
   for (const name in { ...props, ...newProps }) {
     if (props[name] !== newProps[name]) {
       console.log("changed prop", name, props[name], newProps[name]);
@@ -11,7 +11,7 @@ function equals(props, newProps) {
   return true;
 }
 
-export function memo(Component) {
+export function memo(Component, equals = shallowEquals) {
   return function* Wrapped({ children, ...props }) {
     console.log(
       "create memo wrapped component",
