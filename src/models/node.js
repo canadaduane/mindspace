@@ -1,9 +1,10 @@
 // @flow
 import { nanoid } from "nanoid";
-import { Vector2 } from "./math/vector2.js";
-import { orbSize } from "./constants.js";
+import { orbSize } from "../constants.js";
 
 /*::
+import { Vector2 } from "../math/vector2.js";
+
 type NodeInitial = Node & { nodeId: string };
 
 export type Node = {

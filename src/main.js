@@ -20,7 +20,7 @@ import {
   makeShapesMap,
   getShape,
   createShape,
-} from "./shape.js";
+} from "./models/shape.js";
 import {
   makeNodesMap,
   getNode,
@@ -30,7 +30,7 @@ import {
   setNodeValues,
   forEachNode,
   findNodeAtPosition,
-} from "./node.js";
+} from "./models/node.js";
 import { styles } from "./styles.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 import { Circle } from "./shapes/circle.js";
