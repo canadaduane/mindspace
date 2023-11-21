@@ -4,7 +4,7 @@ import { dispatch, svg, squash } from "../utils.js";
 import {
   distanceFromPointToLine,
   normalizedOrthogonalVectorToPointOnLine,
-} from "../trig.js";
+} from "../math/trig.js";
 import { lineMaxDistance, lineTransition, orbSize } from "../constants.js";
 import { makeDraggable } from "../drag.js";
 

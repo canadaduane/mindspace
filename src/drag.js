@@ -1,5 +1,4 @@
 import { Vector2 } from "./math/vector2.js";
-import { calcDistance } from "./trig.js";
 
 // How far can the drag movement drift from the start position before
 // it registers as a "movement" and, e.g. cancels long-press?

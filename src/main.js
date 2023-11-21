@@ -1,7 +1,7 @@
 import { renderer } from "@b9g/crank/dom";
 import { nanoid } from "nanoid";
 import { html, closestSide } from "./utils.js";
-import { doesLineIntersectLine, doesLineIntersectCircle } from "./trig.js";
+import { doesLineIntersectLine, doesLineIntersectCircle } from "./math/trig.js";
 import { Vector2 } from "./math/vector2.js";
 import {
   scrollbarThickness,
