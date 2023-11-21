@@ -215,3 +215,7 @@ export function* Cone() {
     stopAnimation(this);
   }
 }
+
+export function sigmoid(ratio /*: number */) /*: number */ {
+  return 1 - 1 / (1 + Math.pow(Math.E, ratio));
+}

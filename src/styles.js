@@ -1,6 +1,3 @@
-import { renderer } from "@b9g/crank/dom";
-import { jsx as html } from "@b9g/crank/standalone";
-
 export const styles = new Set();
 
 export function css(strings, ...args) {

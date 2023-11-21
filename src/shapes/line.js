@@ -1,8 +1,7 @@
 import Color from "colorjs.io";
 import { Vector2 } from "../math/vector2.js";
-import { dispatch, sigmoid, svg, squash } from "../utils.js";
+import { dispatch, svg, squash } from "../utils.js";
 import {
-  calcDistance,
   distanceFromPointToLine,
   normalizedOrthogonalVectorToPointOnLine,
 } from "../trig.js";
@@ -99,7 +98,7 @@ export function* Line({ shapeId /*: string */ }) {
     }
 
     if (type === "short") {
-      const s = sigmoid((lineMaxDistance - length) / lineTransition);
+      const s = squash((lineMaxDistance - length) / lineTransition);
       line = {
         opacity: s,
         strokeWidth: 3,
@@ -108,7 +107,7 @@ export function* Line({ shapeId /*: string */ }) {
     }
 
     if (type === "deleted" || type === "short") {
-      const s = sigmoid((orbSize + 20 - length) / lineTransition);
+      const s = squash((orbSize + 20 - length) / lineTransition);
       nearIndicator = {
         opacity: s,
         strokeWidth: s * 30,

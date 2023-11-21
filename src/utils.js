@@ -1,6 +1,9 @@
 // @flow
 import { jsx } from "@b9g/crank/standalone";
+
+/*::
 import { Vector2 } from "./math/vector2.js";
+*/
 
 // Export jsx as both html and svg so that we get lit-html syntax highlighting
 export const html = jsx;
@@ -8,10 +11,6 @@ export const svg = jsx;
 
 export function isFirefox() /*: boolean */ {
   return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
-}
-
-export function sigmoid(ratio /*: number */) /*: number */ {
-  return 1 - 1 / (1 + Math.pow(Math.E, ratio));
 }
 
 // Similar to sigmoid, but exact bounds [0, 1]; input x is [0, 1]
