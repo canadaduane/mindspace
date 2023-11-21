@@ -4,9 +4,9 @@ import { nanoid } from "nanoid";
 /*::
 import type { Node } from "./node.js";
 
-type ShapeInitial = Shape & { shapeId: string };
+export type ShapeInitial = Shape & { shapeId: string };
 
-type Shape =
+export type Shape =
   | {
       type: "circle";
       controlsNodeId: number;

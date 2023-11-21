@@ -15,32 +15,20 @@ import {
   applyNodeToShapes,
   removeShape,
   setShapeValues,
-  makeShapesMap,
   getShape,
   createShape,
 } from "./models/shape.js";
-import {
-  makeNodesMap,
-  getNode,
-  setNode,
-  hasNode,
-  removeNode,
-  setNodeValues,
-  forEachNode,
-  findNodeAtPosition,
-} from "./models/node.js";
 import { styles } from "./styles.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 import { Circle } from "./shapes/circle.js";
 import { Line } from "./shapes/line.js";
 import { Pop } from "./shapes/pop.js";
 import { Tap, tapAnimationMs } from "./shapes/tap.js";
+import { makeGraph } from "./models/graph.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
-  let nodes = makeNodesMap(initNodes);
-  window.nodes = nodes;
-  let shapes = makeShapesMap(initShapes);
-  window.shapes = shapes;
+  let graph = makeGraph({ nodes: initNodes, shapes: initShapes });
+  let shapes = graph.shapes;
 
   let mostRecentlyActiveNodeId;
 
@@ -98,7 +86,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   this.addEventListener("nodeMoved", ({ detail: { nodeId, x, y } }) => {
-    const node = getNode(nodes, nodeId);
+    const node = graph.getNode(nodeId);
     node.x = x;
     node.y = y;
     this.refresh();
@@ -139,7 +127,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       });
 
       // Once we convert to strong lines via bump, delete all short lines
-      const node = getNode(nodes, controlledNodeId);
+      const node = graph.getNode(controlledNodeId);
       if (node) {
         node.dependents.forEach((dependent) => {
           const depShape = getShape(shapes, dependent.shapeId);
@@ -168,15 +156,15 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   );
 
   this.addEventListener("createNode", ({ detail: { nodeId } }) => {
-    createNodeAroundNode(getNode(nodes, nodeId));
+    createNodeAroundNode(graph.getNode(nodeId));
   });
 
   const onKeyDown = (event) => {
     if (event.target.tagName !== "BODY") return;
 
     if (event.key === "Enter") {
-      if (hasNode(nodes, mostRecentlyActiveNodeId))
-        createNodeAroundNode(getNode(nodes, mostRecentlyActiveNodeId));
+      if (graph.hasNode(mostRecentlyActiveNodeId))
+        createNodeAroundNode(graph.getNode(mostRecentlyActiveNodeId));
       else createNode(window.innerWidth, window.innerHeight);
     } else if (event.key === "Backspace" || event.key === "Delete") {
       if (selectedLineShapeId) {
@@ -267,7 +255,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
           setTimeout(() => {
             removeTap(false).then(() => {
-              createNode(x, y, "circle");
+              createNode(x, y);
             });
           }, tapAnimationMs - 50);
 
@@ -294,11 +282,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         if (dragColor) {
           const circleColor = dragColor;
           removeTap(false).then(() => {
-            const node = findNodeAtPosition(nodes, new Vector2(x, y));
+            const node = graph.findNodeAtPosition(new Vector2(x, y));
             if (node) {
               node.color = circleColor;
             } else {
-              createNode(x, y, "circle", circleColor);
+              createNode(x, y, circleColor);
             }
             this.refresh();
           });
@@ -373,7 +361,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   const getColorFromNearestNode = (p /*: Vector2 */) /*: string */ => {
-    const sorted = [...nodes.values()].sort(
+    const sorted = [...graph.nodes.values()].sort(
       (a, b) => p.distanceTo(a) - p.distanceTo(b)
     );
     const node = sorted[0];
@@ -400,12 +388,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
     const dependents = [];
     // Create lines from this node to all other nodes
-    forEachNode(nodes, (otherNode) => {
+    graph.forEachNode((otherNode) => {
       createLine(dependents, otherNode.dependents);
     });
 
     // Create the new node that all shapes depend on for position updates
-    setNode(nodes, nodeId, {
+    graph.setNode(nodeId, {
       x,
       y,
       color,
@@ -430,12 +418,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   // Remove node and its dependents
   const destroyNode = (nodeId /*: string */) => {
-    if (hasNode(nodes, nodeId)) {
-      const node = getNode(nodes, nodeId);
+    if (graph.hasNode(nodeId)) {
+      const node = graph.getNode(nodeId);
       node.dependents.forEach((d) => {
         shapes.delete(d.shapeId);
       });
-      return removeNode(nodes, nodeId);
+      return graph.removeNode(nodeId);
     } else {
       console.warn("can't set node movement", nodeId);
       return false;
@@ -444,7 +432,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   const getShapesConnectedToLineShapeId = (shapeId /*: string */) => {
     const connectedShapes = [];
-    forEachNode(nodes, (node) => {
+    graph.forEachNode((node) => {
       const hasDeps =
         node.dependents.filter((dep) => dep.shapeId === shapeId).length > 0;
 
@@ -472,12 +460,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const y = cy + Math.sin(r) * spiralRadius;
 
     const { nodeId } = createNode(x, y);
-    const createdNode = getNode(nodes, nodeId);
+    const createdNode = graph.getNode(nodeId);
     // Pass the spirality on to the next node
-    setNodeValues(createdNode, { spiral: node.spiral + spiralAddend });
+    graph.setNodeValues(createdNode, { spiral: node.spiral + spiralAddend });
 
     // When revisiting this node, set the spiral to start in a new direction
-    setNodeValues(node, { spiral: node.spiral + spiralAddend + 5 });
+    graph.setNodeValues(node, { spiral: node.spiral + spiralAddend + 5 });
   };
 
   let svgShapes = [],
@@ -485,7 +473,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   try {
     while (true) {
-      forEachNode(nodes, (node) => {
+      graph.forEachNode((node) => {
         applyNodeToShapes(node, shapes);
       });
 

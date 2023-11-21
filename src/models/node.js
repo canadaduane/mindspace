@@ -5,7 +5,7 @@ import { orbSize } from "../constants.js";
 /*::
 import { Vector2 } from "../math/vector2.js";
 
-type NodeInitial = Node & { nodeId: string };
+export type NodeInitial = Node & { nodeId: string };
 
 export type Node = {
   x: number; // The global X coordinate for this node
@@ -34,62 +34,50 @@ export function makeNodesMap(
   );
 }
 
-export function getNode(
-  nodes /*: NodeMap */,
-  nodeId /*: string */
-) /*: Node */ {
-  const node = nodes.get(nodeId);
-  if (!node) throw new Error(`can't get node ${nodeId}`);
-  return node;
-}
+export const getNode =
+  (nodes /*: NodeMap */) /*: (nodeId: string) => Node */ => (nodeId) => {
+    const node = nodes.get(nodeId);
+    if (!node) throw new Error(`can't get node ${nodeId}`);
+    return node;
+  };
 
-export function setNode(
-  nodes /*: NodeMap */,
-  nodeId /*: string */,
-  node /*: Node */
-) {
-  nodes.set(nodeId, node);
-}
+export const setNode =
+  (
+    nodes /*: NodeMap */
+  ) /*: (nodeId: string, node: Node) => Map<string, Node> */ =>
+  (nodeId, node) =>
+    nodes.set(nodeId, node);
 
-export function removeNode(
-  nodes /*: NodeMap */,
-  nodeId /*: string */
-) /*: boolean */ {
-  if (nodes.has(nodeId)) {
-    nodes.delete(nodeId);
-    return true;
-  }
-  return false;
-}
-
-export function forEachNode(
-  nodes /*: NodeMap */,
-  action /*: (node: Node) => void */
-) {
-  for (let node of nodes.values()) {
-    action(node);
-  }
-}
-
-export function hasNode(
-  nodes /*: NodeMap */,
-  nodeId /*: string */
-) /*: boolean */ {
-  return nodes.has(nodeId);
-}
-
-export function setNodeValues(node /*: Node */, values /*: any */) {
-  Object.assign(node, values);
-}
-
-export function findNodeAtPosition(
-  nodes /*: NodeMap */,
-  pos /*: Vector2 */
-) /*: Node | void */ {
-  for (let [nodeId, node] of nodes.entries()) {
-    // $FlowIgnore
-    if (pos.distanceTo(node) <= orbSize / 2) {
-      return node;
+export const removeNode =
+  (nodes /*: NodeMap */) /*: (nodeId: string) => boolean */ => (nodeId) => {
+    if (nodes.has(nodeId)) {
+      return nodes.delete(nodeId);
     }
-  }
-}
+    return false;
+  };
+
+export const forEachNode =
+  (nodes /*: NodeMap */) /*: (action: (node: Node) => void) => void */ =>
+  (action) => {
+    for (let node of nodes.values()) {
+      action(node);
+    }
+  };
+
+export const hasNode =
+  (nodes /*: NodeMap */) /*: (nodeId: string) => boolean */ => (nodeId) =>
+    nodes.has(nodeId);
+
+export const setNodeValues = (node /*: Node */, values /*: any */) => {
+  Object.assign(node, values);
+};
+
+export const findNodeAtPosition =
+  (nodes /*: NodeMap */) /*: (pos: Vector2) => Node | void */ => (pos) => {
+    for (let [nodeId, node] of nodes.entries()) {
+      // $FlowIgnore
+      if (pos.distanceTo(node) <= orbSize / 2) {
+        return node;
+      }
+    }
+  };
