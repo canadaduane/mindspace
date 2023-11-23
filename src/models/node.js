@@ -42,11 +42,13 @@ export const getNode =
   };
 
 export const setNode =
-  (
-    nodes /*: NodeMap */
-  ) /*: (nodeId: string, node: Node) => Map<string, Node> */ =>
+  (nodes /*: NodeMap */) /*: (nodeId: string, node: Node) => NodeMap */ =>
   (nodeId, node) =>
     nodes.set(nodeId, node);
+
+export const hasNode =
+  (nodes /*: NodeMap */) /*: (nodeId: string) => boolean */ => (nodeId) =>
+    nodes.has(nodeId);
 
 export const removeNode =
   (nodes /*: NodeMap */) /*: (nodeId: string) => boolean */ => (nodeId) => {
@@ -63,10 +65,6 @@ export const forEachNode =
       action(node);
     }
   };
-
-export const hasNode =
-  (nodes /*: NodeMap */) /*: (nodeId: string) => boolean */ => (nodeId) =>
-    nodes.has(nodeId);
 
 export const setNodeValues = (node /*: Node */, values /*: any */) => {
   Object.assign(node, values);

@@ -61,72 +61,41 @@ export function makeShapesMap(
   );
 }
 
-export function createShape(
-  shapes /*: ShapeMap */,
-  shape /*: Shape */
-) /*: string */ {
-  const shapeId = nanoid(12);
-  setShape(shapes, shapeId, shape);
-  return shapeId;
-}
+export const createShape =
+  (shapes /*: ShapeMap */) /*: (shape: Shape) => string */ => (shape) => {
+    const shapeId = nanoid(12);
+    setShape(shapes)(shapeId, shape);
+    return shapeId;
+  };
 
-export function getShape(
-  shapes /*: ShapeMap */,
-  shapeId /*: string */
-) /*: Shape */ {
-  const shape = shapes.get(shapeId);
-  if (!shape) throw new Error(`can't get shape ${shapeId}`);
-  return shape;
-}
-
-export function setShape(
-  shapes /*: ShapeMap */,
-  shapeId /*: string */,
-  shape /*: Shape */
-) {
-  shapes.set(shapeId, shape);
-}
-
-export function removeShape(
-  shapes /*: ShapeMap */,
-  shapeId /*: string */
-) /*: boolean */ {
-  if (shapes.has(shapeId)) {
-    shapes.delete(shapeId);
-    return true;
-  }
-  return false;
-}
-
-export function setShapeValues(
-  shape /*: Shape */,
-  values /*: any */
-) /*: Shape */ {
-  const definedValues = Object.assign({}, values);
-  for (var k in definedValues) {
-    if (definedValues[k] === undefined) delete definedValues[k];
-  }
-
-  Object.assign(shape, definedValues);
-
-  return shape;
-}
-
-export function applyNodeToShapes(
-  node /*: Node */,
-  shapes /*: Map<string, Shape> */
-) {
-  for (let { shapeId, attrs } of node.dependents) {
+export const getShape =
+  (shapes /*: ShapeMap */) /*: (shapeId: string) => Shape */ => (shapeId) => {
     const shape = shapes.get(shapeId);
-    if (shape) {
-      for (let fromAttr in attrs) {
-        let toAttr = attrs[fromAttr];
-        // $FlowIgnore
-        shape[toAttr] = node[fromAttr];
-      }
+    if (!shape) throw new Error(`can't get shape ${shapeId}`);
+    return shape;
+  };
+
+export const setShape =
+  (shapes /*: ShapeMap */) /*: (shapeId: string, shape: Shape) => ShapeMap */ =>
+  (shapeId, shape) =>
+    shapes.set(shapeId, shape);
+
+export const removeShape =
+  (shapes /*: ShapeMap */) /*: (shapeId: string) => boolean */ => (shapeId) =>
+    shapes.delete(shapeId);
+
+export const setShapeValues =
+  (shape /*: Shape */) /*: (values: any) => Shape */ => (values) => {
+    const definedValues = Object.assign({}, values);
+    for (var k in definedValues) {
+      if (definedValues[k] === undefined) delete definedValues[k];
     }
-  }
-}
+
+    Object.assign(shape, definedValues);
+
+    return shape;
+  };
+
 
 // const getDependentShapesOfControllerShape = (shapeId /*: string */) => {
 //   const shape = shapes.get(shapeId);

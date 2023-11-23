@@ -11,24 +11,16 @@ import {
 } from "./constants.js";
 import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
 import { makeDraggable } from "./drag.js";
-import {
-  applyNodeToShapes,
-  removeShape,
-  setShapeValues,
-  getShape,
-  createShape,
-} from "./models/shape.js";
 import { styles } from "./styles.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 import { Circle } from "./shapes/circle.js";
 import { Line } from "./shapes/line.js";
 import { Pop } from "./shapes/pop.js";
 import { Tap, tapAnimationMs } from "./shapes/tap.js";
-import { makeGraph } from "./models/graph.js";
+import { makeGraph, getShapesConnectedToLineShapeId } from "./models/graph.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let graph = makeGraph({ nodes: initNodes, shapes: initShapes });
-  let shapes = graph.shapes;
 
   let mostRecentlyActiveNodeId;
 
@@ -99,7 +91,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   this.addEventListener("destroyShape", ({ detail: { shapeId } }) => {
-    if (removeShape(shapes, shapeId)) {
+    if (graph.removeShape(shapeId)) {
       this.refresh();
     }
   });
@@ -119,7 +111,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   this.addEventListener("bump", ({ detail: { shapeId, lineType } }) => {
     const shape = setLineType(shapeId, lineType);
     if (shape) {
-      const connectedShapes = getShapesConnectedToLineShapeId(shapeId);
+      const connectedShapes = getShapesConnectedToLineShapeId(graph)(shapeId);
       connectedShapes.forEach((s) => {
         if (s.type === "circle") {
           s.shake = true;
@@ -130,7 +122,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       const node = graph.getNode(controlledNodeId);
       if (node) {
         node.dependents.forEach((dependent) => {
-          const depShape = getShape(shapes, dependent.shapeId);
+          const depShape = graph.getShape(dependent.shapeId);
           if (
             depShape &&
             depShape.type === "line" &&
@@ -150,8 +142,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   this.addEventListener(
     "setShapeValues",
     ({ detail: { shapeId, ...values } }) => {
-      const shape = getShape(shapes, shapeId);
-      setShapeValues(shape, values);
+      const shape = graph.getShape(shapeId);
+      graph.setShapeValues(shape)(values);
     }
   );
 
@@ -168,7 +160,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       else createNode(window.innerWidth, window.innerHeight);
     } else if (event.key === "Backspace" || event.key === "Delete") {
       if (selectedLineShapeId) {
-        const lineShape = getShape(shapes, selectedLineShapeId);
+        const lineShape = graph.getShape(selectedLineShapeId);
         unselectSelectedLine();
         lineShape.lineType = "deleted";
         this.refresh();
@@ -200,8 +192,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     if (!tapShapeId) return;
 
     if (animate) {
-      const shape = getShape(shapes, tapShapeId);
-      setShapeValues(shape, { tapState: "destroying" });
+      const shape = graph.getShape(tapShapeId);
+      graph.setShapeValues(shape)({ tapState: "destroying" });
       this.refresh();
     }
 
@@ -212,7 +204,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
     await new Promise((resolve) => setTimeout(resolve, tapAnimationMs));
 
-    removeShape(shapes, tapShapeIdToRemove);
+    graph.removeShape(tapShapeIdToRemove);
 
     this.refresh();
   };
@@ -228,7 +220,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           dragColor = getColorFromScreenCoord({ x, y }, winSize);
 
           console.log("create color");
-          tapShapeId = createShape(shapes, {
+          tapShapeId = graph.createShape({
             type: "tap",
             tapState: "color",
             color: dragColor,
@@ -250,8 +242,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           clearTimeout(singleClickTimeout);
           singleClickTimeout = undefined;
 
-          const shape = getShape(shapes, tapShapeId);
-          setShapeValues(shape, { x, y, tapState: "creating" });
+          const shape = graph.getShape(tapShapeId);
+          graph.setShapeValues(shape, { x, y, tapState: "creating" });
 
           setTimeout(() => {
             removeTap(false).then(() => {
@@ -262,7 +254,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           this.refresh();
         } else {
           const createNewTap = () => {
-            tapShapeId = createShape(shapes, {
+            tapShapeId = graph.createShape({
               type: "tap",
               tapState: "create",
               x,
@@ -313,12 +305,12 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         clearTimeout(singleClickTimeout);
 
         if (tapShapeId) {
-          const shape = getShape(shapes, tapShapeId);
+          const shape = graph.getShape(tapShapeId);
 
           if (shape.tapState === "color") {
-            setShapeValues(shape, { x, y });
+            graph.setShapeValues(shape)({ x, y });
           } else {
-            setShapeValues(shape, { x, y, tapState: "select" });
+            graph.setShapeValues(shape)({ x, y, tapState: "select" });
           }
           this.refresh();
         }
@@ -332,7 +324,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   const createLine = (nodeDependents1, nodeDependents2) => {
     const lineShape = { type: "line", lineType: "short", selected: false };
-    const lineShapeId = createShape(shapes, lineShape);
+    const lineShapeId = graph.createShape(lineShape);
 
     nodeDependents1.push({ shapeId: lineShapeId, attrs: { x: "x2", y: "y2" } });
     nodeDependents2.push({ shapeId: lineShapeId, attrs: { x: "x1", y: "y1" } });
@@ -341,13 +333,13 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   const setLineType = (shapeId, lineType) => {
-    const shape = getShape(shapes, shapeId);
-    return setShapeValues(shape, { lineType });
+    const shape = graph.getShape(shapeId);
+    return graph.setShapeValues(shape)({ lineType });
   };
 
   const unselectSelectedLine = () => {
     if (selectedLineShapeId) {
-      const shape = shapes.get(selectedLineShapeId);
+      const shape = graph.getShape(selectedLineShapeId);
       if (shape) shape.selected = false;
       selectedLineShapeId = null;
     }
@@ -356,7 +348,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   const selectLine = (shapeId /*: string */) => {
     unselectSelectedLine();
     selectedLineShapeId = shapeId;
-    const shape = shapes.get(selectedLineShapeId);
+    const shape = graph.getShape(selectedLineShapeId);
     if (shape) shape.selected = true;
   };
 
@@ -384,7 +376,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       cy: y,
       controlsNodeId: nodeId,
     };
-    const shapeId = createShape(shapes, controllerShape);
+    const shapeId = graph.createShape(controllerShape);
 
     const dependents = [];
     // Create lines from this node to all other nodes
@@ -421,33 +413,13 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     if (graph.hasNode(nodeId)) {
       const node = graph.getNode(nodeId);
       node.dependents.forEach((d) => {
-        shapes.delete(d.shapeId);
+        graph.removeShape(d.shapeId);
       });
       return graph.removeNode(nodeId);
     } else {
       console.warn("can't set node movement", nodeId);
       return false;
     }
-  };
-
-  const getShapesConnectedToLineShapeId = (shapeId /*: string */) => {
-    const connectedShapes = [];
-    graph.forEachNode((node) => {
-      const hasDeps =
-        node.dependents.filter((dep) => dep.shapeId === shapeId).length > 0;
-
-      if (!hasDeps) return;
-
-      for (let dep of node.dependents) {
-        if (dep.shapeId !== shapeId) {
-          const shape = shapes.get(dep.shapeId);
-          if (shape && shape.type === "circle") {
-            connectedShapes.push(shape);
-          }
-        }
-      }
-    });
-    return connectedShapes;
   };
 
   // Approximate Archimedean Spiral
@@ -473,13 +445,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   try {
     while (true) {
-      graph.forEachNode((node) => {
-        applyNodeToShapes(node, shapes);
-      });
+      graph.applyNodesToShapes();
 
       svgShapes.length = 0;
       htmlShapes.length = 0;
-      for (let [shapeId, shape] of shapes.entries()) {
+      for (let [shapeId, shape] of graph.shapes.entries()) {
         if (shape.type === "line") {
           svgShapes.unshift([shapeId, shape]);
         }
