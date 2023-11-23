@@ -12,8 +12,8 @@ export type Shape =
       controlsNodeId: number;
       color: string;
       shake: boolean;
-      cx: number;
-      cy: number;
+      x: number;
+      y: number;
     }
   | {
       type: "line";

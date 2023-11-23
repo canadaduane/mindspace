@@ -374,8 +374,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     // Create a circle that controls the node
     const controllerShape = {
       type: "circle",
-      cx: x,
-      cy: y,
+      x,
+      y,
       controlsNodeId: nodeId,
     };
     const shapeId = graph.createShape(controllerShape);
@@ -396,8 +396,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         {
           shapeId,
           attrs: {
-            x: "cx",
-            y: "cy",
+            x: "x",
+            y: "y",
             color: "color",
           },
         },
@@ -516,8 +516,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
                 <${Circle}
                   $key=${shapeId}
                   nodeId=${shape.controlsNodeId}
-                  x=${shape.cx}
-                  y=${shape.cy}
+                  x=${shape.x}
+                  y=${shape.y}
                   color=${shape.color}
                   shake=${shape.shake}
                 />
