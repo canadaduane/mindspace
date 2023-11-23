@@ -39,7 +39,7 @@ export type Shape =
       y: number;
   };
  
-export type ShapeMap = Map<string, Shape>;
+export type ShapesMap = Map<string, Shape>;
 
 export type TapState = 
   | "create"
@@ -48,12 +48,12 @@ export type TapState =
   | "select"
   | "delete"
   | "destroying";
-  
+
 */
 
 export function makeShapesMap(
   initShapes /*: ShapeInitial[] */
-) /*: ShapeMap */ {
+) /*: ShapesMap */ {
   return new Map(
     initShapes.map(({ shapeId, ...shape }) => {
       return [shapeId ?? nanoid(12), shape];
@@ -62,40 +62,45 @@ export function makeShapesMap(
 }
 
 export const createShape =
-  (shapes /*: ShapeMap */) /*: (shape: Shape) => string */ => (shape) => {
+  (shapes /*: ShapesMap */) /*: (shape: Shape) => string */ => (shape /*: Shape */) => {
     const shapeId = nanoid(12);
     setShape(shapes)(shapeId, shape);
     return shapeId;
   };
 
 export const getShape =
-  (shapes /*: ShapeMap */) /*: (shapeId: string) => Shape */ => (shapeId) => {
+  (shapes /*: ShapesMap */) /*: (shapeId: string) => Shape */ => (shapeId) => {
     const shape = shapes.get(shapeId);
     if (!shape) throw new Error(`can't get shape ${shapeId}`);
     return shape;
   };
 
 export const setShape =
-  (shapes /*: ShapeMap */) /*: (shapeId: string, shape: Shape) => ShapeMap */ =>
+  (
+    shapes /*: ShapesMap */
+  ) /*: (shapeId: string, shape: Shape) => ShapesMap */ =>
   (shapeId, shape) =>
     shapes.set(shapeId, shape);
 
 export const removeShape =
-  (shapes /*: ShapeMap */) /*: (shapeId: string) => boolean */ => (shapeId) =>
+  (shapes /*: ShapesMap */) /*: (shapeId: string) => boolean */ => (shapeId) =>
     shapes.delete(shapeId);
 
-export const setShapeValues =
-  (shape /*: Shape */) /*: (values: any) => Shape */ => (values) => {
-    const definedValues = Object.assign({}, values);
-    for (var k in definedValues) {
-      if (definedValues[k] === undefined) delete definedValues[k];
-    }
+/* Utility Functions */
 
-    Object.assign(shape, definedValues);
+export function setShapeValues(
+  shape /*: Shape */,
+  values /*: any */
+) /*: Shape */ {
+  const definedValues = Object.assign({}, values);
+  for (var k in definedValues) {
+    if (definedValues[k] === undefined) delete definedValues[k];
+  }
 
-    return shape;
-  };
+  Object.assign(shape, definedValues);
 
+  return shape;
+}
 
 // const getDependentShapesOfControllerShape = (shapeId /*: string */) => {
 //   const shape = shapes.get(shapeId);
@@ -115,3 +120,28 @@ export const setShapeValues =
 //     throw new Error(`can't find shape: ${shapeId}`);
 //   }
 // };
+
+/*::
+export type ShapesBundle = {
+  shapes: ShapesMap,
+
+  createShape: ReturnType<typeof createShape>,
+  getShape: ReturnType<typeof getShape>,
+  setShape: ReturnType<typeof setShape>,
+  removeShape: ReturnType<typeof removeShape>
+}
+*/
+
+export function makeShapes(
+  initShapes /*: ShapeInitial[] */ = []
+) /*: ShapesBundle */ {
+  const shapes = makeShapesMap(initShapes);
+
+  return {
+    shapes,
+    createShape: createShape(shapes),
+    getShape: getShape(shapes),
+    setShape: setShape(shapes),
+    removeShape: removeShape(shapes),
+  };
+}

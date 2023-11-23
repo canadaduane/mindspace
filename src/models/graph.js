@@ -9,19 +9,11 @@ import {
   forEachNode,
   setNodeValues,
 } from "./node.js";
-
-import {
-  makeShapesMap,
-  createShape,
-  getShape,
-  setShape,
-  removeShape,
-  setShapeValues,
-} from "./shape.js";
+import { makeShapes } from "./shape.js";
 
 /*::
 import { type NodeInitial, type Node } from './node.js'
-import { type ShapeInitial, type Shape } from './shape.js'
+import { type ShapeInitial, type Shape, type ShapesBundle } from './shape.js'
 
 type GraphInitial = {
   nodes: NodeInitial[],
@@ -29,6 +21,8 @@ type GraphInitial = {
 }
 
 type Graph = {
+  ...ShapesBundle,
+
   getNode: ReturnType<typeof getNode>,
   setNode: ReturnType<typeof setNode>,
   hasNode: ReturnType<typeof hasNode>,
@@ -37,16 +31,9 @@ type Graph = {
   forEachNode: ReturnType<typeof forEachNode>,
   findNodeAtPosition: ReturnType<typeof findNodeAtPosition>,
 
-  createShape: ReturnType<typeof createShape>,
-  getShape: ReturnType<typeof getShape>,
-  setShape: ReturnType<typeof setShape>,
-  setShapeValues: typeof setShapeValues,
-  removeShape: ReturnType<typeof removeShape>,
-
   applyNodesToShapes: () => void,
   
   nodes: Map<string, Node>,
-  shapes: Map<string, Shape>
 }
 */
 
@@ -54,11 +41,11 @@ export function makeGraph(
   { nodes: initNodes = [], shapes: initShapes = [] } /*: GraphInitial */
 ) /*: Graph */ {
   const nodes = makeNodesMap(initNodes);
-  const shapes = makeShapesMap(initShapes);
+  const shapes = makeShapes(initShapes);
 
   const applyNodesToShapes = () => {
     forEachNode(nodes)((node) => {
-      applyNodeToShapes(node, shapes);
+      applyNodeToShapes(node, shapes.shapes);
     });
   };
 
@@ -71,23 +58,18 @@ export function makeGraph(
     forEachNode: forEachNode(nodes),
     findNodeAtPosition: findNodeAtPosition(nodes),
 
-    createShape: createShape(shapes),
-    getShape: getShape(shapes),
-    setShape: setShape(shapes),
-    setShapeValues: setShapeValues,
-    removeShape: removeShape(shapes),
+    ...shapes, 
 
     applyNodesToShapes,
 
     nodes,
-    shapes,
   };
 }
 
 export const getShapesConnectedToLineShapeId =
   (graph /*: Graph */) /*: (shapeId: string) => Shape[] */ => (shapeId) => {
     const connectedShapes /*: Shape[] */ = [];
-    graph.forEachNode((node) => {
+    graph.nodes.forEach((node) => {
       const hasDeps =
         node.dependents.filter((dep) => dep.shapeId === shapeId).length > 0;
 

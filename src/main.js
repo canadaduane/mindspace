@@ -9,15 +9,16 @@ import {
   spiralAddend,
   rainbowBorderThickness,
 } from "./constants.js";
+import { makeGraph, getShapesConnectedToLineShapeId } from "./models/graph.js";
+import { setShapeValues } from "./models/shape.js";
 import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
 import { makeDraggable } from "./drag.js";
 import { styles } from "./styles.js";
-import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 import { Circle } from "./shapes/circle.js";
 import { Line } from "./shapes/line.js";
 import { Pop } from "./shapes/pop.js";
 import { Tap, tapAnimationMs } from "./shapes/tap.js";
-import { makeGraph, getShapesConnectedToLineShapeId } from "./models/graph.js";
+import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let graph = makeGraph({ nodes: initNodes, shapes: initShapes });
@@ -143,7 +144,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     "setShapeValues",
     ({ detail: { shapeId, ...values } }) => {
       const shape = graph.getShape(shapeId);
-      graph.setShapeValues(shape)(values);
+      setShapeValues(shape, values);
     }
   );
 
@@ -193,7 +194,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
     if (animate) {
       const shape = graph.getShape(tapShapeId);
-      graph.setShapeValues(shape)({ tapState: "destroying" });
+      setShapeValues(shape, { tapState: "destroying" });
       this.refresh();
     }
 
@@ -243,7 +244,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           singleClickTimeout = undefined;
 
           const shape = graph.getShape(tapShapeId);
-          graph.setShapeValues(shape, { x, y, tapState: "creating" });
+          setShapeValues(shape, { x, y, tapState: "creating" });
 
           setTimeout(() => {
             removeTap(false).then(() => {
@@ -308,9 +309,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           const shape = graph.getShape(tapShapeId);
 
           if (shape.tapState === "color") {
-            graph.setShapeValues(shape)({ x, y });
+            setShapeValues(shape, { x, y });
           } else {
-            graph.setShapeValues(shape)({ x, y, tapState: "select" });
+            setShapeValues(shape, { x, y, tapState: "select" });
           }
           this.refresh();
         }
@@ -334,7 +335,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   const setLineType = (shapeId, lineType) => {
     const shape = graph.getShape(shapeId);
-    return graph.setShapeValues(shape)({ lineType });
+    return setShapeValues(shape, { lineType });
   };
 
   const unselectSelectedLine = () => {
@@ -380,7 +381,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
     const dependents = [];
     // Create lines from this node to all other nodes
-    graph.forEachNode((otherNode) => {
+    graph.nodes.forEach((otherNode) => {
       createLine(dependents, otherNode.dependents);
     });
 
