@@ -62,7 +62,8 @@ export function makeShapesMap(
 }
 
 export const createShape =
-  (shapes /*: ShapesMap */) /*: (shape: Shape) => string */ => (shape /*: Shape */) => {
+  (shapes /*: ShapesMap */) /*: (shape: Shape) => string */ =>
+  (shape /*: Shape */) => {
     const shapeId = nanoid(12);
     setShape(shapes)(shapeId, shape);
     return shapeId;
@@ -74,6 +75,10 @@ export const getShape =
     if (!shape) throw new Error(`can't get shape ${shapeId}`);
     return shape;
   };
+
+export const hasShape =
+  (shapes /*: ShapesMap */) /*: (shapeId: string) => boolean */ => (shapeId) =>
+    shapes.has(shapeId);
 
 export const setShape =
   (
@@ -127,6 +132,7 @@ export type ShapesBundle = {
 
   createShape: ReturnType<typeof createShape>,
   getShape: ReturnType<typeof getShape>,
+  hasShape: ReturnType<typeof hasShape>,
   setShape: ReturnType<typeof setShape>,
   removeShape: ReturnType<typeof removeShape>
 }
@@ -141,6 +147,7 @@ export function makeShapes(
     shapes,
     createShape: createShape(shapes),
     getShape: getShape(shapes),
+    hasShape: hasShape(shapes),
     setShape: setShape(shapes),
     removeShape: removeShape(shapes),
   };

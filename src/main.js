@@ -11,6 +11,7 @@ import {
 } from "./constants.js";
 import { makeGraph, getShapesConnectedToLineShapeId } from "./models/graph.js";
 import { setShapeValues } from "./models/shape.js";
+import { setNodeValues } from "./models/node.js";
 import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
 import { makeDraggable } from "./drag.js";
 import { styles } from "./styles.js";
@@ -435,10 +436,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const { nodeId } = createNode(x, y);
     const createdNode = graph.getNode(nodeId);
     // Pass the spirality on to the next node
-    graph.setNodeValues(createdNode, { spiral: node.spiral + spiralAddend });
+    setNodeValues(createdNode, { spiral: node.spiral + spiralAddend });
 
     // When revisiting this node, set the spiral to start in a new direction
-    graph.setNodeValues(node, { spiral: node.spiral + spiralAddend + 5 });
+    setNodeValues(node, { spiral: node.spiral + spiralAddend + 5 });
   };
 
   let svgShapes = [],

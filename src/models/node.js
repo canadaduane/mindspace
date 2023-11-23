@@ -18,10 +18,10 @@ export type Node = {
 
 export type Dependent = {
   shapeId: string; // The ID of the shape that depends on the node
-  attrs: Record<string, string>; // A mapping from Node attributes to Shape attributes
+  attrs: Record<string, string>; // A mapping from Node attributes to Node attributes
 };
 
-export type NodeMap = Map<string, Node>;
+export type NodesMap = Map<string, Node>;
 */
 
 export function makeNodesMap(
@@ -34,44 +34,45 @@ export function makeNodesMap(
   );
 }
 
+export const createNode =
+  (nodes /*: NodesMap */) /*: (node: Node) => string */ =>
+  (node /*: Node */) => {
+    const nodeId = nanoid(12);
+    setNode(nodes)(nodeId, node);
+    return nodeId;
+  };
+
 export const getNode =
-  (nodes /*: NodeMap */) /*: (nodeId: string) => Node */ => (nodeId) => {
+  (nodes /*: NodesMap */) /*: (nodeId: string) => Node */ => (nodeId) => {
     const node = nodes.get(nodeId);
     if (!node) throw new Error(`can't get node ${nodeId}`);
     return node;
   };
 
 export const setNode =
-  (nodes /*: NodeMap */) /*: (nodeId: string, node: Node) => NodeMap */ =>
+  (nodes /*: NodesMap */) /*: (nodeId: string, node: Node) => NodesMap */ =>
   (nodeId, node) =>
     nodes.set(nodeId, node);
 
 export const hasNode =
-  (nodes /*: NodeMap */) /*: (nodeId: string) => boolean */ => (nodeId) =>
+  (nodes /*: NodesMap */) /*: (nodeId: string) => boolean */ => (nodeId) =>
     nodes.has(nodeId);
 
 export const removeNode =
-  (nodes /*: NodeMap */) /*: (nodeId: string) => boolean */ => (nodeId) => {
+  (nodes /*: NodesMap */) /*: (nodeId: string) => boolean */ => (nodeId) => {
     if (nodes.has(nodeId)) {
       return nodes.delete(nodeId);
     }
     return false;
   };
 
-export const forEachNode =
-  (nodes /*: NodeMap */) /*: (action: (node: Node) => void) => void */ =>
-  (action) => {
-    for (let node of nodes.values()) {
-      action(node);
-    }
-  };
-
-export const setNodeValues = (node /*: Node */, values /*: any */) => {
+export function setNodeValues(node /*: Node */, values /*: any */) /*: Node */ {
   Object.assign(node, values);
-};
+  return node;
+}
 
 export const findNodeAtPosition =
-  (nodes /*: NodeMap */) /*: (pos: Vector2) => Node | void */ => (pos) => {
+  (nodes /*: NodesMap */) /*: (pos: Vector2) => Node | void */ => (pos) => {
     for (let [nodeId, node] of nodes.entries()) {
       // $FlowIgnore
       if (pos.distanceTo(node) <= orbSize / 2) {
@@ -79,3 +80,33 @@ export const findNodeAtPosition =
       }
     }
   };
+
+/*::
+export type NodesBundle = {
+  nodes: NodesMap,
+
+  createNode: ReturnType<typeof createNode>,
+  getNode: ReturnType<typeof getNode>,
+  hasNode: ReturnType<typeof hasNode>,
+  setNode: ReturnType<typeof setNode>,
+  removeNode: ReturnType<typeof removeNode>,
+  findNodeAtPosition: ReturnType<typeof findNodeAtPosition> 
+}
+*/
+
+export function makeNodes(
+  initNodes /*: NodeInitial[] */ = []
+) /*: NodesBundle */ {
+  const nodes = makeNodesMap(initNodes);
+
+  return {
+    nodes,
+
+    createNode: createNode(nodes),
+    getNode: getNode(nodes),
+    hasNode: hasNode(nodes),
+    setNode: setNode(nodes),
+    removeNode: removeNode(nodes),
+    findNodeAtPosition: findNodeAtPosition(nodes),
+  };
+}

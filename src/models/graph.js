@@ -1,18 +1,9 @@
 // @flow
-import {
-  makeNodesMap,
-  getNode,
-  setNode,
-  hasNode,
-  removeNode,
-  findNodeAtPosition,
-  forEachNode,
-  setNodeValues,
-} from "./node.js";
+import { makeNodes } from "./node.js";
 import { makeShapes } from "./shape.js";
 
 /*::
-import { type NodeInitial, type Node } from './node.js'
+import { type NodeInitial, type Node, type NodesBundle } from './node.js'
 import { type ShapeInitial, type Shape, type ShapesBundle } from './shape.js'
 
 type GraphInitial = {
@@ -21,15 +12,8 @@ type GraphInitial = {
 }
 
 type Graph = {
+  ...NodesBundle, 
   ...ShapesBundle,
-
-  getNode: ReturnType<typeof getNode>,
-  setNode: ReturnType<typeof setNode>,
-  hasNode: ReturnType<typeof hasNode>,
-  setNodeValues: typeof setNodeValues,
-  removeNode: ReturnType<typeof removeNode>,
-  forEachNode: ReturnType<typeof forEachNode>,
-  findNodeAtPosition: ReturnType<typeof findNodeAtPosition>,
 
   applyNodesToShapes: () => void,
   
@@ -40,29 +24,18 @@ type Graph = {
 export function makeGraph(
   { nodes: initNodes = [], shapes: initShapes = [] } /*: GraphInitial */
 ) /*: Graph */ {
-  const nodes = makeNodesMap(initNodes);
+  const nodes = makeNodes(initNodes);
   const shapes = makeShapes(initShapes);
 
-  const applyNodesToShapes = () => {
-    forEachNode(nodes)((node) => {
-      applyNodeToShapes(node, shapes.shapes);
-    });
-  };
-
   return {
-    getNode: getNode(nodes),
-    setNode: setNode(nodes),
-    hasNode: hasNode(nodes),
-    setNodeValues: setNodeValues,
-    removeNode: removeNode(nodes),
-    forEachNode: forEachNode(nodes),
-    findNodeAtPosition: findNodeAtPosition(nodes),
+    ...nodes,
+    ...shapes,
 
-    ...shapes, 
-
-    applyNodesToShapes,
-
-    nodes,
+    applyNodesToShapes: () => {
+      nodes.nodes.forEach((node) => {
+        applyNodeToShapes(node, shapes.shapes);
+      });
+    },
   };
 }
 
