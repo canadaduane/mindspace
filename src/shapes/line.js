@@ -53,7 +53,7 @@ export function* Line({ shapeId /*: string */ }) {
 
   const p1 = new Vector2();
   const p2 = new Vector2();
-  for (const { x1, y1, x2, y2, type, selected } of this) {
+  for (const { x1, y1, x2, y2, lineType: type, selected } of this) {
     if (type === "disabled") {
       yield null;
       continue;

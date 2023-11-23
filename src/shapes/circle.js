@@ -10,7 +10,7 @@ import {
 } from "../constants.js";
 import { getColorFromWorldCoord } from "../color.js";
 
-export function* Circle({ nodeId, x = 0, y = 0 }) {
+export function* Circle({ controlsNodeId: nodeId, x = 0, y = 0 }) {
   const pos = new Vector2(x, y);
 
   let editEl;

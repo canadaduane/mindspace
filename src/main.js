@@ -1,4 +1,5 @@
 import { renderer } from "@b9g/crank/dom";
+import { createElement } from "@b9g/crank/standalone";
 import { nanoid } from "nanoid";
 import { html, closestSide } from "./utils.js";
 import { Vector2 } from "./math/vector2.js";
@@ -14,11 +15,11 @@ import { setShapeValues } from "./models/shape.js";
 import { setNodeValues } from "./models/node.js";
 import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
 import { makeDraggable } from "./drag.js";
+import { getHtmlShapeComponent, getSvgShapeComponent } from "./shapes/index.js";
 import { styles } from "./styles.js";
-import { Circle } from "./shapes/circle.js";
 import { Line } from "./shapes/line.js";
 import { Pop } from "./shapes/pop.js";
-import { Tap, tapAnimationMs } from "./shapes/tap.js";
+import { tapAnimationMs } from "./shapes/tap.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
@@ -476,32 +477,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           ontouchstart=${touchStart}
         >
           ${svgShapes.map(([shapeId, shape]) => {
-            switch (shape.type) {
-              case "line":
-                return html`<${Line}
-                  $key=${shapeId}
-                  shapeId=${shapeId}
-                  selected=${shape.selected}
-                  x1=${shape.x1}
-                  y1=${shape.y1}
-                  x2=${shape.x2}
-                  y2=${shape.y2}
-                  type=${shape.lineType}
-                />`;
-              case "pop":
-                return html`
-                  <${Pop}
-                    $key=${shapeId}
-                    shapeId=${shapeId}
-                    x=${shape.x}
-                    y=${shape.y}
-                    theta=${shape.theta}
-                    color=${shape.color}
-                  />
-                `;
-              default:
-                throw new Error(`unknown svg shape type: ${shape.type}`);
-            }
+            const Shape = getSvgShapeComponent(shape.type);
+            return createElement(Shape, { $key: shapeId, shapeId, ...shape });
           })}
         </svg>
         <${RainbowBorder}
@@ -510,31 +487,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           focus=${rainbowFocus}
         />
         ${htmlShapes.map(([shapeId, shape]) => {
-          switch (shape.type) {
-            case "circle":
-              return html`
-                <${Circle}
-                  $key=${shapeId}
-                  nodeId=${shape.controlsNodeId}
-                  x=${shape.x}
-                  y=${shape.y}
-                  color=${shape.color}
-                  shake=${shape.shake}
-                />
-              `;
-            case "tap":
-              return html`
-                <${Tap}
-                  $key=${shapeId}
-                  x=${shape.x}
-                  y=${shape.y}
-                  tapState=${shape.tapState}
-                  color=${shape.color}
-                />
-              `;
-            default:
-              throw new Error(`unknown html shape type: ${shape.type}`);
-          }
+          const Shape = getHtmlShapeComponent(shape.type);
+          return createElement(Shape, { $key: shapeId, shapeId, ...shape });
         })}
         <!-- end -->`;
     }
