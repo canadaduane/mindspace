@@ -17,7 +17,7 @@ export type Shape =
     }
   | {
       type: "line";
-      lineType: "short" | "deleted" | "strong" | "disabled";
+      lineType: LineType;
       selected?: boolean;
       color?: string;
       x1?: number;
@@ -40,6 +40,8 @@ export type Shape =
   };
  
 export type ShapesMap = Map<string, Shape>;
+
+export type LineType = "short" | "deleted" | "strong" | "disabled";
 
 export type TapState = 
   | "create"
@@ -93,6 +95,18 @@ export const removeShape =
   (shapes /*: ShapesMap */) /*: (shapeId: string) => boolean */ => (shapeId) =>
     shapes.delete(shapeId);
 
+export const setLineType =
+  (
+    shapes /*: ShapesMap */
+  ) /*: (shapeId: string, lineType: LineType) => Shape */ =>
+  (shapeId, lineType) => {
+    const shape = shapes.get(shapeId);
+    if (!shape) throw new Error(`can't get Line shape: ${shapeId}`);
+    if (shape.type !== "line")
+      throw new Error(`shape not a line: ${shapeId} (${shape.type})`);
+    return setShapeValues(shape, { lineType });
+  };
+
 /* Utility Functions */
 
 export function setShapeValues(
@@ -136,7 +150,8 @@ export type ShapesBundle = {
   getShape: ReturnType<typeof getShape>,
   hasShape: ReturnType<typeof hasShape>,
   setShape: ReturnType<typeof setShape>,
-  removeShape: ReturnType<typeof removeShape>
+  removeShape: ReturnType<typeof removeShape>,
+  setLineType: ReturnType<typeof setLineType>,
 }
 */
 
@@ -152,5 +167,6 @@ export function makeShapes(
     hasShape: hasShape(shapes),
     setShape: setShape(shapes),
     removeShape: removeShape(shapes),
+    setLineType: setLineType(shapes),
   };
 }

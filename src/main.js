@@ -84,13 +84,17 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   this.addEventListener("destroyNode", ({ detail: { nodeId } }) => {
-    if (destroyNode(nodeId)) {
+    if (graph.removeNodeWithDependents(nodeId)) {
       this.refresh();
     }
   });
 
   this.addEventListener("destroyShape", ({ detail: { shapeId } }) => {
-    if (graph.removeShape(shapeId)) {
+    const shape = graph.getShape(shapeId);
+    if (shape.type === "circle") {
+      graph.removeNodeWithDependents(shape.controlsNodeId);
+      this.refresh();
+    } else if (graph.removeShape(shapeId)) {
       this.refresh();
     }
   });
@@ -103,7 +107,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   this.addEventListener("deleteLine", ({ detail: { shapeId } }) => {
     unselectSelectedLine();
-    setLineType(shapeId, "deleted");
+    graph.setLineType(shapeId, "deleted");
     this.refresh();
   });
 
@@ -112,7 +116,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       console.error("bump without controlledNodeId");
       return;
     }
-    const shape = setLineType(shapeId, lineType);
+    const shape = graph.setLineType(shapeId, lineType);
     if (shape) {
       const connectedShapes = getShapesConnectedToLineShapeId(graph)(shapeId);
       connectedShapes.forEach((s) => {
@@ -324,11 +328,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   /** Create Functions */
 
-  const setLineType = (shapeId, lineType) => {
-    const shape = graph.getShape(shapeId);
-    return setShapeValues(shape, { lineType });
-  };
-
   const unselectSelectedLine = () => {
     if (selectedLineShapeId) {
       const shape = graph.getShape(selectedLineShapeId);
@@ -354,11 +353,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     // if no nodes, return undefined
   };
 
-  const createCircleUI = (
-    x,
-    y,
-    colorOverride /*: string | void */
-  ) => {
+  const createCircleUI = (x, y, colorOverride /*: string | void */) => {
     const p = new Vector2(x, y);
     const color =
       colorOverride || getColorFromNearestNode(p) || getColorFromWorldCoord(p);
@@ -367,20 +362,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     this.refresh();
 
     return { nodeId, shapeId };
-  };
-
-  // Remove node and its dependents
-  const destroyNode = (nodeId /*: string */) => {
-    if (graph.hasNode(nodeId)) {
-      const node = graph.getNode(nodeId);
-      node.dependents.forEach((d) => {
-        graph.removeShape(d.shapeId);
-      });
-      return graph.removeNode(nodeId);
-    } else {
-      console.warn("can't set node movement", nodeId);
-      return false;
-    }
   };
 
   // Approximate Archimedean Spiral

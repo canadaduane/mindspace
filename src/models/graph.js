@@ -11,23 +11,23 @@ import type { Dependent } from "./node";
 type GraphInitial = {
   nodes: NodeInitial[],
   shapes: ShapeInitial[]
-}
+};
 
 type Graph = {
   ...NodesBundle, 
   ...ShapesBundle,
 
   applyNodesToShapes: () => void,
-  createCircleControllingNode: CreateCircleControllingNode,
+  createCircleControllingNode: CreateCircleControllingNodeFn,
+  removeNodeWithDependents: RemoveNodeWithDependentsFn,
   
   nodes: Map<string, Node>,
-}
+};
 
-type CreateCircleControllingNode =
-  (
-    pos: Vector2,
-    color: string,
-  ) => { nodeId: string, node: Node, shapeId: string, shape: Shape }
+type CreateCircleControllingNodeFn = ( pos: Vector2, color: string ) =>
+  { nodeId: string, node: Node, shapeId: string, shape: Shape };
+
+type RemoveNodeWithDependentsFn = ( nodeId: string ) => boolean;
  
 */
 
@@ -48,6 +48,7 @@ export function makeGraph(
     },
 
     createCircleControllingNode: createCircleControllingNode(nodes, shapes),
+    removeNodeWithDependents: removeNodeWithDependents(nodes, shapes),
   };
 }
 
@@ -92,7 +93,7 @@ const createCircleControllingNode =
   (
     nodes /*: NodesBundle */,
     shapes /*: ShapesBundle */
-  ) /*: CreateCircleControllingNode */ =>
+  ) /*: CreateCircleControllingNodeFn */ =>
   (pos, color) => {
     const { nodeId, node } = nodes.createNode({
       x: pos.x,
@@ -146,3 +147,22 @@ const createConnectedLine = (
 
   return { shape, shapeId };
 };
+
+// Remove node and its dependents
+const removeNodeWithDependents =
+  (
+    nodes /*: NodesBundle */,
+    shapes /*: ShapesBundle */
+  ) /*: RemoveNodeWithDependentsFn */ =>
+  (nodeId) => {
+    const node = nodes.getNode(nodeId);
+    if (node) {
+      node.dependents.forEach((d) => {
+        shapes.removeShape(d.shapeId);
+      });
+      return nodes.removeNode(nodeId);
+    } else {
+      console.warn("can't set node movement", nodeId);
+      return false;
+    }
+  };
