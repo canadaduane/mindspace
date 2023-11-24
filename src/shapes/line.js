@@ -21,7 +21,7 @@ type LineProps = {
 */
 
 export function* Line({ shapeId /*: string */ }) {
-  let canBump = true;
+  let canBump = false;
   let broken = false;
   let brokenRatio = 0;
 

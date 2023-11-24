@@ -8,7 +8,6 @@ import {
   orbRectHeight,
   stringLengthTransition,
 } from "../constants.js";
-import { getColorFromWorldCoord } from "../color.js";
 
 export function* Circle({ controlsNodeId: nodeId, x = 0, y = 0 }) {
   const pos = new Vector2(x, y);
@@ -115,8 +114,7 @@ function styles() {
       border-radius: 100%;
       outline-width: 3px;
       outline-style: solid;
-      transition: outline-width 200s ease-in-out,
-        outline-color 600ms linear;
+      transition: outline-width 200s ease-in-out, outline-color 600ms linear;
 
       width: ${orbSize}px;
       height: ${orbSize}px;
