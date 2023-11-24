@@ -11,7 +11,7 @@ export type Node = {
   x: number; // The global X coordinate for this node
   y: number; // The global Y coordinate for this node
   color: string; // The color chosen for this node
-  text: string; // The text stored at this node
+  text: string | null; // The text stored at this node
   spiral: number; // A number that stores the "spiral step" for new nodes
   dependents: Dependent[]; // A list of dependent shapes
 };
@@ -35,11 +35,13 @@ export function makeNodesMap(
 }
 
 export const createNode =
-  (nodes /*: NodesMap */) /*: (node: Node) => string */ =>
+  (
+    nodes /*: NodesMap */
+  ) /*: (node: Node) => { nodeId: string, node: Node } */ =>
   (node /*: Node */) => {
     const nodeId = nanoid(12);
     setNode(nodes)(nodeId, node);
-    return nodeId;
+    return { nodeId, node };
   };
 
 export const getNode =

@@ -19,7 +19,7 @@ const directory /*: Record<Shape["type"], ["html" | "svg", any]> */ = {
 
 /**
  * Partitions a ShapesMap into HTML and SVG namespaced components, returning
- * htmlShapes and svgShapes. 
+ * htmlShapes and svgShapes.
  */
 export function shapesMapToComponents(
   shapes /*: ShapesMap */

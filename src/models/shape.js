@@ -9,34 +9,34 @@ export type ShapeInitial = Shape & { shapeId: string };
 export type Shape =
   | {
       type: "circle";
-      controlsNodeId: number;
-      color: string;
-      shake: boolean;
-      x: number;
-      y: number;
+      controlsNodeId: string;
+      color?: string;
+      shake?: boolean;
+      x?: number;
+      y?: number;
     }
   | {
       type: "line";
-      color: string;
       lineType: "short" | "deleted" | "strong" | "disabled";
-      selected: boolean;
-      x1: number;
-      y1: number;
-      x2: number;
-      y2: number;
+      selected?: boolean;
+      color?: string;
+      x1?: number;
+      y1?: number;
+      x2?: number;
+      y2?: number;
     }
   | {
       type: "pop";
-      color: string;
-      x: number;
-      y: number;
+      color?: string;
+      x?: number;
+      y?: number;
     }
   | {
       type: "tap";
       tapState: TapState;
       color?: string; 
-      x: number;
-      y: number;
+      x?: number;
+      y?: number;
   };
  
 export type ShapesMap = Map<string, Shape>;
@@ -62,11 +62,13 @@ export function makeShapesMap(
 }
 
 export const createShape =
-  (shapes /*: ShapesMap */) /*: (shape: Shape) => string */ =>
+  (
+    shapes /*: ShapesMap */
+  ) /*: (shape: Shape) => { shapeId: string, shape: Shape } */ =>
   (shape /*: Shape */) => {
     const shapeId = nanoid(12);
     setShape(shapes)(shapeId, shape);
-    return shapeId;
+    return { shapeId, shape };
   };
 
 export const getShape =

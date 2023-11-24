@@ -1,5 +1,4 @@
 import { renderer } from "@b9g/crank/dom";
-import { nanoid } from "nanoid";
 import { html, closestSide } from "./utils.js";
 import { Vector2 } from "./math/vector2.js";
 import {
@@ -109,6 +108,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   });
 
   this.addEventListener("bump", ({ detail: { shapeId, lineType } }) => {
+    if (!controlledNodeId) {
+      console.error("bump without controlledNodeId");
+      return;
+    }
     const shape = setLineType(shapeId, lineType);
     if (shape) {
       const connectedShapes = getShapesConnectedToLineShapeId(graph)(shapeId);
@@ -157,7 +160,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     if (event.key === "Enter") {
       if (graph.hasNode(mostRecentlyActiveNodeId))
         createNodeAroundNode(graph.getNode(mostRecentlyActiveNodeId));
-      else createNode(window.innerWidth, window.innerHeight);
+      else createCircleUI(window.innerWidth, window.innerHeight);
     } else if (event.key === "Backspace" || event.key === "Delete") {
       if (selectedLineShapeId) {
         const lineShape = graph.getShape(selectedLineShapeId);
@@ -219,14 +222,13 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         if (side.distance < 40) {
           dragColor = getColorFromScreenCoord({ x, y }, winSize);
 
-          console.log("create color");
           tapShapeId = graph.createShape({
             type: "tap",
             tapState: "color",
             color: dragColor,
             x,
             y,
-          });
+          }).shapeId;
           return;
         }
 
@@ -247,7 +249,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
           setTimeout(() => {
             removeTap(false).then(() => {
-              createNode(x, y);
+              createCircleUI(x, y);
             });
           }, tapAnimationMs - 50);
 
@@ -259,7 +261,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
               tapState: "create",
               x,
               y,
-            });
+            }).shapeId;
           };
           if (tapShapeId) {
             removeTap(false).then(createNewTap);
@@ -278,7 +280,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
             if (node) {
               node.color = circleColor;
             } else {
-              createNode(x, y, circleColor);
+              createCircleUI(x, y, circleColor);
             }
             this.refresh();
           });
@@ -322,16 +324,6 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   /** Create Functions */
 
-  const createLine = (nodeDependents1, nodeDependents2) => {
-    const lineShape = { type: "line", lineType: "short", selected: false };
-    const lineShapeId = graph.createShape(lineShape);
-
-    nodeDependents1.push({ shapeId: lineShapeId, attrs: { x: "x2", y: "y2" } });
-    nodeDependents2.push({ shapeId: lineShapeId, attrs: { x: "x1", y: "y1" } });
-
-    return { shape: lineShape, shapeId: lineShapeId };
-  };
-
   const setLineType = (shapeId, lineType) => {
     const shape = graph.getShape(shapeId);
     return setShapeValues(shape, { lineType });
@@ -362,46 +354,15 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     // if no nodes, return undefined
   };
 
-  const createNode = (x, y, colorOverride /*: string | void */) => {
-    const nodeId = nanoid(12);
-
+  const createCircleUI = (
+    x,
+    y,
+    colorOverride /*: string | void */
+  ) => {
     const p = new Vector2(x, y);
     const color =
       colorOverride || getColorFromNearestNode(p) || getColorFromWorldCoord(p);
-
-    // Create a circle that controls the node
-    const controllerShape = {
-      type: "circle",
-      x,
-      y,
-      controlsNodeId: nodeId,
-    };
-    const shapeId = graph.createShape(controllerShape);
-
-    const dependents = [];
-    // Create lines from this node to all other nodes
-    graph.nodes.forEach((otherNode) => {
-      createLine(dependents, otherNode.dependents);
-    });
-
-    // Create the new node that all shapes depend on for position updates
-    graph.setNode(nodeId, {
-      x,
-      y,
-      color,
-      text: `n${nodeId}`,
-      dependents: [
-        {
-          shapeId,
-          attrs: {
-            x: "x",
-            y: "y",
-            color: "color",
-          },
-        },
-        ...dependents,
-      ],
-    });
+    const { nodeId, shapeId } = graph.createCircleControllingNode(p, color);
 
     this.refresh();
 
@@ -431,7 +392,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     const x = cx + Math.cos(r) * spiralRadius;
     const y = cy + Math.sin(r) * spiralRadius;
 
-    const { nodeId } = createNode(x, y);
+    const { nodeId } = createCircleUI(x, y);
     const createdNode = graph.getNode(nodeId);
     // Pass the spirality on to the next node
     setNodeValues(createdNode, { spiral: node.spiral + spiralAddend });

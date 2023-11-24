@@ -5,6 +5,8 @@ import { makeShapes } from "./shape.js";
 /*::
 import { type NodeInitial, type Node, type NodesBundle } from './node.js'
 import { type ShapeInitial, type Shape, type ShapesBundle } from './shape.js'
+import type { Vector2 } from "../math/vector2";
+import type { Dependent } from "./node";
 
 type GraphInitial = {
   nodes: NodeInitial[],
@@ -16,9 +18,17 @@ type Graph = {
   ...ShapesBundle,
 
   applyNodesToShapes: () => void,
+  createCircleControllingNode: CreateCircleControllingNode,
   
   nodes: Map<string, Node>,
 }
+
+type CreateCircleControllingNode =
+  (
+    pos: Vector2,
+    color: string,
+  ) => { nodeId: string, node: Node, shapeId: string, shape: Shape }
+ 
 */
 
 export function makeGraph(
@@ -36,6 +46,8 @@ export function makeGraph(
         applyNodeToShapes(node, shapes.shapes);
       });
     },
+
+    createCircleControllingNode: createCircleControllingNode(nodes, shapes),
   };
 }
 
@@ -75,3 +87,62 @@ export function applyNodeToShapes(
     }
   }
 }
+
+const createCircleControllingNode =
+  (
+    nodes /*: NodesBundle */,
+    shapes /*: ShapesBundle */
+  ) /*: CreateCircleControllingNode */ =>
+  (pos, color) => {
+    const { nodeId, node } = nodes.createNode({
+      x: pos.x,
+      y: pos.y,
+      color,
+      text: null,
+      dependents: [],
+      spiral: 0,
+    });
+
+    // Create a circle that controls the node
+    const { shapeId, shape } = shapes.createShape({
+      type: "circle",
+      color,
+      shake: false,
+      x: pos.x,
+      y: pos.y,
+      controlsNodeId: nodeId,
+    });
+
+    // Create lines from this node to all other nodes
+    nodes.nodes.forEach((otherNode) => {
+      createConnectedLine(shapes, node.dependents, otherNode.dependents);
+    });
+
+    // Create the new node that all shapes depend on for position updates
+    node.dependents.push({
+      shapeId,
+      attrs: {
+        x: "x",
+        y: "y",
+        color: "color",
+      },
+    });
+
+    return { nodeId, node, shapeId, shape };
+  };
+
+const createConnectedLine = (
+  shapes /*: ShapesBundle */,
+  nodeDependents1 /*: Dependent[] */,
+  nodeDependents2 /*: Dependent[] */
+) => {
+  const { shape, shapeId } = shapes.createShape({
+    type: "line",
+    lineType: "short",
+  });
+
+  nodeDependents1.push({ shapeId, attrs: { x: "x2", y: "y2" } });
+  nodeDependents2.push({ shapeId, attrs: { x: "x1", y: "y1" } });
+
+  return { shape, shapeId };
+};
