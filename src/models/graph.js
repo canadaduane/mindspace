@@ -115,7 +115,8 @@ const createCircleControllingNode =
     });
 
     // Create lines from this node to all other nodes
-    nodes.nodes.forEach((otherNode) => {
+    nodes.nodes.forEach((otherNode, otherNodeId) => {
+      if (nodeId === otherNodeId) return;
       createConnectedLine(shapes, node.dependents, otherNode.dependents);
     });
 
