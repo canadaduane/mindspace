@@ -1,5 +1,7 @@
+// @flow
+
 import { renderer } from "@b9g/crank/dom";
-import { html, closestSide } from "./utils.js";
+import { html, closestSide, hasTagName } from "./utils.js";
 import { Vector2 } from "./math/vector2.js";
 import {
   scrollbarThickness,
@@ -8,7 +10,7 @@ import {
   spiralAddend,
   rainbowBorderThickness,
 } from "./constants.js";
-import { makeGraph, getShapesConnectedToLineShapeId } from "./models/graph.js";
+import { makeGraph } from "./models/graph.js";
 import { setShapeValues } from "./models/shape.js";
 import { setNodeValues } from "./models/node.js";
 import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
@@ -18,7 +20,18 @@ import { styles } from "./styles.js";
 import { tapAnimationMs } from "./shapes/tap.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 
-function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
+/*::
+import type { Node, NodeInitial } from "./models/node";
+import type { Shape, ShapeInitial } from "./models/shape";
+*/
+
+function* Svg(
+  /*:: this:  any, */
+  {
+    nodes: initNodes = [],
+    shapes: initShapes = [],
+  } /*: { nodes: NodeInitial[], shapes: ShapeInitial[] } */
+) {
   let graph = makeGraph({ nodes: initNodes, shapes: initShapes });
   window.graph = graph;
 
@@ -36,14 +49,16 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
   const matchWorkAreaSizesWithoutRefresh = () => {
     winSize.set(window.innerWidth, window.innerHeight);
-    if (minDocW < document.documentElement.scrollWidth) {
-      minDocW = document.documentElement.scrollWidth;
+    const scrollWidth = document.documentElement?.scrollWidth ?? 0;
+    const scrollHeight = document.documentElement?.scrollHeight ?? 0;
+    if (minDocW < scrollWidth) {
+      minDocW = document.documentElement?.scrollWidth;
     }
-    docSize.width = Math.max(minDocW, document.documentElement.scrollWidth);
-    if (minDocH < document.documentElement.scrollHeight) {
-      minDocH = document.documentElement.scrollHeight;
+    docSize.width = Math.max(minDocW, scrollWidth);
+    if (minDocH < scrollHeight) {
+      minDocH = scrollHeight;
     }
-    docSize.height = Math.max(minDocH, document.documentElement.scrollHeight);
+    docSize.height = Math.max(minDocH, scrollHeight);
   };
   matchWorkAreaSizesWithoutRefresh();
 
@@ -119,7 +134,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
     const shape = graph.setLineType(shapeId, lineType);
     if (shape) {
-      const connectedShapes = getShapesConnectedToLineShapeId(graph)(shapeId);
+      const connectedShapes = graph.getShapesConnectedToLineShapeId(shapeId);
       connectedShapes.forEach((s) => {
         if (s.type === "circle") {
           s.shake = true;
@@ -142,7 +157,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       }
 
       setTimeout(() => {
-        connectedShapes.forEach((s) => (s.shake = false));
+        connectedShapes.forEach((s) => {
+          if (s.type === "circle") {
+            s.shake = false;
+          }
+        });
       }, 1000);
     }
   });
@@ -159,8 +178,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     createNodeAroundNode(graph.getNode(nodeId));
   });
 
-  const onKeyDown = (event) => {
-    if (event.target.tagName !== "BODY") return;
+  const onKeyDown = (event /*: KeyboardEvent */) => {
+    if (!hasTagName(event.target, "body")) return;
 
     if (event.key === "Enter") {
       if (graph.hasNode(mostRecentlyActiveNodeId))
@@ -169,9 +188,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     } else if (event.key === "Backspace" || event.key === "Delete") {
       if (selectedLineShapeId) {
         const lineShape = graph.getShape(selectedLineShapeId);
-        unselectSelectedLine();
-        lineShape.lineType = "deleted";
-        this.refresh();
+        if (lineShape.type === "line") {
+          unselectSelectedLine();
+          lineShape.lineType = "deleted";
+          this.refresh();
+        }
       } else {
         console.log("No line selected to delete");
       }
@@ -186,17 +207,17 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     this.refresh();
   });
 
-  document.body.addEventListener("keydown", onKeyDown);
+  document.body?.addEventListener("keydown", onKeyDown);
 
-  let tapShapeId;
-  let singleClickTimeout;
-  let singleTapPos /*: Vector2 | undefined */;
-  let dragColor /*: string | undefined */;
+  let tapShapeId /*: string | void */;
+  let singleClickTimeout /*: TimeoutID | void */;
+  let singleTapPos /*: Vector2 | void */;
+  let dragColor /*: string | void */;
 
   const doubleTapMs = 500;
   let isDoubleTap = false;
 
-  const removeTap = async (animate = false) => {
+  const removeTap = async (animate /*: boolean */ = false) => {
     if (!tapShapeId) return;
 
     if (animate) {
@@ -212,7 +233,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
     await new Promise((resolve) => setTimeout(resolve, tapAnimationMs));
 
-    graph.removeShape(tapShapeIdToRemove);
+    if (tapShapeIdToRemove) {
+      graph.removeShape(tapShapeIdToRemove);
+    }
 
     this.refresh();
   };
@@ -223,9 +246,9 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       onStart: ({ x, y }) => {
         unselectSelectedLine();
 
-        const side = closestSide({ x, y }, winSize);
+        const side = closestSide(new Vector2(x, y), winSize);
         if (side.distance < 40) {
-          dragColor = getColorFromScreenCoord({ x, y }, winSize);
+          dragColor = getColorFromScreenCoord(new Vector2(x, y), winSize);
 
           tapShapeId = graph.createShape({
             type: "tap",
@@ -238,7 +261,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         }
 
         const doubleTapDistance = singleTapPos
-          ? singleTapPos.distanceTo({ x, y })
+          ? singleTapPos.distanceTo(new Vector2(x, y))
           : 0;
 
         if (singleClickTimeout && !isDoubleTap && doubleTapDistance < 5) {
@@ -248,6 +271,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
 
           clearTimeout(singleClickTimeout);
           singleClickTimeout = undefined;
+
+          if (!tapShapeId) return;
 
           const shape = graph.getShape(tapShapeId);
           setShapeValues(shape, { x, y, tapState: "creating" });
@@ -327,12 +352,14 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     }
   );
 
-  /** Create Functions */
+  /** Helper Functions */
 
   const unselectSelectedLine = () => {
     if (selectedLineShapeId) {
       const shape = graph.getShape(selectedLineShapeId);
-      if (shape) shape.selected = false;
+      if (!shape || shape.type !== "line")
+        throw new Error("can't unselect shape");
+      shape.selected = false;
       selectedLineShapeId = null;
     }
   };
@@ -341,12 +368,15 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     unselectSelectedLine();
     selectedLineShapeId = shapeId;
     const shape = graph.getShape(selectedLineShapeId);
-    if (shape) shape.selected = true;
+    if (!shape || shape.type !== "line") throw new Error("can't select shape");
+    shape.selected = true;
   };
 
-  const getColorFromNearestNode = (p /*: Vector2 */) /*: string */ => {
+  const getColorFromNearestNode = (p /*: Vector2 */) /*: string | void */ => {
     const sorted = [...graph.nodes.values()].sort(
-      (a, b) => p.distanceTo(a) - p.distanceTo(b)
+      (a, b) =>
+        p.distanceTo(new Vector2(a.x, a.y)) -
+        p.distanceTo(new Vector2(b.x, b.y))
     );
     const node = sorted[0];
     if (node) return node.color;
@@ -354,7 +384,11 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     // if no nodes, return undefined
   };
 
-  const createCircleUI = (x, y, colorOverride /*: string | void */) => {
+  const createCircleUI = (
+    x /*: number */,
+    y /*: number */,
+    colorOverride /*: string | void */
+  ) => {
     const p = new Vector2(x, y);
     const color =
       colorOverride || getColorFromNearestNode(p) || getColorFromWorldCoord(p);
@@ -366,7 +400,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   };
 
   // Approximate Archimedean Spiral
-  const createNodeAroundNode = (node) => {
+  const createNodeAroundNode = (node /*: Node */) => {
     const { x: cx, y: cy } = node;
     if (node.spiral === undefined) node.spiral = spiralInitial;
 
@@ -411,7 +445,7 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
         <!-- end -->`;
     }
   } finally {
-    document.body.removeEventListener("keydown", onKeyDown);
+    document.body?.removeEventListener("keydown", onKeyDown);
   }
 }
 

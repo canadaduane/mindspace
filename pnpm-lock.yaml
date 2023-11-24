@@ -23,8 +23,8 @@ devDependencies:
     specifier: ^0.19.4
     version: 0.19.4
   flow-bin:
-    specifier: ^0.220.1
-    version: 0.220.1
+    specifier: ^0.222.0
+    version: 0.222.0
   sirv-cli:
     specifier: ^2.0.2
     version: 2.0.2
@@ -280,8 +280,8 @@ packages:
       '@esbuild/win32-x64': 0.19.4
     dev: true
 
-  /flow-bin@0.220.1:
-    resolution: {integrity: sha512-p25Ga+f3yWG0/Nlua6jGary2ptR4vHWt6cWh6MXGLR41NFlOwtrZtDtEjLpSWgOLUphTN4tEQjqoaruU72JObg==}
+  /flow-bin@0.222.0:
+    resolution: {integrity: sha512-U2047+pOX1EutHGykcjtamAlP8UIHrxbkexB5zPVQ8PH+WcVmD4PtRE6J8Jc3S6odyo0AqVnQsI4rE/2x2fGmQ==}
     engines: {node: '>=0.10.0'}
     hasBin: true
     dev: true

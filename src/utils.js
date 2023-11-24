@@ -82,3 +82,20 @@ export function closestSide(
 
   return sides[0];
 }
+
+/*::
+type HTMLElementTagNameMap = {
+  'body': HTMLBodyElement,
+  'div': HTMLDivElement,
+};
+*/
+
+export function hasTagName /*:: <K: $Keys<HTMLElementTagNameMap>> */(
+  el /*: Element | EventTarget | null */,
+  tagName /*: K */
+) /*: boolean */ {
+  return (
+    el instanceof HTMLElement &&
+    el.tagName.toLowerCase() === tagName.toLowerCase()
+  );
+}

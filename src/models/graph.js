@@ -20,6 +20,7 @@ type Graph = {
   applyNodesToShapes: () => void,
   createCircleControllingNode: CreateCircleControllingNodeFn,
   removeNodeWithDependents: RemoveNodeWithDependentsFn,
+  getShapesConnectedToLineShapeId: GetShapesConnectedFn,
 
   debug: () => void
 };
@@ -29,6 +30,8 @@ type CreateCircleControllingNodeFn = ( pos: Vector2, color: string ) =>
 
 type RemoveNodeWithDependentsFn = ( nodeId: string ) => boolean;
  
+type GetShapesConnectedFn = (shapeId: string) => Shape[];
+
 */
 
 export function makeGraph(
@@ -49,6 +52,10 @@ export function makeGraph(
 
     createCircleControllingNode: createCircleControllingNode(nodes, shapes),
     removeNodeWithDependents: removeNodeWithDependents(nodes, shapes),
+    getShapesConnectedToLineShapeId: getShapesConnectedToLineShapeId(
+      nodes,
+      shapes
+    ),
 
     debug: () => {
       console.log("nodes", nodes.nodes);
@@ -58,9 +65,13 @@ export function makeGraph(
 }
 
 export const getShapesConnectedToLineShapeId =
-  (graph /*: Graph */) /*: (shapeId: string) => Shape[] */ => (shapeId) => {
+  (
+    nodes /*: NodesBundle */,
+    shapes /*: ShapesBundle */
+  ) /*: GetShapesConnectedFn */ =>
+  (shapeId) => {
     const connectedShapes /*: Shape[] */ = [];
-    graph.nodes.forEach((node) => {
+    nodes.nodes.forEach((node) => {
       const hasDeps = node.dependents.has(shapeId);
 
       if (!hasDeps) return;
@@ -68,12 +79,13 @@ export const getShapesConnectedToLineShapeId =
       node.dependents.forEach((attrs, depShapeId) => {
         if (depShapeId === shapeId) return;
 
-        const shape = graph.getShape(depShapeId);
+        const shape = shapes.getShape(depShapeId);
         if (shape && shape.type === "circle") {
           connectedShapes.push(shape);
         }
       });
     });
+
     return connectedShapes;
   };
 
