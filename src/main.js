@@ -1,5 +1,4 @@
 import { renderer } from "@b9g/crank/dom";
-import { createElement } from "@b9g/crank/standalone";
 import { nanoid } from "nanoid";
 import { html, closestSide } from "./utils.js";
 import { Vector2 } from "./math/vector2.js";
@@ -15,10 +14,8 @@ import { setShapeValues } from "./models/shape.js";
 import { setNodeValues } from "./models/node.js";
 import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
 import { makeDraggable } from "./drag.js";
-import { getHtmlShapeComponent, getSvgShapeComponent } from "./shapes/index.js";
+import { shapesMapToComponents } from "./shapes/index.js";
 import { styles } from "./styles.js";
-import { Line } from "./shapes/line.js";
-import { Pop } from "./shapes/pop.js";
 import { tapAnimationMs } from "./shapes/tap.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 
@@ -443,26 +440,10 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
     setNodeValues(node, { spiral: node.spiral + spiralAddend + 5 });
   };
 
-  let svgShapes = [],
-    htmlShapes = [];
-
   try {
     while (true) {
       graph.applyNodesToShapes();
-
-      svgShapes.length = 0;
-      htmlShapes.length = 0;
-      for (let [shapeId, shape] of graph.shapes.entries()) {
-        if (shape.type === "line") {
-          svgShapes.unshift([shapeId, shape]);
-        }
-        if (shape.type === "pop") {
-          svgShapes.push([shapeId, shape]);
-        }
-        if (shape.type === "circle" || shape.type === "tap") {
-          htmlShapes.push([shapeId, shape]);
-        }
-      }
+      const { svgShapes, htmlShapes } = shapesMapToComponents(graph.shapes);
 
       yield html`<!-- begin -->
         <svg
@@ -476,20 +457,14 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
           onpointermove=${move}
           ontouchstart=${touchStart}
         >
-          ${svgShapes.map(([shapeId, shape]) => {
-            const Shape = getSvgShapeComponent(shape.type);
-            return createElement(Shape, { $key: shapeId, shapeId, ...shape });
-          })}
+          ${svgShapes}
         </svg>
         <${RainbowBorder}
           size=${winSize}
           borderThickness=${rainbowBorderThickness}
           focus=${rainbowFocus}
         />
-        ${htmlShapes.map(([shapeId, shape]) => {
-          const Shape = getHtmlShapeComponent(shape.type);
-          return createElement(Shape, { $key: shapeId, shapeId, ...shape });
-        })}
+        ${htmlShapes}
         <!-- end -->`;
     }
   } finally {
