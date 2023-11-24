@@ -6,7 +6,7 @@ import { makeShapes } from "./shape.js";
 import { type NodeInitial, type Node, type NodesBundle } from './node.js'
 import { type ShapeInitial, type Shape, type ShapesBundle } from './shape.js'
 import type { Vector2 } from "../math/vector2";
-import type { Dependent } from "./node";
+import type { DependentShapeAttrs } from "./node";
 
 type GraphInitial = {
   nodes: NodeInitial[],
@@ -56,19 +56,18 @@ export const getShapesConnectedToLineShapeId =
   (graph /*: Graph */) /*: (shapeId: string) => Shape[] */ => (shapeId) => {
     const connectedShapes /*: Shape[] */ = [];
     graph.nodes.forEach((node) => {
-      const hasDeps =
-        node.dependents.filter((dep) => dep.shapeId === shapeId).length > 0;
+      const hasDeps = node.dependents.has(shapeId);
 
       if (!hasDeps) return;
 
-      for (let dep of node.dependents) {
-        if (dep.shapeId !== shapeId) {
-          const shape = graph.getShape(dep.shapeId);
-          if (shape && shape.type === "circle") {
-            connectedShapes.push(shape);
-          }
+      node.dependents.forEach((attrs, depShapeId) => {
+        if (depShapeId === shapeId) return;
+
+        const shape = graph.getShape(depShapeId);
+        if (shape && shape.type === "circle") {
+          connectedShapes.push(shape);
         }
-      }
+      });
     });
     return connectedShapes;
   };
@@ -77,16 +76,16 @@ export function applyNodeToShapes(
   node /*: Node */,
   shapes /*: Map<string, Shape> */
 ) {
-  for (let { shapeId, attrs } of node.dependents) {
+  node.dependents.forEach((attrs, shapeId) => {
     const shape = shapes.get(shapeId);
-    if (shape) {
-      for (let fromAttr in attrs) {
-        let toAttr = attrs[fromAttr];
-        // $FlowIgnore
-        shape[toAttr] = node[fromAttr];
-      }
+    if (!shape) return;
+
+    for (let fromAttr in attrs) {
+      let toAttr = attrs[fromAttr];
+      // $FlowIgnore
+      shape[toAttr] = node[fromAttr];
     }
-  }
+  });
 }
 
 const createCircleControllingNode =
@@ -100,7 +99,7 @@ const createCircleControllingNode =
       y: pos.y,
       color,
       text: null,
-      dependents: [],
+      dependents: new Map(),
       spiral: 0,
     });
 
@@ -121,13 +120,10 @@ const createCircleControllingNode =
     });
 
     // Create the new node that all shapes depend on for position updates
-    node.dependents.push({
-      shapeId,
-      attrs: {
-        x: "x",
-        y: "y",
-        color: "color",
-      },
+    node.dependents.set(shapeId, {
+      x: "x",
+      y: "y",
+      color: "color",
     });
 
     return { nodeId, node, shapeId, shape };
@@ -135,16 +131,16 @@ const createCircleControllingNode =
 
 const createConnectedLine = (
   shapes /*: ShapesBundle */,
-  nodeDependents1 /*: Dependent[] */,
-  nodeDependents2 /*: Dependent[] */
+  nodeDependents1 /*: Map<string, DependentShapeAttrs> */,
+  nodeDependents2 /*: Map<string, DependentShapeAttrs> */
 ) => {
   const { shape, shapeId } = shapes.createShape({
     type: "line",
     lineType: "short",
   });
 
-  nodeDependents1.push({ shapeId, attrs: { x: "x2", y: "y2" } });
-  nodeDependents2.push({ shapeId, attrs: { x: "x1", y: "y1" } });
+  nodeDependents1.set(shapeId, { x: "x2", y: "y2" });
+  nodeDependents2.set(shapeId, { x: "x1", y: "y1" });
 
   return { shape, shapeId };
 };
@@ -157,13 +153,8 @@ const removeNodeWithDependents =
   ) /*: RemoveNodeWithDependentsFn */ =>
   (nodeId) => {
     const node = nodes.getNode(nodeId);
-    if (node) {
-      node.dependents.forEach((d) => {
-        shapes.removeShape(d.shapeId);
-      });
-      return nodes.removeNode(nodeId);
-    } else {
-      console.warn("can't set node movement", nodeId);
-      return false;
-    }
+    node.dependents.forEach((_attrs, depShapeId) => {
+      shapes.removeShape(depShapeId);
+    });
+    return nodes.removeNode(nodeId);
   };

@@ -20,6 +20,7 @@ import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 
 function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
   let graph = makeGraph({ nodes: initNodes, shapes: initShapes });
+  window.graph = graph;
 
   let mostRecentlyActiveNodeId;
 
@@ -128,8 +129,8 @@ function* Svg({ nodes: initNodes = [], shapes: initShapes = [] }) {
       // Once we convert to strong lines via bump, delete all short lines
       const node = graph.getNode(controlledNodeId);
       if (node) {
-        node.dependents.forEach((dependent) => {
-          const depShape = graph.getShape(dependent.shapeId);
+        node.dependents.forEach((attrs, depShapeId) => {
+          const depShape = graph.getShape(depShapeId);
           if (
             depShape &&
             depShape.type === "line" &&

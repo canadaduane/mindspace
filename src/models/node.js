@@ -13,13 +13,10 @@ export type Node = {
   color: string; // The color chosen for this node
   text: string | null; // The text stored at this node
   spiral: number; // A number that stores the "spiral step" for new nodes
-  dependents: Dependent[]; // A list of dependent shapes
+  dependents: Map<string, DependentShapeAttrs>; // A list of dependent shapes
 };
 
-export type Dependent = {
-  shapeId: string; // The ID of the shape that depends on the node
-  attrs: Record<string, string>; // A mapping from Node attributes to Node attributes
-};
+export type DependentShapeAttrs = Record<string, string>;
 
 export type NodesMap = Map<string, Node>;
 */
