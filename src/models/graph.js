@@ -20,8 +20,8 @@ type Graph = {
   applyNodesToShapes: () => void,
   createCircleControllingNode: CreateCircleControllingNodeFn,
   removeNodeWithDependents: RemoveNodeWithDependentsFn,
-  
-  nodes: Map<string, Node>,
+
+  debug: () => void
 };
 
 type CreateCircleControllingNodeFn = ( pos: Vector2, color: string ) =>
@@ -49,6 +49,11 @@ export function makeGraph(
 
     createCircleControllingNode: createCircleControllingNode(nodes, shapes),
     removeNodeWithDependents: removeNodeWithDependents(nodes, shapes),
+
+    debug: () => {
+      console.log("nodes", nodes.nodes);
+      console.log("shapes", shapes.shapes);
+    },
   };
 }
 
@@ -116,7 +121,7 @@ const createCircleControllingNode =
     // Create lines from this node to all other nodes
     nodes.nodes.forEach((otherNode, otherNodeId) => {
       if (nodeId === otherNodeId) return;
-      createConnectedLine(shapes, node.dependents, otherNode.dependents);
+      createConnectedLine(shapes, nodeId, node, otherNodeId, otherNode);
     });
 
     // Create the new node that all shapes depend on for position updates
@@ -131,30 +136,45 @@ const createCircleControllingNode =
 
 const createConnectedLine = (
   shapes /*: ShapesBundle */,
-  nodeDependents1 /*: Map<string, DependentShapeAttrs> */,
-  nodeDependents2 /*: Map<string, DependentShapeAttrs> */
+  nodeId1 /*: string */,
+  node1 /*: Node */,
+  nodeId2 /*: string*/,
+  node2 /*: Node */
 ) => {
   const { shape, shapeId } = shapes.createShape({
     type: "line",
     lineType: "short",
+    connectedNodeId1: nodeId1,
+    connectedNodeId2: nodeId2,
   });
 
-  nodeDependents1.set(shapeId, { x: "x2", y: "y2" });
-  nodeDependents2.set(shapeId, { x: "x1", y: "y1" });
+  node1.dependents.set(shapeId, { x: "x2", y: "y2" });
+  node2.dependents.set(shapeId, { x: "x1", y: "y1" });
 
   return { shape, shapeId };
 };
 
 // Remove node and its dependents
-const removeNodeWithDependents =
-  (
-    nodes /*: NodesBundle */,
-    shapes /*: ShapesBundle */
-  ) /*: RemoveNodeWithDependentsFn */ =>
-  (nodeId) => {
+const removeNodeWithDependents = (
+  nodes /*: NodesBundle */,
+  shapes /*: ShapesBundle */
+) /*: RemoveNodeWithDependentsFn */ =>
+  function remove(nodeId /*: string */) /*: boolean */ {
     const node = nodes.getNode(nodeId);
     node.dependents.forEach((_attrs, depShapeId) => {
+      if (!shapes.hasShape(depShapeId)) return;
+      const depShape = shapes.getShape(depShapeId);
       shapes.removeShape(depShapeId);
+      if (depShape.type === "line") {
+        if (nodes.hasNode(depShape.connectedNodeId1)) {
+          const connectedNode = nodes.getNode(depShape.connectedNodeId1);
+          connectedNode.dependents.delete(depShapeId);
+        }
+        if (nodes.hasNode(depShape.connectedNodeId2)) {
+          const connectedNode = nodes.getNode(depShape.connectedNodeId2);
+          connectedNode.dependents.delete(depShapeId);
+        }
+      }
     });
     return nodes.removeNode(nodeId);
   };

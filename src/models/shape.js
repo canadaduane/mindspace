@@ -18,6 +18,8 @@ export type Shape =
   | {
       type: "line";
       lineType: LineType;
+      connectedNodeId1: string;
+      connectedNodeId2: string;
       selected?: boolean;
       color?: string;
       x1?: number;
