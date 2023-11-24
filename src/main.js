@@ -3,8 +3,8 @@
 import { renderer } from "@b9g/crank/dom";
 import { html, closestSide, hasTagName } from "./utils.js";
 import { Vector2 } from "./math/vector2.js";
+import { Box2 } from "./math/box2.js";
 import {
-  scrollbarThickness,
   spiralRadius,
   spiralInitial,
   spiralAddend,
@@ -37,45 +37,37 @@ function* Svg(
 
   let mostRecentlyActiveNodeId;
 
-  const winSize = new Vector2();
-  const docSize = new Vector2();
-  let minDocH = window.innerHeight * 2;
-  let minDocW = window.innerWidth * 2;
+  const winSize = new Vector2(window.innerWidth, window.innerHeight);
+  const zoom = {
+    scale: 1.0,
+    world: new Box2(new Vector2(0, 0), new Vector2().copy(winSize)),
+    view: new Box2(new Vector2(0, 0), new Vector2().copy(winSize)),
+  };
 
   let controlledNodeId;
   let selectedLineShapeId;
 
   let rainbowFocus;
 
-  const matchWorkAreaSizesWithoutRefresh = () => {
-    winSize.set(window.innerWidth, window.innerHeight);
+  const getScrollSize = () => {
     const scrollWidth = document.documentElement?.scrollWidth ?? 0;
     const scrollHeight = document.documentElement?.scrollHeight ?? 0;
-    if (minDocW < scrollWidth) {
-      minDocW = document.documentElement?.scrollWidth;
-    }
-    docSize.width = Math.max(minDocW, scrollWidth);
-    if (minDocH < scrollHeight) {
-      minDocH = scrollHeight;
-    }
-    docSize.height = Math.max(minDocH, scrollHeight);
+    return new Vector2(scrollWidth, scrollHeight);
   };
-  matchWorkAreaSizesWithoutRefresh();
 
-  const matchWorkAreaSizes = () => {
-    matchWorkAreaSizesWithoutRefresh();
+  const resizeWithoutRefresh = () => {
+    winSize.set(window.innerWidth, window.innerHeight);
+  };
+  resizeWithoutRefresh();
+
+  const resize = () => {
+    resizeWithoutRefresh();
     this.refresh();
   };
 
   /** Event Listeners */
 
-  window.addEventListener("load", () => {
-    // Scroll to center of area after first render
-    // document.documentElement.scrollLeft = window.innerWidth / 2;
-    // document.documentElement.scrollTop = window.innerHeight / 2;
-  });
-
-  window.addEventListener("resize", matchWorkAreaSizes);
+  window.addEventListener("resize", resize);
 
   window.addEventListener("mouseout", () => {
     rainbowFocus = undefined;
@@ -422,11 +414,11 @@ function* Svg(
       graph.applyNodesToShapes();
       const { svgShapes, htmlShapes } = shapesMapToComponents(graph.shapes);
 
+      const { width: w, height: h } = winSize;
       yield html`<!-- begin -->
         <svg
-          viewBox="0 0 ${docSize.width} ${docSize.height - scrollbarThickness}"
-          style="width: ${docSize.width}px; height: ${docSize.height -
-          scrollbarThickness}px;"
+          viewBox="0 0 ${w} ${h}"
+          style="width: ${w}px; height: ${h}px;"
           xmlns="http://www.w3.org/2000/svg"
           onpointerdown=${start}
           onpointerup=${end}
@@ -446,6 +438,7 @@ function* Svg(
     }
   } finally {
     document.body?.removeEventListener("keydown", onKeyDown);
+    window.removeEventListener("resize", resize);
   }
 }
 
