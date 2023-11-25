@@ -105,7 +105,6 @@ export function* Jot({
         style=${{
           "left": `${pos.x}px`,
           "top": `${pos.y}px`,
-          "border-color": color,
           "outline-color": color,
         }}
       >
@@ -131,7 +130,7 @@ function styles() {
       border-radius: 100%;
       outline-width: 3px;
       outline-style: solid;
-      transition: outline-width 200s ease-in-out, outline-color 600ms linear;
+      transition: outline-width 200ms ease-in-out, outline-color 200ms linear;
 
       width: ${jotCircleRadius * 2}px;
       height: ${jotCircleRadius * 2}px;
@@ -147,7 +146,6 @@ function styles() {
     }
     .jot:focus-within {
       outline-width: 9px;
-      transition: outline-width 0.15s ease-in-out;
     }
     .jot .edit {
       padding: 8px;
