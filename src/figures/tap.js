@@ -1,12 +1,9 @@
-import { Portal } from "@b9g/crank/standalone";
-import { Vector2 } from "../math/vector2.js";
 import { html } from "../utils.js";
 import { css } from "../styles.js";
 import { tapSize, orbSize } from "../constants.js";
-import { makeDraggable } from "../drag.js";
 
 /*::
-import type { TapState } from "../shapes.js"
+import type { TapState } from "../figures.js"
 */
 
 export const tapAnimationMs = 200;

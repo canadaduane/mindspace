@@ -1,7 +1,7 @@
 import { isSyncExecuting, dispatch, svg } from "../utils.js";
 import { orbSize } from "../constants.js";
 
-export function* Pop({ shapeId, x, y, theta, color }) {
+export function* Pop({ figureId, x, y, theta, color }) {
   let gapGrowthRate = 0;
   let gap = 0;
   let thickness = 3;
@@ -23,7 +23,7 @@ export function* Pop({ shapeId, x, y, theta, color }) {
 
     if (gap >= Math.PI * 2) {
       animating = false;
-      dispatch(this, "destroyShape", { shapeId });
+      dispatch(this, "destroyShape", { figureId });
     }
 
     if (!isSyncExecuting) this.refresh();

@@ -9,7 +9,7 @@ import {
   stringLengthTransition,
 } from "../constants.js";
 
-export function* Jot({ shapeId, controlsNodeId: nodeId, x = 0, y = 0 }) {
+export function* Jot({ figureId, controlsNodeId: nodeId, x = 0, y = 0 }) {
   const pos = new Vector2(x, y);
 
   let editEl;
@@ -54,9 +54,9 @@ export function* Jot({ shapeId, controlsNodeId: nodeId, x = 0, y = 0 }) {
     }
     content = event.target.innerText.trim();
     if (content.length <= stringLengthTransition) {
-      dispatch(this, "setFigure", { shapeId, figure: "circle" });
+      dispatch(this, "setFigure", { figureId, figure: "circle" });
     } else {
-      dispatch(this, "setFigure", { shapeId, figure: "rectangle" });
+      dispatch(this, "setFigure", { figureId, figure: "rectangle" });
     }
     this.refresh();
   };

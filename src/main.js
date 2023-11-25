@@ -11,28 +11,28 @@ import {
   rainbowBorderThickness,
 } from "./constants.js";
 import { makeGraph } from "./models/graph.js";
-import { setShapeValues } from "./models/shape.js";
+import { setFigureValues } from "./models/figure.js";
 import { setNodeValues } from "./models/node.js";
 import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
 import { makeDraggable } from "./drag.js";
-import { shapesMapToComponents } from "./shapes/index.js";
+import { figuresMapToComponents } from "./figures/index.js";
 import { styles } from "./styles.js";
-import { tapAnimationMs } from "./shapes/tap.js";
+import { tapAnimationMs } from "./figures/tap.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 
 /*::
 import type { Node, NodeInitial } from "./models/node";
-import type { Shape, ShapeInitial } from "./models/shape";
+import type { Figure, FigureInitial } from "./models/figure";
 */
 
 function* Svg(
   /*:: this:  any, */
   {
     nodes: initNodes = [],
-    shapes: initShapes = [],
-  } /*: { nodes: NodeInitial[], shapes: ShapeInitial[] } */
+    figures: initFigures = [],
+  } /*: { nodes: NodeInitial[], figures: FigureInitial[] } */
 ) {
-  let graph = makeGraph({ nodes: initNodes, shapes: initShapes });
+  let graph = makeGraph({ nodes: initNodes, figures: initFigures });
   window.graph = graph;
 
   let mostRecentlyActiveNodeId;
@@ -45,7 +45,7 @@ function* Svg(
   };
 
   let controlledNodeId;
-  let selectedLineShapeId;
+  let selectedLineFigureId;
 
   let rainbowFocus;
 
@@ -97,43 +97,44 @@ function* Svg(
     }
   });
 
-  this.addEventListener("destroyShape", ({ detail: { shapeId } }) => {
-    const shape = graph.getShape(shapeId);
-    if (shape.type === "jot") {
-      graph.removeNodeWithDependents(shape.controlsNodeId);
+  this.addEventListener("destroyFigure", ({ detail: { figureId } }) => {
+    const figure = graph.getFigure(figureId);
+    if (figure.type === "jot") {
+      graph.removeNodeWithDependents(figure.controlsNodeId);
       this.refresh();
-    } else if (graph.removeShape(shapeId)) {
+    } else if (graph.removeFigure(figureId)) {
       this.refresh();
     }
   });
 
-  this.addEventListener("selectLine", ({ detail: { shapeId } }) => {
+  this.addEventListener("selectLine", ({ detail: { figureId } }) => {
     unselectSelectedLine();
-    selectLine(shapeId);
+    selectLine(figureId);
     this.refresh();
   });
 
-  this.addEventListener("deleteLine", ({ detail: { shapeId } }) => {
+  this.addEventListener("deleteLine", ({ detail: { figureId } }) => {
     unselectSelectedLine();
-    graph.setLineType(shapeId, "deleted");
+    graph.setLineType(figureId, "deleted");
     this.refresh();
   });
 
-  this.addEventListener("setFigure", ({ detail: { shapeId, figure } }) => {
-    const shape = graph.getShape(shapeId);
-    setShapeValues(shape, { figure });
+  this.addEventListener("setFigure", ({ detail: { figureId, shape } }) => {
+    const figure = graph.getFigure(figureId);
+    setFigureValues(figure, { shape });
     this.refresh();
   });
 
-  this.addEventListener("bump", ({ detail: { shapeId, lineType } }) => {
+  this.addEventListener("bump", ({ detail: { figureId, lineType } }) => {
     if (!controlledNodeId) {
       console.error("bump without controlledNodeId");
       return;
     }
-    const shape = graph.setLineType(shapeId, lineType);
-    if (shape) {
-      const connectedShapes = graph.getShapesConnectedToLineShapeId(shapeId);
-      connectedShapes.forEach((s) => {
+    const figure = graph.setLineType(figureId, lineType);
+    if (figure) {
+      const connectedFigures =
+        graph.getFiguresConnectedToLineFigureId(figureId);
+      connectedFigures.forEach((s) => {
         if (s.type === "jot") {
           s.shake = true;
         }
@@ -142,20 +143,20 @@ function* Svg(
       // Once we convert to strong lines via bump, delete all short lines
       const node = graph.getNode(controlledNodeId);
       if (node) {
-        node.dependents.forEach((attrs, depShapeId) => {
-          const depShape = graph.getShape(depShapeId);
+        node.dependents.forEach((attrs, depFigureId) => {
+          const depFigure = graph.getFigure(depFigureId);
           if (
-            depShape &&
-            depShape.type === "line" &&
-            depShape.lineType === "short"
+            depFigure &&
+            depFigure.type === "line" &&
+            depFigure.lineType === "short"
           ) {
-            depShape.lineType = "deleted";
+            depFigure.lineType = "deleted";
           }
         });
       }
 
       setTimeout(() => {
-        connectedShapes.forEach((s) => {
+        connectedFigures.forEach((s) => {
           if (s.type === "jot") {
             s.shake = false;
           }
@@ -165,10 +166,10 @@ function* Svg(
   });
 
   this.addEventListener(
-    "setShapeValues",
-    ({ detail: { shapeId, ...values } }) => {
-      const shape = graph.getShape(shapeId);
-      setShapeValues(shape, values);
+    "setFigureValues",
+    ({ detail: { figureId, ...values } }) => {
+      const figure = graph.getFigure(figureId);
+      setFigureValues(figure, values);
     }
   );
 
@@ -184,11 +185,11 @@ function* Svg(
         createNodeAroundNode(graph.getNode(mostRecentlyActiveNodeId));
       else createCircleUI(window.innerWidth, window.innerHeight);
     } else if (event.key === "Backspace" || event.key === "Delete") {
-      if (selectedLineShapeId) {
-        const lineShape = graph.getShape(selectedLineShapeId);
-        if (lineShape.type === "line") {
+      if (selectedLineFigureId) {
+        const lineFigure = graph.getFigure(selectedLineFigureId);
+        if (lineFigure.type === "line") {
           unselectSelectedLine();
-          lineShape.lineType = "deleted";
+          lineFigure.lineType = "deleted";
           this.refresh();
         }
       } else {
@@ -207,7 +208,7 @@ function* Svg(
 
   document.body?.addEventListener("keydown", onKeyDown);
 
-  let tapShapeId /*: string | void */;
+  let tapFigureId /*: string | void */;
   let singleClickTimeout /*: TimeoutID | void */;
   let singleTapPos /*: Vector2 | void */;
   let dragColor /*: string | void */;
@@ -216,23 +217,23 @@ function* Svg(
   let isDoubleTap = false;
 
   const removeTap = async (animate /*: boolean */ = false) => {
-    if (!tapShapeId) return;
+    if (!tapFigureId) return;
 
     if (animate) {
-      const shape = graph.getShape(tapShapeId);
-      setShapeValues(shape, { tapState: "destroying" });
+      const figure = graph.getFigure(tapFigureId);
+      setFigureValues(figure, { tapState: "destroying" });
       this.refresh();
     }
 
-    const tapShapeIdToRemove = tapShapeId;
+    const tapFigureIdToRemove = tapFigureId;
 
     // This Tap is done, no one can access it from here on
-    tapShapeId = undefined;
+    tapFigureId = undefined;
 
     await new Promise((resolve) => setTimeout(resolve, tapAnimationMs));
 
-    if (tapShapeIdToRemove) {
-      graph.removeShape(tapShapeIdToRemove);
+    if (tapFigureIdToRemove) {
+      graph.removeFigure(tapFigureIdToRemove);
     }
 
     this.refresh();
@@ -248,13 +249,13 @@ function* Svg(
         if (side.distance < 40) {
           dragColor = getColorFromScreenCoord(new Vector2(x, y), winSize);
 
-          tapShapeId = graph.createShape({
+          tapFigureId = graph.createFigure({
             type: "tap",
             tapState: "color",
             color: dragColor,
             x,
             y,
-          }).shapeId;
+          }).figureId;
           return;
         }
 
@@ -263,17 +264,17 @@ function* Svg(
           : 0;
 
         if (singleClickTimeout && !isDoubleTap && doubleTapDistance < 5) {
-          if (!tapShapeId) return;
+          if (!tapFigureId) return;
 
           isDoubleTap = true;
 
           clearTimeout(singleClickTimeout);
           singleClickTimeout = undefined;
 
-          if (!tapShapeId) return;
+          if (!tapFigureId) return;
 
-          const shape = graph.getShape(tapShapeId);
-          setShapeValues(shape, { x, y, tapState: "creating" });
+          const figure = graph.getFigure(tapFigureId);
+          setFigureValues(figure, { x, y, tapState: "creating" });
 
           setTimeout(() => {
             removeTap(false).then(() => {
@@ -284,14 +285,14 @@ function* Svg(
           this.refresh();
         } else {
           const createNewTap = () => {
-            tapShapeId = graph.createShape({
+            tapFigureId = graph.createFigure({
               type: "tap",
               tapState: "create",
               x,
               y,
-            }).shapeId;
+            }).figureId;
           };
-          if (tapShapeId) {
+          if (tapFigureId) {
             removeTap(false).then(createNewTap);
           } else {
             createNewTap();
@@ -323,7 +324,7 @@ function* Svg(
 
         singleTapPos = new Vector2(x, y);
 
-        // Clean up Tap shape if needed
+        // Clean up Tap figure if needed
         singleClickTimeout = setTimeout(() => {
           removeTap(true);
           singleClickTimeout = undefined;
@@ -334,13 +335,13 @@ function* Svg(
       onMove: ({ x, y }) => {
         clearTimeout(singleClickTimeout);
 
-        if (tapShapeId) {
-          const shape = graph.getShape(tapShapeId);
+        if (tapFigureId) {
+          const figure = graph.getFigure(tapFigureId);
 
-          if (shape.tapState === "color") {
-            setShapeValues(shape, { x, y });
+          if (figure.tapState === "color") {
+            setFigureValues(figure, { x, y });
           } else {
-            setShapeValues(shape, { x, y, tapState: "select" });
+            setFigureValues(figure, { x, y, tapState: "select" });
           }
           this.refresh();
         }
@@ -353,21 +354,22 @@ function* Svg(
   /** Helper Functions */
 
   const unselectSelectedLine = () => {
-    if (selectedLineShapeId) {
-      const shape = graph.getShape(selectedLineShapeId);
-      if (!shape || shape.type !== "line")
-        throw new Error("can't unselect shape");
-      shape.selected = false;
-      selectedLineShapeId = null;
+    if (selectedLineFigureId) {
+      const figure = graph.getFigure(selectedLineFigureId);
+      if (!figure || figure.type !== "line")
+        throw new Error("can't unselect figure");
+      figure.selected = false;
+      selectedLineFigureId = null;
     }
   };
 
-  const selectLine = (shapeId /*: string */) => {
+  const selectLine = (figureId /*: string */) => {
     unselectSelectedLine();
-    selectedLineShapeId = shapeId;
-    const shape = graph.getShape(selectedLineShapeId);
-    if (!shape || shape.type !== "line") throw new Error("can't select shape");
-    shape.selected = true;
+    selectedLineFigureId = figureId;
+    const figure = graph.getFigure(selectedLineFigureId);
+    if (!figure || figure.type !== "line")
+      throw new Error("can't select figure");
+    figure.selected = true;
   };
 
   const getColorFromNearestNode = (p /*: Vector2 */) /*: string | void */ => {
@@ -390,11 +392,11 @@ function* Svg(
     const p = new Vector2(x, y);
     const color =
       colorOverride || getColorFromNearestNode(p) || getColorFromWorldCoord(p);
-    const { nodeId, shapeId } = graph.createCircleControllingNode(p, color);
+    const { nodeId, figureId } = graph.createCircleControllingNode(p, color);
 
     this.refresh();
 
-    return { nodeId, shapeId };
+    return { nodeId, figureId };
   };
 
   // Approximate Archimedean Spiral
@@ -417,8 +419,8 @@ function* Svg(
 
   try {
     while (true) {
-      graph.applyNodesToShapes();
-      const { svgShapes, htmlShapes } = shapesMapToComponents(graph.shapes);
+      graph.applyNodesToFigures();
+      const { svgFigures, htmlFigures } = figuresMapToComponents(graph.figures);
 
       const { width: w, height: h } = winSize;
       yield html`<!-- begin -->
@@ -432,14 +434,14 @@ function* Svg(
           onpointermove=${move}
           ontouchstart=${touchStart}
         >
-          ${svgShapes}
+          ${svgFigures}
         </svg>
         <${RainbowBorder}
           size=${winSize}
           borderThickness=${rainbowBorderThickness}
           focus=${rainbowFocus}
         />
-        ${htmlShapes}
+        ${htmlFigures}
         <!-- end -->`;
     }
   } finally {

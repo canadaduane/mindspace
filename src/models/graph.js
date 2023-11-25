@@ -1,106 +1,106 @@
 // @flow
 import { makeNodes } from "./node.js";
-import { makeShapes } from "./shape.js";
+import { makeFigures } from "./figure.js";
 
 /*::
 import { type NodeInitial, type Node, type NodesBundle } from './node.js'
-import { type ShapeInitial, type Shape, type ShapesBundle } from './shape.js'
+import { type FigureInitial, type Figure, type FiguresBundle } from './figure.js'
 import type { Vector2 } from "../math/vector2";
-import type { DependentShapeAttrs } from "./node";
+import type { DependentFigureAttrs } from "./node";
 
 type GraphInitial = {
   nodes: NodeInitial[],
-  shapes: ShapeInitial[]
+  figures: FigureInitial[]
 };
 
 type Graph = {
   ...NodesBundle, 
-  ...ShapesBundle,
+  ...FiguresBundle,
 
-  applyNodesToShapes: () => void,
+  applyNodesToFigures: () => void,
   createCircleControllingNode: CreateCircleControllingNodeFn,
   removeNodeWithDependents: RemoveNodeWithDependentsFn,
-  getShapesConnectedToLineShapeId: GetShapesConnectedFn,
+  getFiguresConnectedToLineFigureId: GetFiguresConnectedFn,
 
   debug: () => void
 };
 
 type CreateCircleControllingNodeFn = ( pos: Vector2, color: string ) =>
-  { nodeId: string, node: Node, shapeId: string, shape: Shape };
+  { nodeId: string, node: Node, figureId: string, figure: Figure };
 
 type RemoveNodeWithDependentsFn = ( nodeId: string ) => boolean;
  
-type GetShapesConnectedFn = (shapeId: string) => Shape[];
+type GetFiguresConnectedFn = (figureId: string) => Figure[];
 
 */
 
 export function makeGraph(
-  { nodes: initNodes = [], shapes: initShapes = [] } /*: GraphInitial */
+  { nodes: initNodes = [], figures: initFigures = [] } /*: GraphInitial */
 ) /*: Graph */ {
   const nodes = makeNodes(initNodes);
-  const shapes = makeShapes(initShapes);
+  const figures = makeFigures(initFigures);
 
   return {
     ...nodes,
-    ...shapes,
+    ...figures,
 
-    applyNodesToShapes: () => {
+    applyNodesToFigures: () => {
       nodes.nodes.forEach((node) => {
-        applyNodeToShapes(node, shapes.shapes);
+        applyNodeToFigures(node, figures.figures);
       });
     },
 
-    createCircleControllingNode: createCircleControllingNode(nodes, shapes),
-    removeNodeWithDependents: removeNodeWithDependents(nodes, shapes),
-    getShapesConnectedToLineShapeId: getShapesConnectedToLineShapeId(
+    createCircleControllingNode: createCircleControllingNode(nodes, figures),
+    removeNodeWithDependents: removeNodeWithDependents(nodes, figures),
+    getFiguresConnectedToLineFigureId: getFiguresConnectedToLineFigureId(
       nodes,
-      shapes
+      figures
     ),
 
     debug: () => {
       console.log("nodes", nodes.nodes);
-      console.log("shapes", shapes.shapes);
+      console.log("figures", figures.figures);
     },
   };
 }
 
-export const getShapesConnectedToLineShapeId =
+export const getFiguresConnectedToLineFigureId =
   (
     nodes /*: NodesBundle */,
-    shapes /*: ShapesBundle */
-  ) /*: GetShapesConnectedFn */ =>
-  (shapeId) => {
-    const connectedShapes /*: Shape[] */ = [];
+    figures /*: FiguresBundle */
+  ) /*: GetFiguresConnectedFn */ =>
+  (figureId) => {
+    const connectedFigures /*: Figure[] */ = [];
     nodes.nodes.forEach((node) => {
-      const hasDeps = node.dependents.has(shapeId);
+      const hasDeps = node.dependents.has(figureId);
 
       if (!hasDeps) return;
 
-      node.dependents.forEach((attrs, depShapeId) => {
-        if (depShapeId === shapeId) return;
+      node.dependents.forEach((attrs, depFigureId) => {
+        if (depFigureId === figureId) return;
 
-        const shape = shapes.getShape(depShapeId);
-        if (shape && shape.type === "jot") {
-          connectedShapes.push(shape);
+        const figure = figures.getFigure(depFigureId);
+        if (figure && figure.type === "jot") {
+          connectedFigures.push(figure);
         }
       });
     });
 
-    return connectedShapes;
+    return connectedFigures;
   };
 
-export function applyNodeToShapes(
+export function applyNodeToFigures(
   node /*: Node */,
-  shapes /*: Map<string, Shape> */
+  figures /*: Map<string, Figure> */
 ) {
-  node.dependents.forEach((attrs, shapeId) => {
-    const shape = shapes.get(shapeId);
-    if (!shape) return;
+  node.dependents.forEach((attrs, figureId) => {
+    const figure = figures.get(figureId);
+    if (!figure) return;
 
     for (let fromAttr in attrs) {
       let toAttr = attrs[fromAttr];
       // $FlowIgnore
-      shape[toAttr] = node[fromAttr];
+      figure[toAttr] = node[fromAttr];
     }
   });
 }
@@ -108,7 +108,7 @@ export function applyNodeToShapes(
 const createCircleControllingNode =
   (
     nodes /*: NodesBundle */,
-    shapes /*: ShapesBundle */
+    figures /*: FiguresBundle */
   ) /*: CreateCircleControllingNodeFn */ =>
   (pos, color) => {
     const { nodeId, node } = nodes.createNode({
@@ -121,10 +121,10 @@ const createCircleControllingNode =
     });
 
     // Create a jot that controls the node
-    const { shapeId, shape } = shapes.createShape({
+    const { figureId, figure } = figures.createFigure({
       type: "jot",
       color,
-      figure: "circle", 
+      shape: "circle", 
       shake: false,
       x: pos.x,
       y: pos.y,
@@ -134,58 +134,58 @@ const createCircleControllingNode =
     // Create lines from this node to all other nodes
     nodes.nodes.forEach((otherNode, otherNodeId) => {
       if (nodeId === otherNodeId) return;
-      createConnectedLine(shapes, nodeId, node, otherNodeId, otherNode);
+      createConnectedLine(figures, nodeId, node, otherNodeId, otherNode);
     });
 
-    // Create the new node that all shapes depend on for position updates
-    node.dependents.set(shapeId, {
+    // Create the new node that all figures depend on for position updates
+    node.dependents.set(figureId, {
       x: "x",
       y: "y",
       color: "color",
     });
 
-    return { nodeId, node, shapeId, shape };
+    return { nodeId, node, figureId, figure };
   };
 
 const createConnectedLine = (
-  shapes /*: ShapesBundle */,
+  figures /*: FiguresBundle */,
   nodeId1 /*: string */,
   node1 /*: Node */,
   nodeId2 /*: string*/,
   node2 /*: Node */
 ) => {
-  const { shape, shapeId } = shapes.createShape({
+  const { figure, figureId } = figures.createFigure({
     type: "line",
     lineType: "short",
     connectedNodeId1: nodeId1,
     connectedNodeId2: nodeId2,
   });
 
-  node1.dependents.set(shapeId, { x: "x2", y: "y2" });
-  node2.dependents.set(shapeId, { x: "x1", y: "y1" });
+  node1.dependents.set(figureId, { x: "x2", y: "y2" });
+  node2.dependents.set(figureId, { x: "x1", y: "y1" });
 
-  return { shape, shapeId };
+  return { figure, figureId };
 };
 
 // Remove node and its dependents
 const removeNodeWithDependents = (
   nodes /*: NodesBundle */,
-  shapes /*: ShapesBundle */
+  figures /*: FiguresBundle */
 ) /*: RemoveNodeWithDependentsFn */ =>
   function remove(nodeId /*: string */) /*: boolean */ {
     const node = nodes.getNode(nodeId);
-    node.dependents.forEach((_attrs, depShapeId) => {
-      if (!shapes.hasShape(depShapeId)) return;
-      const depShape = shapes.getShape(depShapeId);
-      shapes.removeShape(depShapeId);
-      if (depShape.type === "line") {
-        if (nodes.hasNode(depShape.connectedNodeId1)) {
-          const connectedNode = nodes.getNode(depShape.connectedNodeId1);
-          connectedNode.dependents.delete(depShapeId);
+    node.dependents.forEach((_attrs, depFigureId) => {
+      if (!figures.hasFigure(depFigureId)) return;
+      const depFigure = figures.getFigure(depFigureId);
+      figures.removeFigure(depFigureId);
+      if (depFigure.type === "line") {
+        if (nodes.hasNode(depFigure.connectedNodeId1)) {
+          const connectedNode = nodes.getNode(depFigure.connectedNodeId1);
+          connectedNode.dependents.delete(depFigureId);
         }
-        if (nodes.hasNode(depShape.connectedNodeId2)) {
-          const connectedNode = nodes.getNode(depShape.connectedNodeId2);
-          connectedNode.dependents.delete(depShapeId);
+        if (nodes.hasNode(depFigure.connectedNodeId2)) {
+          const connectedNode = nodes.getNode(depFigure.connectedNodeId2);
+          connectedNode.dependents.delete(depFigureId);
         }
       }
     });

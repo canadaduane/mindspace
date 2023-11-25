@@ -20,7 +20,7 @@ type LineProps = {
 }
 */
 
-export function* Line({ shapeId /*: string */ }) {
+export function* Line({ figureId /*: string */ }) {
   let canBump = false;
   let broken = false;
   let brokenRatio = 0;
@@ -39,7 +39,7 @@ export function* Line({ shapeId /*: string */ }) {
       // nothing for now
     },
     onStart: () => {
-      dispatch(this, "selectLine", { shapeId });
+      dispatch(this, "selectLine", { figureId });
     },
     onEnd: () => {
       isDragging = false;
@@ -70,7 +70,7 @@ export function* Line({ shapeId /*: string */ }) {
       length < orbSize + 5
     ) {
       canBump = false;
-      dispatch(this, "bump", { shapeId, lineType: promoteLineType(type) });
+      dispatch(this, "bump", { figureId, lineType: promoteLineType(type) });
     } else if (length > orbSize + 20) {
       canBump = true;
     }
@@ -148,7 +148,7 @@ export function* Line({ shapeId /*: string */ }) {
             isDragging = false;
             broken = false;
             brokenRatio = 0;
-            dispatch(this, "deleteLine", { shapeId });
+            dispatch(this, "deleteLine", { figureId });
           } else {
             this.refresh();
             requestAnimationFrame(incrBrokenRatio);
