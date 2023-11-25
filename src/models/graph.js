@@ -123,8 +123,6 @@ const createCircleControllingNode =
     const { figureId, figure } = figures.createFigure({
       type: "jot",
       color,
-      shape: "circle",
-      shake: false,
       x: pos.x,
       y: pos.y,
       controlsNodeId: nodeId,

@@ -1,5 +1,5 @@
 // @flow
-import { orbSize } from "../constants.js";
+import { jotCircleRadius } from "../constants.js";
 import { Box2 } from "../math/box2.js";
 import { nonNull, makeId } from "../utils.js";
 
@@ -90,7 +90,7 @@ export const findNodeAtPosition =
   (nodes /*: NodesMap */) /*: (pos: Vector2) => Node | void */ => (pos) => {
     for (let [nodeId, node] of nodes.entries()) {
       // $FlowIgnore
-      if (pos.distanceTo(node) <= orbSize / 2) {
+      if (pos.distanceTo(node) <= jotCircleRadius) {
         return node;
       }
     }

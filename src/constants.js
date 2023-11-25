@@ -1,12 +1,11 @@
 // @flow
 
-export const orbSize = 100;
+export const jotCircleRadius = 50;
 export const tapSize = 25;
 export const orbRectWidth = 160;
-export const orbRectHeight = 100;
+export const orbRectHeight = 120;
 export const lineMaxDistance = 230;
 export const lineTransition = 50;
-export const stringLengthTransition = 3;
 export const scrollbarThickness = 30;
 export const pointerIconOffset = 5;
 export const spiralInitial = 2;

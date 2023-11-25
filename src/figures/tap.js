@@ -1,6 +1,6 @@
 import { html } from "../utils.js";
 import { css } from "../styles.js";
-import { tapSize, orbSize } from "../constants.js";
+import { tapSize, jotCircleRadius } from "../constants.js";
 
 /*::
 import type { TapState } from "../figures.js"
@@ -61,7 +61,7 @@ function getSizeFromTapState(tapState /*: TapState */) {
     case "create":
       return tapSize;
     case "creating":
-      return orbSize;
+      return jotCircleRadius * 2;
     case "color":
       return tapSize / 2;
     case "select":

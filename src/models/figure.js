@@ -1,6 +1,6 @@
 // @flow
 import { nanoid } from "nanoid";
-import { orbSize, tapSize } from "../constants.js";
+import { jotCircleRadius, tapSize } from "../constants.js";
 import { Vector2 } from "../math/vector2.js";
 import { nonNull, makeId } from "../utils.js";
 
@@ -9,7 +9,7 @@ import type { Box2 } from "../math/box2.js";
 import { orbRectHeight, orbRectWidth } from "../constants";
 
 // A "jot" is a note that can be in the shape of a circle or rectangle 
-export type JotShape = "circle" | "rectangle";
+export type JotShape = "circle" | "pill" | "rectangle";
 export type JotFigure = {
   type: "jot";
   controlsNodeId: string;
@@ -259,12 +259,12 @@ function setCircleBoundingBox(
 export function setFigureBoundingBox(figure /*: Figure */, target /*: Box2 */) {
   switch (figure.type) {
     case "pop":
-      setCircleBoundingBox(target, figure.x, figure.y, orbSize / 2);
+      setCircleBoundingBox(target, figure.x, figure.y, jotCircleRadius);
       return;
 
     case "jot":
       if (figure.shape === "circle") {
-        setCircleBoundingBox(target, figure.x, figure.y, orbSize / 2);
+        setCircleBoundingBox(target, figure.x, figure.y, jotCircleRadius);
       } else {
         const x = figure.x ?? 0;
         const y = figure.y ?? 0;

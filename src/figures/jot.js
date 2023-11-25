@@ -2,19 +2,25 @@ import { Vector2 } from "../math/vector2.js";
 import { css } from "../styles.js";
 import { dispatch, html, isFirefox } from "../utils.js";
 import { makeDraggable } from "../drag.js";
-import {
-  orbSize,
-  orbRectWidth,
-  orbRectHeight,
-  stringLengthTransition,
-} from "../constants.js";
+import { jotCircleRadius, orbRectWidth, orbRectHeight } from "../constants.js";
 
-export function* Jot({ figureId, controlsNodeId: nodeId, x = 0, y = 0 }) {
+const circleToPillTextLength = 3;
+const pillToRectangleTextLength = 16;
+
+export function* Jot({
+  figureId,
+  controlsNodeId: nodeId,
+  shape,
+  x = 0,
+  y = 0,
+}) {
   const pos = new Vector2(x, y);
 
   let editEl;
   let didDrag = false;
   let content = "";
+  let currentShape = shape;
+  let animateClass = "";
 
   const { start, end, move, touchStart } = makeDraggable(pos, {
     onStart: () => {
@@ -53,12 +59,21 @@ export function* Jot({ figureId, controlsNodeId: nodeId, x = 0, y = 0 }) {
       editEl?.blur();
     }
     content = event.target.innerText.trim();
-    if (content.length <= stringLengthTransition) {
-      dispatch(this, "setJotShape", { figureId, shape: "circle" });
+
+    let newShape;
+    if (content.length <= circleToPillTextLength) {
+      newShape = "circle";
+    } else if (content.length <= pillToRectangleTextLength) {
+      newShape = "pill";
     } else {
-      dispatch(this, "setJotShape", { figureId, shape: "rectangle" });
+      newShape = "rectangle";
     }
-    this.refresh();
+
+    if (newShape !== currentShape) {
+      animateClass = `${currentShape}-to-${newShape}`;
+      dispatch(this, "setJotShape", { figureId, shape: newShape });
+      this.refresh();
+    }
   };
 
   this.schedule(() => setTimeout(() => editEl?.focus(), 50));
@@ -67,23 +82,22 @@ export function* Jot({ figureId, controlsNodeId: nodeId, x = 0, y = 0 }) {
     dispatch(this, "nodeActive", { nodeId });
   };
 
-  for (const { x, y, shape, color, shake } of this) {
+  for (const { shape, x, y, color, shake } of this) {
+    currentShape = shape;
     pos.set(x, y);
 
-    yield html`<!-- circle -->
+    const shapeClasses = [];
+    if (shake) shapeClasses.push("shake");
+    shapeClasses.push(animateClass);
+
+    yield html`<!-- jot -->
       <div
         onpointerdown=${start}
         onpointerup=${end}
         onpointercancel=${end}
         onpointermove=${move}
         ontouchstart=${touchStart}
-        class="circle ${shake && shape === "rectangle"
-          ? "circle--rect-shake"
-          : shape === "rectangle"
-          ? "circle--rect"
-          : shake
-          ? "circle--shake"
-          : ""}"
+        class="jot ${"jot--" + shapeClasses.join("-")}"
         style=${{
           "left": `${pos.x}px`,
           "top": `${pos.y}px`,
@@ -92,7 +106,7 @@ export function* Jot({ figureId, controlsNodeId: nodeId, x = 0, y = 0 }) {
         }}
       >
         <div
-          class="edit ${shape === "circle" && "edit-circle"}"
+          class="edit ${shape === "circle" && "edit-jot"}"
           spellcheck=${shape === "rectangle" ? "true" : "false"}
           contenteditable="true"
           onkeydown=${onKeyDown}
@@ -106,7 +120,7 @@ export function* Jot({ figureId, controlsNodeId: nodeId, x = 0, y = 0 }) {
 
 function styles() {
   css`
-    .circle {
+    .jot {
       position: absolute;
       transform: translate(-50%, -50%);
 
@@ -115,8 +129,8 @@ function styles() {
       outline-style: solid;
       transition: outline-width 200s ease-in-out, outline-color 600ms linear;
 
-      width: ${orbSize}px;
-      height: ${orbSize}px;
+      width: ${jotCircleRadius * 2}px;
+      height: ${jotCircleRadius * 2}px;
       color: var(--brightText);
       background-color: var(--defaultOrbFill);
 
@@ -127,20 +141,20 @@ function styles() {
       overflow-y: auto;
       cursor: default;
     }
-    .circle:focus-within {
+    .jot:focus-within {
       outline-width: 9px;
       transition: outline-width 0.15s ease-in-out;
     }
-    .circle .edit {
+    .jot .edit {
       padding: 8px;
       flex-grow: 1;
       margin: auto;
       text-align: center;
     }
-    .circle .edit:focus-visible {
+    .jot .edit:focus-visible {
       outline: 0;
     }
-    .circle .edit.edit-circle {
+    .jot .edit.edit-jot {
       font-size: 48px;
       line-height: 48px;
       margin-bottom: 14px;
@@ -148,26 +162,102 @@ function styles() {
       white-space: nowrap;
     }
 
-    .circle--rect {
-      animation: circle--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
+    .jot--shake- {
+      /* prettier-ignore */
+      animation:
+        jot--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
     }
-    .circle--shake {
-      animation: circle--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    .jot--circle-to-pill {
+      /* prettier-ignore */
+      animation:
+        jot--circle-to-pill 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
     }
-    .circle--rect-shake {
-      animation: circle--rect 0.3s cubic-bezier(0.6, 0, 1, 1) forwards,
-        circle--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    .jot--shake-circle-to-pill {
+      /* prettier-ignore */
+      animation:
+        jot--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both,
+        jot--circle-to-pill 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
     }
-    @keyframes circle--rect {
+    .jot--pill-to-circle {
+      /* prettier-ignore */
+      animation:
+        jot--pill-to-circle 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
+    }
+    .jot--shake-pill-to-circle {
+      /* prettier-ignore */
+      animation:
+        jot--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both,
+        jot--pill-to-circle 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
+    }
+    .jot--pill-to-rectangle {
+      /* prettier-ignore */
+      animation:
+        jot--pill-to-rectangle 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
+    }
+    .jot--shake-pill-to-rectangle {
+      /* prettier-ignore */
+      animation:
+        jot--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both,
+        jot--pill-to-rectangle 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
+    }
+    .jot--rectangle-to-pill {
+      /* prettier-ignore */
+      animation:
+        jot--rectangle-to-pill 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
+    }
+    .jot--shake-rectangle-to-pill {
+      /* prettier-ignore */
+      animation:
+        jot--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both,
+        jot--rectangle-to-pill 0.3s cubic-bezier(0.6, 0, 1, 1) forwards;
+    }
+
+    @keyframes jot--circle-to-pill {
       0% {
         border-radius: 100%;
-        width: ${orbSize}px;
-        height: ${orbSize}px;
+        width: ${jotCircleRadius * 2}px;
+        height: ${jotCircleRadius * 2}px;
+      }
+      40% {
+        border-radius: ${jotCircleRadius * 2}px;
+        width: ${jotCircleRadius * 2}px;
+        height: ${jotCircleRadius * 2}px;
+      }
+      100% {
+        border-radius: ${jotCircleRadius * 2}px;
+        width: ${orbRectWidth}px;
+        height: ${jotCircleRadius * 2}px;
+      }
+    }
+
+    @keyframes jot--pill-to-circle {
+      0% {
+        border-radius: ${jotCircleRadius * 2}px;
+        width: ${orbRectWidth}px;
+        height: ${jotCircleRadius * 2}px;
+      }
+      40% {
+        border-radius: ${jotCircleRadius * 2}px;
+        width: ${jotCircleRadius * 2}px;
+        height: ${jotCircleRadius * 2}px;
+      }
+      100% {
+        border-radius: 100%;
+        width: ${jotCircleRadius * 2}px;
+        height: ${jotCircleRadius * 2}px;
+      }
+    }
+
+    @keyframes jot--pill-to-rectangle {
+      0% {
+        border-radius: ${jotCircleRadius * 2}px;
+        width: ${orbRectWidth}px;
+        height: ${jotCircleRadius * 2}px;
       }
       40% {
         border-radius: 9px;
-        width: ${orbSize}px;
-        height: ${orbSize}px;
+        width: ${orbRectWidth}px;
+        height: ${jotCircleRadius * 2}px;
       }
       100% {
         border-radius: 9px;
@@ -176,7 +266,25 @@ function styles() {
       }
     }
 
-    @keyframes circle--shake {
+    @keyframes jot--rectangle-to-pill {
+      0% {
+        border-radius: 9px;
+        width: ${orbRectWidth}px;
+        height: ${orbRectHeight}px;
+      }
+      40% {
+        border-radius: ${jotCircleRadius * 2}px;
+        width: ${orbRectWidth}px;
+        height: ${jotCircleRadius * 2}px;
+      }
+      100% {
+        border-radius: ${jotCircleRadius * 2}px;
+        width: ${orbRectWidth}px;
+        height: ${jotCircleRadius * 2}px;
+      }
+    }
+
+    @keyframes jot--shake {
       10%,
       90% {
         transform: translate(-51%, -50%);
@@ -204,10 +312,10 @@ function styles() {
     css`
       /* CSS hackery to get around bug where contenteditable with
            centered text does not show caret in correct position */
-      .circle .edit:focus:empty {
+      .jot .edit:focus:empty {
         caret-color: transparent;
       }
-      .circle .edit:focus:empty::after {
+      .jot .edit:focus:empty::after {
         content: "";
         display: inline-block;
         width: 3.5px;
@@ -218,7 +326,7 @@ function styles() {
         opacity: 1;
         animation: blink 1.2s steps(2, jump-none) reverse infinite;
       }
-      .circle .edit:focus::after {
+      .jot .edit:focus::after {
         display: none;
       }
     `;

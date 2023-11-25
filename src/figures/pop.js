@@ -1,12 +1,12 @@
 import { isSyncExecuting, dispatch, svg } from "../utils.js";
-import { orbSize } from "../constants.js";
+import { jotCircleRadius } from "../constants.js";
 
 export function* Pop({ figureId, x, y, theta, color }) {
   let gapGrowthRate = 0;
   let gap = 0;
   let thickness = 3;
 
-  let r = orbSize / 2 + 15;
+  let r = jotCircleRadius + 15;
 
   let animating = true;
 

@@ -5,7 +5,11 @@ import {
   distanceFromPointToLine,
   normalizedOrthogonalVectorToPointOnLine,
 } from "../math/trig.js";
-import { lineMaxDistance, lineTransition, orbSize } from "../constants.js";
+import {
+  lineMaxDistance,
+  lineTransition,
+  jotCircleRadius,
+} from "../constants.js";
 import { makeDraggable } from "../drag.js";
 
 const opacityThreshold = 0.001;
@@ -67,11 +71,11 @@ export function* Line({ figureId /*: string */ }) {
     if (
       canBump &&
       (type === "deleted" || type === "short") &&
-      length < orbSize + 5
+      length < jotCircleRadius * 2 + 5
     ) {
       canBump = false;
       dispatch(this, "bump", { figureId, lineType: promoteLineType(type) });
-    } else if (length > orbSize + 20) {
+    } else if (length > jotCircleRadius * 2 + 20) {
       canBump = true;
     }
 
@@ -107,7 +111,7 @@ export function* Line({ figureId /*: string */ }) {
     }
 
     if (type === "deleted" || type === "short") {
-      const s = squash((orbSize + 20 - length) / lineTransition);
+      const s = squash((jotCircleRadius * 2 + 20 - length) / lineTransition);
       nearIndicator = {
         opacity: s,
         strokeWidth: s * 30,
@@ -174,7 +178,7 @@ export function* Line({ figureId /*: string */ }) {
               ? "rgba(240, 240, 240, 0.1)"
               : "rgba(0, 0, 0, 0.01)"
           } 
-          stroke-width=${(orbSize * 2) / 3}
+          stroke-width=${(jotCircleRadius * 4) / 3}
         />
         ${
           line &&
