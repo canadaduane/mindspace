@@ -6,6 +6,7 @@ import { Vector2 } from "../math/vector2.js";
 /*::
 import type { Node } from "./node.js";
 import type { Box2 } from "../math/box2.js";
+import { orbRectHeight, orbRectWidth } from "../constants";
 
 export type FigureInitial = Figure & { figureId: string };
 
@@ -14,7 +15,7 @@ export type Figure =
       // A "jot" is a note that can be in the shape of a circle or rectangle 
       type: "jot";
       controlsNodeId: string;
-      shape: JotShape; 
+      shape: JotShape;
       color?: string;
       shake?: boolean;
       x?: number;
@@ -86,14 +87,16 @@ export const createFigure =
   };
 
 export const getFigure =
-  (figures /*: FiguresMap */) /*: (figureId: string) => Figure */ => (figureId) => {
+  (figures /*: FiguresMap */) /*: (figureId: string) => Figure */ =>
+  (figureId) => {
     const figure = figures.get(figureId);
     if (!figure) throw new Error(`can't get figure ${figureId}`);
     return figure;
   };
 
 export const hasFigure =
-  (figures /*: FiguresMap */) /*: (figureId: string) => boolean */ => (figureId) =>
+  (figures /*: FiguresMap */) /*: (figureId: string) => boolean */ =>
+  (figureId) =>
     figures.has(figureId);
 
 export const setFigure =
@@ -104,7 +107,8 @@ export const setFigure =
     figures.set(figureId, figure);
 
 export const removeFigure =
-  (figures /*: FiguresMap */) /*: (figureId: string) => boolean */ => (figureId) =>
+  (figures /*: FiguresMap */) /*: (figureId: string) => boolean */ =>
+  (figureId) =>
     figures.delete(figureId);
 
 export const setLineType =
@@ -137,21 +141,39 @@ export function setFigureValues(
 
 const p = new Vector2();
 
-export function getFigureBoundingBox(figure /*: Figure */, target /*: Box2 */) {
+function setCircleBoundingBox(
+  target /*: Box2 */,
+  x /*: number | void */,
+  y /*: number | void */,
+  r /*: number */
+) {
+  const x_ = x ?? 0;
+  const y_ = y ?? 0;
+
+  target.min.set(x_ - r, y_ - r);
+  target.max.set(x_ + r, y_ + r);
+}
+
+export function setFigureBoundingBox(figure /*: Figure */, target /*: Box2 */) {
   switch (figure.type) {
     case "pop":
-    case "jot": {
-      const x = figure.x ?? 0;
-      const y = figure.y ?? 0;
-      const r = orbSize / 2;
-
-      target.min.set(x - r, y - r);
-      target.max.set(x + r, y + r);
-
+      setCircleBoundingBox(target, figure.x, figure.y, orbSize / 2);
       return;
-    }
 
-    case "line": {
+    case "jot":
+      if (figure.shape === "circle") {
+        setCircleBoundingBox(target, figure.x, figure.y, orbSize / 2);
+      } else {
+        const x = figure.x ?? 0;
+        const y = figure.y ?? 0;
+        const wHalf = orbRectWidth / 2;
+        const hHalf = orbRectHeight / 2;
+        target.min.set(x - wHalf, y - hHalf);
+        target.max.set(x + wHalf, y + hHalf);
+      }
+      return;
+
+    case "line":
       p.set(figure.x1 ?? 0, figure.y1 ?? 0);
       target.expandByPoint(p);
 
@@ -159,18 +181,10 @@ export function getFigureBoundingBox(figure /*: Figure */, target /*: Box2 */) {
       target.expandByPoint(p);
 
       return;
-    }
 
-    case "tap": {
-      const x = figure.x ?? 0;
-      const y = figure.y ?? 0;
-      const r = tapSize / 2;
-
-      target.min.set(x - r, y - r);
-      target.max.set(x + r, y + r);
-
+    case "tap":
+      setCircleBoundingBox(target, figure.x, figure.y, tapSize / 2);
       return;
-    }
   }
 }
 
