@@ -44,41 +44,52 @@ export function makeNodesMap(
   );
 }
 
-export const createNode =
-  (
-    nodes /*: NodesMap */
-  ) /*: (initNode: NodeConstructor) => { nodeId: string, node: Node } */ =>
-  ({ nodeId, ...initNode }) => {
-    const newNodeId = makeId(nodeId);
-    const newNode = constructNode(initNode);
-    setNode(nodes)(newNodeId, newNode);
-    return { nodeId: newNodeId, node: newNode };
-  };
+function createNode(
+  nodes /*: NodesMap */,
+  { nodeId, ...initNode } /*: NodeConstructor */
+) /*: { nodeId: string, node: Node } */ {
+  const newNodeId = makeId(nodeId);
+  const newNode = constructNode(initNode);
+  setNode(nodes, newNodeId, newNode);
+  return { nodeId: newNodeId, node: newNode };
+}
 
-export const getNode_ =
-  (nodes /*: NodesMap */) /*: (nodeId: string) => ?Node */ => (nodeId) =>
-    nodes.get(nodeId);
+function getNode_(nodes /*: NodesMap */, nodeId /*: string */) /*: ?Node */ {
+  return nodes.get(nodeId);
+}
 
-export const getNode =
-  (nodes /*: NodesMap */) /*: (nodeId: string) => Node */ => (nodeId) =>
-    nonNull(nodes.get(nodeId), "null nodeId");
+function getNode(nodes /*: NodesMap */, nodeId /*: string */) /*: Node */ {
+  return nonNull(nodes.get(nodeId), "null nodeId");
+}
 
-export const setNode =
-  (nodes /*: NodesMap */) /*: (nodeId: string, node: Node) => NodesMap */ =>
-  (nodeId, node) =>
-    nodes.set(nodeId, node);
+function setNode(
+  nodes /*: NodesMap */,
+  nodeId /*: string */,
+  node /*: Node */
+) /*: NodesMap */ {
+  return nodes.set(nodeId, node);
+}
 
-export const hasNode =
-  (nodes /*: NodesMap */) /*: (nodeId: string) => boolean */ => (nodeId) =>
-    nodes.has(nodeId);
+function hasNode(nodes /*: NodesMap */, nodeId /*: string */) /*: boolean */ {
+  return nodes.has(nodeId);
+}
 
-export const deleteNode =
-  (nodes /*: NodesMap */) /*: (nodeId: string) => boolean */ => (nodeId) =>
-    nodes.delete(nodeId);
+function deleteNode(
+  nodes /*: NodesMap */,
+  nodeId /*: string */
+) /*: boolean */ {
+  return nodes.delete(nodeId);
+}
 
-export function setNodeValues(node /*: Node */, values /*: any */) /*: Node */ {
-  Object.assign(node, values);
-  return node;
+function updateNode(
+  nodes /*: NodesMap */,
+  nodeId /*: string */,
+  attrs /*: Partial<Node> */
+) /*: Node */ {
+  const node = getNode(nodes, nodeId);
+  const updated = { ...node, ...attrs };
+  nodes.set(nodeId, updated);
+  return updated;
 }
 
 export const findNodeAtPosition =
@@ -95,12 +106,13 @@ export const findNodeAtPosition =
 export type NodesBundle = {
   nodes: NodesMap,
 
-  createNode: ReturnType<typeof createNode>,
-  getNode_: ReturnType<typeof getNode_>,
-  getNode: ReturnType<typeof getNode>,
-  hasNode: ReturnType<typeof hasNode>,
-  setNode: ReturnType<typeof setNode>,
-  deleteNode: ReturnType<typeof deleteNode>,
+  createNode: (node: NodeConstructor) => { nodeId: string, node: Node },
+  getNode_: (nodeId: string) => ?Node,
+  getNode: (nodeId: string) => Node,
+  hasNode: (nodeId: string) => boolean,
+  setNode:(nodeId: string, node: Node) => NodesMap, 
+  updateNode:(nodeId: string, node: Partial<Node>) => Node, 
+  deleteNode: (nodeId: string) => boolean,
   findNodeAtPosition: ReturnType<typeof findNodeAtPosition> 
 }
 */
@@ -113,12 +125,13 @@ export function makeNodes(
   return {
     nodes,
 
-    createNode: createNode(nodes),
-    getNode_: getNode_(nodes), // can return null
-    getNode: getNode(nodes),
-    hasNode: hasNode(nodes),
-    setNode: setNode(nodes),
-    deleteNode: deleteNode(nodes),
+    createNode: (node) => createNode(nodes, node),
+    getNode_: (nodeId) => getNode_(nodes, nodeId),
+    getNode: (nodeId) => getNode(nodes, nodeId),
+    hasNode: (nodeId) => hasNode(nodes, nodeId),
+    setNode: (nodeId, node) => setNode(nodes, nodeId, node),
+    updateNode: (nodeId, attrs) => updateNode(nodes, nodeId, attrs),
+    deleteNode: (nodeId) => deleteNode(nodes, nodeId),
     findNodeAtPosition: findNodeAtPosition(nodes),
   };
 }

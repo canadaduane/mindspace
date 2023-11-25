@@ -11,7 +11,6 @@ import {
   rainbowBorderThickness,
 } from "./constants.js";
 import { makeGraph } from "./models/graph.js";
-import { setNodeValues } from "./models/node.js";
 import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
 import { makeDraggable } from "./drag.js";
 import { figuresMapToComponents } from "./figures/index.js";
@@ -159,8 +158,7 @@ function* Svg(
   });
 
   this.addEventListener("createNode", ({ detail: { nodeId } }) => {
-    const node = graph.getNode(nodeId);
-    createNodeAroundNode(node);
+    createNodeAroundNode(nodeId);
   });
 
   const onKeyDown = (event /*: KeyboardEvent */) => {
@@ -168,7 +166,7 @@ function* Svg(
 
     if (event.key === "Enter") {
       if (graph.hasNode(mostRecentlyActiveNodeId)) {
-        createNodeAroundNode(graph.getNode(mostRecentlyActiveNodeId));
+        createNodeAroundNode(mostRecentlyActiveNodeId);
       } else {
         createCircleUI(window.innerWidth, window.innerHeight);
       }
@@ -385,7 +383,8 @@ function* Svg(
   };
 
   // Approximate Archimedean Spiral
-  const createNodeAroundNode = (node /*: Node */) => {
+  const createNodeAroundNode = (nodeId /*: string */) => {
+    const node = graph.getNode(nodeId);
     const { x: cx, y: cy } = node;
     if (node.spiral === undefined) node.spiral = spiralInitial;
 
@@ -393,13 +392,13 @@ function* Svg(
     const x = cx + Math.cos(r) * spiralRadius;
     const y = cy + Math.sin(r) * spiralRadius;
 
-    const { nodeId } = createCircleUI(x, y);
-    const createdNode = graph.getNode(nodeId);
+    const { nodeId: createdNodeId } = createCircleUI(x, y);
+
     // Pass the spirality on to the next node
-    setNodeValues(createdNode, { spiral: node.spiral + spiralAddend });
+    graph.updateNode(createdNodeId, { spiral: node.spiral + spiralAddend });
 
     // When revisiting this node, set the spiral to start in a new direction
-    setNodeValues(node, { spiral: node.spiral + spiralAddend + 5 });
+    graph.updateNode(nodeId, { spiral: node.spiral + spiralAddend + 5 });
   };
 
   try {

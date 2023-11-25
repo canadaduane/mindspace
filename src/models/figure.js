@@ -1,12 +1,16 @@
 // @flow
-import { jotCircleRadius, tapRadius } from "../constants.js";
+
+import {
+  jotCircleRadius,
+  jotRectangleWidth,
+  jotRectangleHeight,
+  tapRadius,
+} from "../constants.js";
 import { Vector2 } from "../math/vector2.js";
 import { Box2 } from "../math/box2.js";
 import { nonNull, makeId } from "../utils.js";
 
 /*::
-import { jotRectangleHeight, jotRectangleWidth } from "../constants";
-
 type JotBase = {
   bbox: Box2; // Cached bounding box for this figure
 }
