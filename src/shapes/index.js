@@ -1,7 +1,7 @@
 // @flow
 import { createElement } from "@b9g/crank/standalone";
 
-import { Circle } from "./circle.js";
+import { Jot } from "./jot.js";
 import { Line } from "./line.js";
 import { Pop } from "./pop.js";
 import { Tap } from "./tap.js";
@@ -11,7 +11,7 @@ import type { Shape, ShapesMap } from "../models/shape";
 */
 
 const directory /*: Record<Shape["type"], ["html" | "svg", any]> */ = {
-  circle: ["html", Circle],
+  jot: ["html", Jot],
   tap: ["html", Tap],
   pop: ["svg", Pop],
   line: ["svg", Line],

@@ -80,7 +80,7 @@ export const getShapesConnectedToLineShapeId =
         if (depShapeId === shapeId) return;
 
         const shape = shapes.getShape(depShapeId);
-        if (shape && shape.type === "circle") {
+        if (shape && shape.type === "jot") {
           connectedShapes.push(shape);
         }
       });
@@ -120,9 +120,9 @@ const createCircleControllingNode =
       spiral: 0,
     });
 
-    // Create a circle that controls the node
+    // Create a jot that controls the node
     const { shapeId, shape } = shapes.createShape({
-      type: "circle",
+      type: "jot",
       color,
       shake: false,
       x: pos.x,

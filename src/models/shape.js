@@ -1,17 +1,18 @@
 // @flow
 import { nanoid } from "nanoid";
-import { orbSize, tapSize } from "../constants";
+import { orbSize, tapSize } from "../constants.js";
+import { Vector2 } from "../math/vector2.js";
 
 /*::
 import type { Node } from "./node.js";
-import type { Box2 } from "../math/box2";
-import { Vector2 } from "../math/vector2";
+import type { Box2 } from "../math/box2.js";
 
 export type ShapeInitial = Shape & { shapeId: string };
 
 export type Shape =
   | {
-      type: "circle";
+      // A "jot" is a note that can be in the shape of a circle or rectangle 
+      type: "jot";
       controlsNodeId: string;
       color?: string;
       shake?: boolean;
@@ -19,6 +20,7 @@ export type Shape =
       y?: number;
     }
   | {
+      // A "line" connects two jots 
       type: "line";
       lineType: LineType;
       connectedNodeId1: string;
@@ -31,12 +33,14 @@ export type Shape =
       y2?: number;
     }
   | {
+      // A "pop" is a popping animation to indicate a jot-circle is destroyed
       type: "pop";
       color?: string;
       x?: number;
       y?: number;
     }
   | {
+      // A "tap" is a transient tap or double tap indicator
       type: "tap";
       tapState: TapState;
       color?: string; 
@@ -133,7 +137,7 @@ const p = new Vector2();
 export function getShapeBoundingBox(shape /*: Shape */, target /*: Box2 */) {
   switch (shape.type) {
     case "pop":
-    case "circle": {
+    case "jot": {
       const x = shape.x ?? 0;
       const y = shape.y ?? 0;
       const r = orbSize / 2;

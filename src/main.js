@@ -99,7 +99,7 @@ function* Svg(
 
   this.addEventListener("destroyShape", ({ detail: { shapeId } }) => {
     const shape = graph.getShape(shapeId);
-    if (shape.type === "circle") {
+    if (shape.type === "jot") {
       graph.removeNodeWithDependents(shape.controlsNodeId);
       this.refresh();
     } else if (graph.removeShape(shapeId)) {
@@ -128,7 +128,7 @@ function* Svg(
     if (shape) {
       const connectedShapes = graph.getShapesConnectedToLineShapeId(shapeId);
       connectedShapes.forEach((s) => {
-        if (s.type === "circle") {
+        if (s.type === "jot") {
           s.shake = true;
         }
       });
@@ -150,7 +150,7 @@ function* Svg(
 
       setTimeout(() => {
         connectedShapes.forEach((s) => {
-          if (s.type === "circle") {
+          if (s.type === "jot") {
             s.shake = false;
           }
         });
@@ -296,13 +296,13 @@ function* Svg(
       },
       onEnd: ({ x, y }) => {
         if (dragColor) {
-          const circleColor = dragColor;
+          const jotColor = dragColor;
           removeTap(false).then(() => {
             const node = graph.findNodeAtPosition(new Vector2(x, y));
             if (node) {
-              node.color = circleColor;
+              node.color = jotColor;
             } else {
-              createCircleUI(x, y, circleColor);
+              createCircleUI(x, y, jotColor);
             }
             this.refresh();
           });

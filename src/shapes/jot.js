@@ -9,7 +9,7 @@ import {
   stringLengthTransition,
 } from "../constants.js";
 
-export function* Circle({ controlsNodeId: nodeId, x = 0, y = 0 }) {
+export function* Jot({ controlsNodeId: nodeId, x = 0, y = 0 }) {
   const pos = new Vector2(x, y);
 
   let editEl;
