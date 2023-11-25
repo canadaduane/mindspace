@@ -1,16 +1,20 @@
 // @flow
-import { nanoid } from "nanoid";
 import { jotCircleRadius, tapRadius } from "../constants.js";
 import { Vector2 } from "../math/vector2.js";
+import { Box2 } from "../math/box2.js";
 import { nonNull, makeId } from "../utils.js";
 
 /*::
-import type { Box2 } from "../math/box2.js";
 import { jotRectangleHeight, jotRectangleWidth } from "../constants";
+
+type JotBase = {
+  bbox: Box2; // Cached bounding box for this figure
+}
+    // bbox: new Box2(),
 
 // A "jot" is a note that can be in the shape of a circle or rectangle 
 export type JotShape = "circle" | "pill" | "rectangle";
-export type JotFigure = {
+export type JotFigure = { 
   type: "jot";
   controlsNodeId: string;
   shape: JotShape;
@@ -19,6 +23,7 @@ export type JotFigure = {
   shake: boolean;
   x: number;
   y: number;
+  ...JotBase;
 }
 export type JotFigureConstructor = {
   type: "jot";
@@ -40,6 +45,7 @@ export type LineFigure = {
   y1: number;
   x2: number;
   y2: number;
+  ...JotBase;
 }
 export type LineFigureConstructor = {
   type: "line";
@@ -54,6 +60,7 @@ export type PopFigure = {
   color: string;
   x: number;
   y: number;
+  ...JotBase;
 };
 export type PopFigureConstructor = {
   type: "pop";
@@ -70,6 +77,7 @@ export type TapFigure = {
   color: string; 
   x: number;
   y: number;
+  ...JotBase;
 };
 export type TapFigureConstructor = {
   type: "tap";
@@ -104,6 +112,7 @@ export const constructJotFigure = (
     shake: false,
     x: 0,
     y: 0,
+    bbox: new Box2(),
   },
   ...params,
 });
@@ -119,6 +128,7 @@ export const constructLineFigure = (
     y1: 0,
     x2: 0,
     y2: 0,
+    bbox: new Box2(),
   },
   ...params,
 });
@@ -131,6 +141,7 @@ export const constructPopFigure = (
     color: "white",
     x: 0,
     y: 0,
+    bbox: new Box2(),
   },
   ...params,
 });
@@ -143,6 +154,7 @@ export const constructTapFigure = (
     color: "white",
     x: 0,
     y: 0,
+    bbox: new Box2(),
   },
   ...params,
 });
@@ -256,7 +268,9 @@ function setCircleBoundingBox(
   target.max.set(x_ + r, y_ + r);
 }
 
-export function setFigureBoundingBox(figure /*: Figure */, target /*: Box2 */) {
+export function updateFigureBoundingBox(figure /*: Figure */) {
+  const target = figure.bbox;
+
   switch (figure.type) {
     case "pop":
       setCircleBoundingBox(target, figure.x, figure.y, jotCircleRadius);

@@ -15,7 +15,6 @@ export type NodeConstructor = {
 export type Node = {
   x: number; // The global X coordinate for this node
   y: number; // The global Y coordinate for this node
-  bbox: Box2; // Cached bounding box for this node, including all figure dependents
   color: string; // The color chosen for this node
   spiral: number; // A number that stores the "spiral step" for new nodes
   dependents: Map<string, DependentFigureAttrs>; // A map of dependent figures' attributes
@@ -31,7 +30,6 @@ export const constructNode = (
 ) /*: Node */ => ({
   ...{
     // Default values
-    bbox: new Box2(),
     color: "white",
     spiral: 0,
     dependents: new Map(),
