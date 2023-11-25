@@ -196,10 +196,10 @@ function* Svg(
 
   document.body?.addEventListener("keydown", onKeyDown);
 
-  let tapFigureId /*: string | void */;
-  let singleClickTimeout /*: TimeoutID | void */;
-  let singleTapPos /*: Vector2 | void */;
-  let dragColor /*: string | void */;
+  let tapFigureId /*: ?string */;
+  let singleClickTimeout /*: ?TimeoutID */;
+  let singleTapPos /*: ?Vector2 */;
+  let dragColor /*: ?string */;
 
   const doubleTapMs = 500;
   let isDoubleTap = false;
@@ -357,7 +357,7 @@ function* Svg(
     figure.selected = true;
   };
 
-  const getColorFromNearestNode = (p /*: Vector2 */) /*: string | void */ => {
+  const getColorFromNearestNode = (p /*: Vector2 */) /*: ?string */ => {
     const sorted = [...graph.nodes.values()].sort(
       (a, b) =>
         p.distanceTo(new Vector2(a.x, a.y)) -
@@ -372,7 +372,7 @@ function* Svg(
   const createCircleUI = (
     x /*: number */,
     y /*: number */,
-    colorOverride /*: string | void */
+    colorOverride /*: ?string */
   ) => {
     const p = new Vector2(x, y);
     const color =

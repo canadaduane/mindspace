@@ -57,7 +57,7 @@ export const createNode =
   };
 
 export const getNode_ =
-  (nodes /*: NodesMap */) /*: (nodeId: string) => Node | void */ => (nodeId) =>
+  (nodes /*: NodesMap */) /*: (nodeId: string) => ?Node */ => (nodeId) =>
     nodes.get(nodeId);
 
 export const getNode =
@@ -83,7 +83,7 @@ export function setNodeValues(node /*: Node */, values /*: any */) /*: Node */ {
 }
 
 export const findNodeAtPosition =
-  (nodes /*: NodesMap */) /*: (pos: Vector2) => Node | void */ => (pos) => {
+  (nodes /*: NodesMap */) /*: (pos: Vector2) => ?Node */ => (pos) => {
     for (let [nodeId, node] of nodes.entries()) {
       // $FlowIgnore
       if (pos.distanceTo(node) <= jotCircleRadius) {

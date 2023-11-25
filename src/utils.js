@@ -70,7 +70,7 @@ type Side = {
 export function closestSide(
   pos /*: Vector2 */,
   size /*: Vector2 */,
-  discard /*: Side["side"] | void */
+  discard /*: ?Side["side"] */
 ) /*: Side */ {
   const sides = [];
   if (discard !== "top") sides.push({ side: "top", distance: pos.y });

@@ -335,8 +335,8 @@ function updateTap(
 const p = new Vector2();
 function setCircleBoundingBox(
   target /*: Box2 */,
-  x /*: number | void */,
-  y /*: number | void */,
+  x /*: ?number */,
+  y /*: ?number */,
   r /*: number */
 ) {
   const x_ = x ?? 0;
