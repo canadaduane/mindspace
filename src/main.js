@@ -1,7 +1,7 @@
 // @flow
 
 import { renderer } from "@b9g/crank/dom";
-import { html, closestSide, hasTagName } from "./utils.js";
+import { html, closestSide, hasTagName, nonNull } from "./utils.js";
 import { Vector2 } from "./math/vector2.js";
 import { Box2 } from "./math/box2.js";
 import {
@@ -21,7 +21,7 @@ import { tapAnimationMs } from "./figures/tap.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 
 /*::
-import type { Node, NodeInitial } from "./models/node";
+import type { Node, ConstructorNode } from "./models/node";
 import type { Figure, FigureInitial } from "./models/figure";
 */
 
@@ -30,7 +30,7 @@ function* Svg(
   {
     nodes: initNodes = [],
     figures: initFigures = [],
-  } /*: { nodes: NodeInitial[], figures: FigureInitial[] } */
+  } /*: { nodes: ConstructorNode[], figures: FigureInitial[] } */
 ) {
   let graph = makeGraph({ nodes: initNodes, figures: initFigures });
   window.graph = graph;
@@ -142,18 +142,13 @@ function* Svg(
 
       // Once we convert to strong lines via bump, delete all short lines
       const node = graph.getNode(controlledNodeId);
-      if (node) {
-        node.dependents.forEach((attrs, depFigureId) => {
-          const depFigure = graph.getFigure(depFigureId);
-          if (
-            depFigure &&
-            depFigure.type === "line" &&
-            depFigure.lineType === "short"
-          ) {
-            depFigure.lineType = "deleted";
-          }
-        });
-      }
+
+      node.dependents.forEach((attrs, depFigureId) => {
+        const depFigure = graph.getFigure(depFigureId);
+        if (depFigure.type === "line" && depFigure.lineType === "short") {
+          depFigure.lineType = "deleted";
+        }
+      });
 
       setTimeout(() => {
         connectedFigures.forEach((s) => {
@@ -174,16 +169,19 @@ function* Svg(
   );
 
   this.addEventListener("createNode", ({ detail: { nodeId } }) => {
-    createNodeAroundNode(graph.getNode(nodeId));
+    const node = graph.getNode(nodeId);
+    createNodeAroundNode(node);
   });
 
   const onKeyDown = (event /*: KeyboardEvent */) => {
     if (!hasTagName(event.target, "body")) return;
 
     if (event.key === "Enter") {
-      if (graph.hasNode(mostRecentlyActiveNodeId))
+      if (graph.hasNode(mostRecentlyActiveNodeId)) {
         createNodeAroundNode(graph.getNode(mostRecentlyActiveNodeId));
-      else createCircleUI(window.innerWidth, window.innerHeight);
+      } else {
+        createCircleUI(window.innerWidth, window.innerHeight);
+      }
     } else if (event.key === "Backspace" || event.key === "Delete") {
       if (selectedLineFigureId) {
         const lineFigure = graph.getFigure(selectedLineFigureId);
@@ -356,8 +354,7 @@ function* Svg(
   const unselectSelectedLine = () => {
     if (selectedLineFigureId) {
       const figure = graph.getFigure(selectedLineFigureId);
-      if (!figure || figure.type !== "line")
-        throw new Error("can't unselect figure");
+      if (figure.type !== "line") throw new Error("can't unselect figure");
       figure.selected = false;
       selectedLineFigureId = null;
     }
@@ -367,8 +364,7 @@ function* Svg(
     unselectSelectedLine();
     selectedLineFigureId = figureId;
     const figure = graph.getFigure(selectedLineFigureId);
-    if (!figure || figure.type !== "line")
-      throw new Error("can't select figure");
+    if (figure.type !== "line") throw new Error("can't select figure");
     figure.selected = true;
   };
 

@@ -2,6 +2,7 @@
 import { nanoid } from "nanoid";
 import { orbSize } from "../constants.js";
 import { Box2 } from "../math/box2.js";
+import { nonNull } from "../utils.js";
 
 /*::
 import { Vector2 } from "../math/vector2.js";
@@ -63,12 +64,13 @@ export const createNode =
     return { nodeId: newNodeId, node: newNode };
   };
 
+export const getNode_ =
+  (nodes /*: NodesMap */) /*: (nodeId: string) => Node | void */ => (nodeId) =>
+    nodes.get(nodeId);
+
 export const getNode =
-  (nodes /*: NodesMap */) /*: (nodeId: string) => Node */ => (nodeId) => {
-    const node = nodes.get(nodeId);
-    if (!node) throw new Error(`can't get node ${nodeId}`);
-    return node;
-  };
+  (nodes /*: NodesMap */) /*: (nodeId: string) => Node */ => (nodeId) =>
+    nonNull(nodes.get(nodeId), "null nodeId");
 
 export const setNode =
   (nodes /*: NodesMap */) /*: (nodeId: string, node: Node) => NodesMap */ =>
@@ -105,6 +107,7 @@ export type NodesBundle = {
   nodes: NodesMap,
 
   createNode: ReturnType<typeof createNode>,
+  getNode_: ReturnType<typeof getNode_>,
   getNode: ReturnType<typeof getNode>,
   hasNode: ReturnType<typeof hasNode>,
   setNode: ReturnType<typeof setNode>,
@@ -122,6 +125,7 @@ export function makeNodes(
     nodes,
 
     createNode: createNode(nodes),
+    getNode_: getNode_(nodes), // can return null
     getNode: getNode(nodes),
     hasNode: hasNode(nodes),
     setNode: setNode(nodes),

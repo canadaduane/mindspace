@@ -99,3 +99,11 @@ export function hasTagName /*:: <K: $Keys<HTMLElementTagNameMap>> */(
     el.tagName.toLowerCase() === tagName.toLowerCase()
   );
 }
+
+export function nonNull /*:: <T> */(
+  value /*: ?T */,
+  errorMessage /*: string */
+) /*: T */ {
+  if (value == null) throw new Error(errorMessage);
+  return value;
+}

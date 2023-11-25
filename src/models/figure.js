@@ -2,6 +2,7 @@
 import { nanoid } from "nanoid";
 import { orbSize, tapSize } from "../constants.js";
 import { Vector2 } from "../math/vector2.js";
+import { nonNull } from "../utils.js";
 
 /*::
 import type { Node } from "./node.js";
@@ -87,13 +88,15 @@ export const createFigure =
     return { figureId, figure };
   };
 
+export const getFigure_ =
+  (figures /*: FiguresMap */) /*: (figureId: string) => Figure | void */ =>
+  (figureId) =>
+    figures.get(figureId);
+
 export const getFigure =
   (figures /*: FiguresMap */) /*: (figureId: string) => Figure */ =>
-  (figureId) => {
-    const figure = figures.get(figureId);
-    if (!figure) throw new Error(`can't get figure ${figureId}`);
-    return figure;
-  };
+  (figureId) =>
+    nonNull(figures.get(figureId), "null figureId");
 
 export const hasFigure =
   (figures /*: FiguresMap */) /*: (figureId: string) => boolean */ =>
@@ -194,6 +197,7 @@ export type FiguresBundle = {
   figures: FiguresMap,
 
   createFigure: ReturnType<typeof createFigure>,
+  getFigure_: ReturnType<typeof getFigure_>,
   getFigure: ReturnType<typeof getFigure>,
   hasFigure: ReturnType<typeof hasFigure>,
   setFigure: ReturnType<typeof setFigure>,
@@ -210,6 +214,7 @@ export function makeFigures(
   return {
     figures,
     createFigure: createFigure(figures),
+    getFigure_: getFigure_(figures), // can be null
     getFigure: getFigure(figures),
     hasFigure: hasFigure(figures),
     setFigure: setFigure(figures),

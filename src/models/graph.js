@@ -1,6 +1,7 @@
 // @flow
 import { makeNodes } from "./node.js";
 import { makeFigures } from "./figure.js";
+import { nonNull } from "../utils.js";
 
 /*::
 import { type ConstructorNode, type Node, type NodesBundle } from './node.js'
@@ -80,7 +81,7 @@ export const getFiguresConnectedToLineFigureId =
         if (depFigureId === figureId) return;
 
         const figure = figures.getFigure(depFigureId);
-        if (figure && figure.type === "jot") {
+        if (figure.type === "jot") {
           connectedFigures.push(figure);
         }
       });
@@ -123,7 +124,7 @@ const createCircleControllingNode =
     const { figureId, figure } = figures.createFigure({
       type: "jot",
       color,
-      shape: "circle", 
+      shape: "circle",
       shake: false,
       x: pos.x,
       y: pos.y,
