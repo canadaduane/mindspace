@@ -11,60 +11,60 @@ import { orbRectHeight, orbRectWidth } from "../constants";
 
 export type FigureInitial = Figure & { figureId: string };
 
-export type Figure =
-  | {
-      // A "jot" is a note that can be in the shape of a circle or rectangle 
-      type: "jot";
-      controlsNodeId: string;
-      shape: JotShape;
-      text?: string;
-      color?: string;
-      shake?: boolean;
-      x?: number;
-      y?: number;
-    }
-  | {
-      // A "line" connects two jots 
-      type: "line";
-      lineType: LineType;
-      connectedNodeId1: string;
-      connectedNodeId2: string;
-      selected?: boolean;
-      color?: string;
-      x1?: number;
-      y1?: number;
-      x2?: number;
-      y2?: number;
-    }
-  | {
-      // A "pop" is a popping animation to indicate a jot-circle is destroyed
-      type: "pop";
-      color?: string;
-      x?: number;
-      y?: number;
-    }
-  | {
-      // A "tap" is a transient tap or double tap indicator
-      type: "tap";
-      tapState: TapState;
-      color?: string; 
-      x?: number;
-      y?: number;
-  };
-
+// A "jot" is a note that can be in the shape of a circle or rectangle 
 export type JotShape = "circle" | "rectangle";
+export type JotFigure = {
+  type: "jot";
+  controlsNodeId: string;
+  shape: JotShape;
+  text?: string;
+  color?: string;
+  shake?: boolean;
+  x?: number;
+  y?: number;
+}
+
+// A "line" connects two jots 
+export type LineType = "short" | "deleted" | "strong" | "disabled";
+export type LineFigure = {
+  type: "line";
+  lineType: LineType;
+  connectedNodeId1: string;
+  connectedNodeId2: string;
+  selected?: boolean;
+  color?: string;
+  x1?: number;
+  y1?: number;
+  x2?: number;
+  y2?: number;
+}
+
+// A "pop" is a popping animation to indicate a jot-circle is destroyed
+export type PopFigure = {
+  type: "pop";
+  color?: string;
+  x?: number;
+  y?: number;
+};
+
+// A "tap" is a transient tap or double tap indicator
+export type TapState = 
+  "create" | "creating" | "color" | "select" | "delete" | "destroying";
+export type TapFigure = {
+  type: "tap";
+  tapState: TapState;
+  color?: string; 
+  x?: number;
+  y?: number;
+};
+
+export type Figure =
+  | JotFigure
+  | LineFigure 
+  | PopFigure 
+  | TapFigure;
  
 export type FiguresMap = Map<string, Figure>;
-
-export type LineType = "short" | "deleted" | "strong" | "disabled";
-
-export type TapState = 
-  | "create"
-  | "creating"
-  | "color"
-  | "select"
-  | "delete"
-  | "destroying";
 
 */
 
