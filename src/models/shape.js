@@ -1,8 +1,11 @@
 // @flow
 import { nanoid } from "nanoid";
+import { orbSize, tapSize } from "../constants";
 
 /*::
 import type { Node } from "./node.js";
+import type { Box2 } from "../math/box2";
+import { Vector2 } from "../math/vector2";
 
 export type ShapeInitial = Shape & { shapeId: string };
 
@@ -125,24 +128,44 @@ export function setShapeValues(
   return shape;
 }
 
-// const getDependentShapesOfControllerShape = (shapeId /*: string */) => {
-//   const shape = shapes.get(shapeId);
-//   if (shape) {
-//     const node = getNode(nodes, shape.controlsNodeId);
-//     const shapeIds = [];
-//     if (node) {
-//       for (let dep of node.dependents) {
-//         const depShape = shapes.get(dep.shapeId);
-//         if (depShape) {
-//           shapeIds.push(depShape);
-//         }
-//       }
-//     }
-//     return shapeIds;
-//   } else {
-//     throw new Error(`can't find shape: ${shapeId}`);
-//   }
-// };
+const p = new Vector2();
+
+export function getShapeBoundingBox(shape /*: Shape */, target /*: Box2 */) {
+  switch (shape.type) {
+    case "pop":
+    case "circle": {
+      const x = shape.x ?? 0;
+      const y = shape.y ?? 0;
+      const r = orbSize / 2;
+
+      target.min.set(x - r, y - r);
+      target.max.set(x + r, y + r);
+
+      return;
+    }
+
+    case "line": {
+      p.set(shape.x1 ?? 0, shape.y1 ?? 0);
+      target.expandByPoint(p);
+
+      p.set(shape.x2 ?? 0, shape.y2 ?? 0);
+      target.expandByPoint(p);
+
+      return;
+    }
+
+    case "tap": {
+      const x = shape.x ?? 0;
+      const y = shape.y ?? 0;
+      const r = tapSize / 2;
+
+      target.min.set(x - r, y - r);
+      target.max.set(x + r, y + r);
+
+      return;
+    }
+  }
+}
 
 /*::
 export type ShapesBundle = {
