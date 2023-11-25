@@ -2,7 +2,11 @@ import { Vector2 } from "../math/vector2.js";
 import { css } from "../styles.js";
 import { dispatch, html, isFirefox } from "../utils.js";
 import { makeDraggable } from "../drag.js";
-import { jotCircleRadius, orbRectWidth, orbRectHeight } from "../constants.js";
+import {
+  jotCircleRadius,
+  jotRectangleWidth,
+  jotRectangleHeight,
+} from "../constants.js";
 
 const circleToPillTextLength = 3;
 const pillToRectangleTextLength = 16;
@@ -150,6 +154,7 @@ function styles() {
       flex-grow: 1;
       margin: auto;
       text-align: center;
+      word-break: break-word;
     }
     .jot .edit:focus-visible {
       outline: 0;
@@ -225,7 +230,7 @@ function styles() {
       }
       100% {
         border-radius: ${jotCircleRadius * 2}px;
-        width: ${orbRectWidth}px;
+        width: ${jotRectangleWidth}px;
         height: ${jotCircleRadius * 2}px;
       }
     }
@@ -233,7 +238,7 @@ function styles() {
     @keyframes jot--pill-to-circle {
       0% {
         border-radius: ${jotCircleRadius * 2}px;
-        width: ${orbRectWidth}px;
+        width: ${jotRectangleWidth}px;
         height: ${jotCircleRadius * 2}px;
       }
       40% {
@@ -251,35 +256,35 @@ function styles() {
     @keyframes jot--pill-to-rectangle {
       0% {
         border-radius: ${jotCircleRadius * 2}px;
-        width: ${orbRectWidth}px;
+        width: ${jotRectangleWidth}px;
         height: ${jotCircleRadius * 2}px;
       }
       40% {
         border-radius: 9px;
-        width: ${orbRectWidth}px;
+        width: ${jotRectangleWidth}px;
         height: ${jotCircleRadius * 2}px;
       }
       100% {
         border-radius: 9px;
-        width: ${orbRectWidth}px;
-        height: ${orbRectHeight}px;
+        width: ${jotRectangleWidth}px;
+        height: ${jotRectangleHeight}px;
       }
     }
 
     @keyframes jot--rectangle-to-pill {
       0% {
         border-radius: 9px;
-        width: ${orbRectWidth}px;
-        height: ${orbRectHeight}px;
+        width: ${jotRectangleWidth}px;
+        height: ${jotRectangleHeight}px;
       }
       40% {
         border-radius: ${jotCircleRadius * 2}px;
-        width: ${orbRectWidth}px;
+        width: ${jotRectangleWidth}px;
         height: ${jotCircleRadius * 2}px;
       }
       100% {
         border-radius: ${jotCircleRadius * 2}px;
-        width: ${orbRectWidth}px;
+        width: ${jotRectangleWidth}px;
         height: ${jotCircleRadius * 2}px;
       }
     }

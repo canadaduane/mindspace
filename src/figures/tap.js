@@ -1,6 +1,6 @@
 import { html } from "../utils.js";
 import { css } from "../styles.js";
-import { tapSize, jotCircleRadius } from "../constants.js";
+import { tapRadius, jotCircleRadius } from "../constants.js";
 
 /*::
 import type { TapState } from "../figures.js"
@@ -59,15 +59,15 @@ function getColorFromTapState(
 function getSizeFromTapState(tapState /*: TapState */) {
   switch (tapState) {
     case "create":
-      return tapSize;
+      return tapRadius;
     case "creating":
       return jotCircleRadius * 2;
     case "color":
-      return tapSize / 2;
+      return tapRadius;
     case "select":
-      return tapSize / 2;
+      return tapRadius / 2;
     case "delete":
-      return tapSize;
+      return tapRadius;
     case "destroying":
       return 5;
   }

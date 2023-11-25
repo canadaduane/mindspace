@@ -1,12 +1,12 @@
 // @flow
 import { nanoid } from "nanoid";
-import { jotCircleRadius, tapSize } from "../constants.js";
+import { jotCircleRadius, tapRadius } from "../constants.js";
 import { Vector2 } from "../math/vector2.js";
 import { nonNull, makeId } from "../utils.js";
 
 /*::
 import type { Box2 } from "../math/box2.js";
-import { orbRectHeight, orbRectWidth } from "../constants";
+import { jotRectangleHeight, jotRectangleWidth } from "../constants";
 
 // A "jot" is a note that can be in the shape of a circle or rectangle 
 export type JotShape = "circle" | "pill" | "rectangle";
@@ -268,8 +268,8 @@ export function setFigureBoundingBox(figure /*: Figure */, target /*: Box2 */) {
       } else {
         const x = figure.x ?? 0;
         const y = figure.y ?? 0;
-        const wHalf = orbRectWidth / 2;
-        const hHalf = orbRectHeight / 2;
+        const wHalf = jotRectangleWidth / 2;
+        const hHalf = jotRectangleHeight / 2;
         target.min.set(x - wHalf, y - hHalf);
         target.max.set(x + wHalf, y + hHalf);
       }
@@ -285,7 +285,7 @@ export function setFigureBoundingBox(figure /*: Figure */, target /*: Box2 */) {
       return;
 
     case "tap":
-      setCircleBoundingBox(target, figure.x, figure.y, tapSize / 2);
+      setCircleBoundingBox(target, figure.x, figure.y, tapRadius);
       return;
   }
 }
