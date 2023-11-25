@@ -2,14 +2,11 @@
 import { nanoid } from "nanoid";
 import { orbSize, tapSize } from "../constants.js";
 import { Vector2 } from "../math/vector2.js";
-import { nonNull } from "../utils.js";
+import { nonNull, makeId } from "../utils.js";
 
 /*::
-import type { Node } from "./node.js";
 import type { Box2 } from "../math/box2.js";
 import { orbRectHeight, orbRectWidth } from "../constants";
-
-export type FigureInitial = Figure & { figureId: string };
 
 // A "jot" is a note that can be in the shape of a circle or rectangle 
 export type JotShape = "circle" | "rectangle";
@@ -17,11 +14,17 @@ export type JotFigure = {
   type: "jot";
   controlsNodeId: string;
   shape: JotShape;
-  text?: string;
-  color?: string;
-  shake?: boolean;
-  x?: number;
-  y?: number;
+  text: string;
+  color: string;
+  shake: boolean;
+  x: number;
+  y: number;
+}
+export type JotFigureConstructor = {
+  type: "jot";
+  figureId?: string;
+  ...Pick<JotFigure, "controlsNodeId">;
+  ...Partial<Omit<JotFigure, "controlsNodeId">>;
 }
 
 // A "line" connects two jots 
@@ -31,21 +34,32 @@ export type LineFigure = {
   lineType: LineType;
   connectedNodeId1: string;
   connectedNodeId2: string;
-  selected?: boolean;
-  color?: string;
-  x1?: number;
-  y1?: number;
-  x2?: number;
-  y2?: number;
+  selected: boolean;
+  color: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+export type LineFigureConstructor = {
+  type: "line";
+  figureId?: string;
+  ...Pick<LineFigure, "lineType" | "connectedNodeId1" | "connectedNodeId2">;
+  ...Partial<Omit<LineFigure, "lineType" | "connectedNodeId1" | "connectedNodeId2">>;
 }
 
 // A "pop" is a popping animation to indicate a jot-circle is destroyed
 export type PopFigure = {
   type: "pop";
-  color?: string;
-  x?: number;
-  y?: number;
+  color: string;
+  x: number;
+  y: number;
 };
+export type PopFigureConstructor = {
+  type: "pop";
+  figureId?: string;
+  ...Partial<PopFigure>;
+}
 
 // A "tap" is a transient tap or double tap indicator
 export type TapState = 
@@ -53,39 +67,123 @@ export type TapState =
 export type TapFigure = {
   type: "tap";
   tapState: TapState;
-  color?: string; 
-  x?: number;
-  y?: number;
+  color: string; 
+  x: number;
+  y: number;
 };
+export type TapFigureConstructor = {
+  type: "tap";
+  figureId?: string;
+  ...Pick<TapFigure, "tapState">;
+  ...Partial<Omit<TapFigure, "tapState">>;
+}
 
 export type Figure =
   | JotFigure
   | LineFigure 
   | PopFigure 
   | TapFigure;
+
+export type FigureConstructor =
+  | JotFigureConstructor
+  | LineFigureConstructor 
+  | PopFigureConstructor 
+  | TapFigureConstructor;
  
 export type FiguresMap = Map<string, Figure>;
-
 */
 
+export const constructJotFigure = (
+  { figureId, ...params } /*: JotFigureConstructor */
+) /*: JotFigure */ => ({
+  ...{
+    // Default values
+    shape: "circle",
+    text: "",
+    color: "white",
+    shake: false,
+    x: 0,
+    y: 0,
+  },
+  ...params,
+});
+
+export const constructLineFigure = (
+  { figureId, ...params } /*: LineFigureConstructor */
+) /*: LineFigure */ => ({
+  ...{
+    // Default values
+    selected: false,
+    color: "white",
+    x1: 0,
+    y1: 0,
+    x2: 0,
+    y2: 0,
+  },
+  ...params,
+});
+
+export const constructPopFigure = (
+  { figureId, ...params } /*: PopFigureConstructor */
+) /*: PopFigure */ => ({
+  ...{
+    // Default values
+    color: "white",
+    x: 0,
+    y: 0,
+  },
+  ...params,
+});
+
+export const constructTapFigure = (
+  { figureId, ...params } /*: TapFigureConstructor */
+) /*: TapFigure */ => ({
+  ...{
+    // Default values
+    color: "white",
+    x: 0,
+    y: 0,
+  },
+  ...params,
+});
+
+export function constructFigure(
+  { figureId, ...params } /*: FigureConstructor */
+) /*: Figure */ {
+  switch (params.type) {
+    case "jot":
+      return constructJotFigure({ figureId, ...params });
+    case "line":
+      return constructLineFigure({ figureId, ...params });
+    case "pop":
+      return constructPopFigure({ figureId, ...params });
+    case "tap":
+      return constructTapFigure({ figureId, ...params });
+    default:
+      throw new Error(`unrecognized figure type: ${params.type}`);
+  }
+}
+
 export function makeFiguresMap(
-  initFigures /*: FigureInitial[] */
-) /*: FiguresMap */ {
+  figures /*: FigureConstructor[] */
+) /*: Map<string, Figure> */ {
   return new Map(
-    initFigures.map(({ figureId, ...figure }) => {
-      return [figureId ?? nanoid(12), figure];
-    })
+    figures.map(({ figureId, ...figure }) => [
+      makeId(figureId),
+      constructFigure(figure),
+    ])
   );
 }
 
 export const createFigure =
   (
     figures /*: FiguresMap */
-  ) /*: (figure: Figure) => { figureId: string, figure: Figure } */ =>
-  (figure /*: Figure */) => {
-    const figureId = nanoid(12);
-    setFigure(figures)(figureId, figure);
-    return { figureId, figure };
+  ) /*: (figure: FigureConstructor) => { figureId: string, figure: Figure } */ =>
+  ({ figureId, ...initFigure }) => {
+    const newFigureId = makeId(figureId);
+    const newFigure = constructFigure(initFigure);
+    setFigure(figures)(newFigureId, newFigure);
+    return { figureId: newFigureId, figure: newFigure };
   };
 
 export const getFigure_ =
@@ -207,7 +305,7 @@ export type FiguresBundle = {
 */
 
 export function makeFigures(
-  initFigures /*: FigureInitial[] */ = []
+  initFigures /*: FigureConstructor[] */ = []
 ) /*: FiguresBundle */ {
   const figures = makeFiguresMap(initFigures);
 

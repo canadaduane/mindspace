@@ -1,33 +1,32 @@
 // @flow
 import { makeNodes } from "./node.js";
 import { makeFigures } from "./figure.js";
-import { nonNull } from "../utils.js";
 
 /*::
-import { type ConstructorNode, type Node, type NodesBundle } from './node.js'
-import { type FigureInitial, type Figure, type FiguresBundle } from './figure.js'
+import { type NodeConstructor, type Node, type NodesBundle } from './node.js'
+import { type FigureConstructor, type Figure, type FiguresBundle } from './figure.js'
 import type { Vector2 } from "../math/vector2";
 import type { DependentFigureAttrs } from "./node";
 
 type GraphInitial = {
-  nodes: ConstructorNode[],
-  figures: FigureInitial[]
+  nodes: NodeConstructor[];
+  figures: FigureConstructor[];
 };
 
 type Graph = {
-  ...NodesBundle, 
-  ...FiguresBundle,
+  ...NodesBundle;
+  ...FiguresBundle;
 
-  applyNodesToFigures: () => void,
-  createCircleControllingNode: CreateCircleControllingNodeFn,
-  deleteNodeWithDependents: RemoveNodeWithDependentsFn,
-  getFiguresConnectedToLineFigureId: GetFiguresConnectedFn,
+  applyNodesToFigures: () => void;
+  createCircleControllingNode: CreateCircleControllingNodeFn;
+  deleteNodeWithDependents: RemoveNodeWithDependentsFn;
+  getFiguresConnectedToLineFigureId: GetFiguresConnectedFn;
 
-  debug: () => void
+  debug: () => void;
 };
 
 type CreateCircleControllingNodeFn = ( pos: Vector2, color: string ) =>
-  { nodeId: string, node: Node, figureId: string, figure: Figure };
+  { nodeId: string; node: Node; figureId: string; figure: Figure };
 
 type RemoveNodeWithDependentsFn = ( nodeId: string ) => boolean;
  

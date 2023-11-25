@@ -21,8 +21,8 @@ import { tapAnimationMs } from "./figures/tap.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 
 /*::
-import type { Node, ConstructorNode } from "./models/node";
-import type { Figure, FigureInitial } from "./models/figure";
+import type { Node, NodeConstructor } from "./models/node";
+import type { Figure, FigureConstructor } from "./models/figure";
 */
 
 function* Svg(
@@ -30,7 +30,7 @@ function* Svg(
   {
     nodes: initNodes = [],
     figures: initFigures = [],
-  } /*: { nodes: ConstructorNode[], figures: FigureInitial[] } */
+  } /*: { nodes: NodeConstructor[], figures: FigureConstructor[] } */
 ) {
   let graph = makeGraph({ nodes: initNodes, figures: initFigures });
   window.graph = graph;

@@ -1,5 +1,6 @@
 // @flow
 import { jsx } from "@b9g/crank/standalone";
+import { nanoid } from "nanoid";
 
 /*::
 import { Vector2 } from "./math/vector2.js";
@@ -106,4 +107,8 @@ export function nonNull /*:: <T> */(
 ) /*: T */ {
   if (value == null) throw new Error(errorMessage);
   return value;
+}
+
+export function makeId(defaultId /*: ?string */) /*: string */ {
+  return defaultId ?? nanoid(12);
 }

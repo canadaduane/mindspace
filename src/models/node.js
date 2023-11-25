@@ -1,16 +1,15 @@
 // @flow
-import { nanoid } from "nanoid";
 import { orbSize } from "../constants.js";
 import { Box2 } from "../math/box2.js";
-import { nonNull } from "../utils.js";
+import { nonNull, makeId } from "../utils.js";
 
 /*::
 import { Vector2 } from "../math/vector2.js";
 
-export type ConstructorNode = {
-  nodeId?: string,
-  ...Pick<Node, 'x' | 'y'>,
-  ...Partial<Omit<Node, 'x' | 'y'>>
+export type NodeConstructor = {
+  nodeId?: string;
+  ...Pick<Node, 'x' | 'y'>;
+  ...Partial<Omit<Node, 'x' | 'y'>>;
 }
 
 export type Node = {
@@ -27,38 +26,33 @@ export type DependentFigureAttrs = Record<string, string>;
 export type NodesMap = Map<string, Node>;
 */
 
-export function constructNode(node /*: ConstructorNode */) /*: Node */ {
-  return {
-    x: node.x,
-    y: node.y,
-    bbox: node.bbox ?? new Box2(),
-    color: node.color ?? "white",
-    spiral: node.spiral ?? 0,
-    dependents: node.dependents ?? new Map(),
-  };
-}
-
-export function makeNodeId(defaultNodeId /*: string | void */) /*: string */ {
-  return defaultNodeId ?? nanoid(12);
-}
+export const constructNode = (
+  { nodeId, ...params } /*: NodeConstructor */
+) /*: Node */ => ({
+  ...{
+    // Default values
+    bbox: new Box2(),
+    color: "white",
+    spiral: 0,
+    dependents: new Map(),
+  },
+  ...params,
+});
 
 export function makeNodesMap(
-  nodes /*: ConstructorNode[] */
+  nodes /*: NodeConstructor[] */
 ) /*: Map<string, Node> */ {
   return new Map(
-    nodes.map(({ nodeId, ...node }) => [
-      makeNodeId(nodeId),
-      constructNode(node),
-    ])
+    nodes.map(({ nodeId, ...node }) => [makeId(nodeId), constructNode(node)])
   );
 }
 
 export const createNode =
   (
     nodes /*: NodesMap */
-  ) /*: (initNode: ConstructorNode) => { nodeId: string, node: Node } */ =>
-  ({ nodeId, ...initNode } /*: ConstructorNode */) => {
-    const newNodeId = makeNodeId(nodeId);
+  ) /*: (initNode: NodeConstructor) => { nodeId: string, node: Node } */ =>
+  ({ nodeId, ...initNode }) => {
+    const newNodeId = makeId(nodeId);
     const newNode = constructNode(initNode);
     setNode(nodes)(newNodeId, newNode);
     return { nodeId: newNodeId, node: newNode };
@@ -117,7 +111,7 @@ export type NodesBundle = {
 */
 
 export function makeNodes(
-  initNodes /*: ConstructorNode[] */ = []
+  initNodes /*: NodeConstructor[] */ = []
 ) /*: NodesBundle */ {
   const nodes = makeNodesMap(initNodes);
 
