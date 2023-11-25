@@ -14,6 +14,7 @@ export type Shape =
       // A "jot" is a note that can be in the shape of a circle or rectangle 
       type: "jot";
       controlsNodeId: string;
+      figure: JotFigure; 
       color?: string;
       shake?: boolean;
       x?: number;
@@ -47,6 +48,8 @@ export type Shape =
       x?: number;
       y?: number;
   };
+
+export type JotFigure = "circle" | "rectangle";
  
 export type ShapesMap = Map<string, Shape>;
 

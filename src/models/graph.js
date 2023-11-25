@@ -124,6 +124,7 @@ const createCircleControllingNode =
     const { shapeId, shape } = shapes.createShape({
       type: "jot",
       color,
+      figure: "circle", 
       shake: false,
       x: pos.x,
       y: pos.y,

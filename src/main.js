@@ -119,6 +119,12 @@ function* Svg(
     this.refresh();
   });
 
+  this.addEventListener("setFigure", ({ detail: { shapeId, figure } }) => {
+    const shape = graph.getShape(shapeId);
+    setShapeValues(shape, { figure });
+    this.refresh();
+  });
+
   this.addEventListener("bump", ({ detail: { shapeId, lineType } }) => {
     if (!controlledNodeId) {
       console.error("bump without controlledNodeId");

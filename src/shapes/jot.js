@@ -9,11 +9,10 @@ import {
   stringLengthTransition,
 } from "../constants.js";
 
-export function* Jot({ controlsNodeId: nodeId, x = 0, y = 0 }) {
+export function* Jot({ shapeId, controlsNodeId: nodeId, x = 0, y = 0 }) {
   const pos = new Vector2(x, y);
 
   let editEl;
-  let shape = "circle";
   let didDrag = false;
   let content = "";
 
@@ -55,9 +54,9 @@ export function* Jot({ controlsNodeId: nodeId, x = 0, y = 0 }) {
     }
     content = event.target.innerText.trim();
     if (content.length <= stringLengthTransition) {
-      shape = "circle";
+      dispatch(this, "setFigure", { shapeId, figure: "circle" });
     } else {
-      shape = "rect";
+      dispatch(this, "setFigure", { shapeId, figure: "rectangle" });
     }
     this.refresh();
   };
@@ -68,7 +67,7 @@ export function* Jot({ controlsNodeId: nodeId, x = 0, y = 0 }) {
     dispatch(this, "nodeActive", { nodeId });
   };
 
-  for (const { x, y, color, shake } of this) {
+  for (const { x, y, figure, color, shake } of this) {
     pos.set(x, y);
 
     yield html`<!-- circle -->
@@ -78,9 +77,9 @@ export function* Jot({ controlsNodeId: nodeId, x = 0, y = 0 }) {
         onpointercancel=${end}
         onpointermove=${move}
         ontouchstart=${touchStart}
-        class="circle ${shake && shape === "rect"
+        class="circle ${shake && figure === "rectangle"
           ? "circle--rect-shake"
-          : shape === "rect"
+          : figure === "rectangle"
           ? "circle--rect"
           : shake
           ? "circle--shake"
@@ -93,8 +92,8 @@ export function* Jot({ controlsNodeId: nodeId, x = 0, y = 0 }) {
         }}
       >
         <div
-          class="edit ${shape === "circle" && "edit-circle"}"
-          spellcheck=${shape === "rect" ? "true" : "false"}
+          class="edit ${figure === "circle" && "edit-circle"}"
+          spellcheck=${figure === "rectangle" ? "true" : "false"}
           contenteditable="true"
           onkeydown=${onKeyDown}
           onkeyup=${onKey}
