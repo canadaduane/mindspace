@@ -16,6 +16,7 @@ export type Figure =
       type: "jot";
       controlsNodeId: string;
       shape: JotShape;
+      text?: string;
       color?: string;
       shake?: boolean;
       x?: number;

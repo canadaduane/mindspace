@@ -3,13 +3,13 @@ import { makeNodes } from "./node.js";
 import { makeFigures } from "./figure.js";
 
 /*::
-import { type NodeInitial, type Node, type NodesBundle } from './node.js'
+import { type ConstructorNode, type Node, type NodesBundle } from './node.js'
 import { type FigureInitial, type Figure, type FiguresBundle } from './figure.js'
 import type { Vector2 } from "../math/vector2";
 import type { DependentFigureAttrs } from "./node";
 
 type GraphInitial = {
-  nodes: NodeInitial[],
+  nodes: ConstructorNode[],
   figures: FigureInitial[]
 };
 
@@ -115,7 +115,6 @@ const createCircleControllingNode =
       x: pos.x,
       y: pos.y,
       color,
-      text: null,
       dependents: new Map(),
       spiral: 0,
     });
