@@ -276,6 +276,7 @@ function setFigure(
   figureId /*: string */,
   figure /*: Figure */
 ) /*: FiguresMap */ {
+  updateFigureBoundingBox(figure);
   return figures.set(figureId, figure);
 }
 

@@ -1,6 +1,6 @@
 // @flow
 import { makeNodes } from "./node.js";
-import { makeFigures } from "./figure.js";
+import { makeFigures, updateFigureBoundingBox } from "./figure.js";
 
 /*::
 import { type NodeConstructor, type Node, type NodesBundle } from './node.js'
@@ -102,6 +102,8 @@ export function applyNodeToFigures(
       // $FlowIgnore
       figure[toAttr] = node[fromAttr];
     }
+
+    updateFigureBoundingBox(figure);
   });
 }
 

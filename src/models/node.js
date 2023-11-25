@@ -1,6 +1,5 @@
 // @flow
 import { jotCircleRadius } from "../constants.js";
-import { Box2 } from "../math/box2.js";
 import { nonNull, makeId } from "../utils.js";
 
 /*::
