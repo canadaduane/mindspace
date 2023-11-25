@@ -1,12 +1,16 @@
 // @flow
 import { makeNodes } from "./node.js";
 import { makeFigures, updateFigureBoundingBox } from "./figure.js";
+import { Vector2 } from "../math/vector2.js";
+import { Box2 } from "../math/box2.js";
+import { jotCircleRadius, jotRectangleWidth } from "../constants.js";
 
 /*::
 import { type NodeConstructor, type Node, type NodesBundle } from './node.js'
 import { type FigureConstructor, type Figure, type FiguresBundle } from './figure.js'
-import type { Vector2 } from "../math/vector2";
-import type { DependentFigureAttrs } from "./node";
+import type { DependentFigureAttrs } from "./node.js";
+import type { FiguresMap } from "./figure.js";
+import { jotRectangleHeight } from "../constants";
 
 type GraphInitial = {
   nodes: NodeConstructor[];
@@ -21,6 +25,7 @@ type Graph = {
   createCircleControllingNode: CreateCircleControllingNodeFn;
   deleteNodeWithDependents: RemoveNodeWithDependentsFn;
   getFiguresConnectedToLineFigureId: GetFiguresConnectedFn;
+  findJotsAtPosition: (pos: Vector2) => string[]; 
 
   debug: () => void;
 };
@@ -56,6 +61,7 @@ export function makeGraph(
       nodes,
       figures
     ),
+    findJotsAtPosition: (pos) => findJotsAtPosition(figures.figures, pos),
 
     debug: () => {
       console.log("nodes", nodes.nodes);
@@ -190,3 +196,57 @@ const deleteNodeWithDependents = (
     });
     return nodes.deleteNode(nodeId);
   };
+
+function findJotsAtPosition(
+  figures /*: FiguresMap */,
+  pos /*: Vector2 */
+) /*: string[] */ {
+  const center = new Vector2();
+  const bounds = new Box2();
+  const matches /*: string[] */ = [];
+  const pillRectWidthHalf = jotRectangleWidth / 2 - jotCircleRadius;
+  figures.forEach((figure, figureId) => {
+    if (figure.type !== "jot") return;
+    if (figure.bbox.containsPoint(pos)) {
+      switch (figure.shape) {
+        case "circle":
+          center.set(figure.x, figure.y);
+          if (pos.distanceTo(center) <= jotCircleRadius) {
+            matches.push(figureId);
+          }
+          break;
+
+        case "pill":
+          center.set(figure.x - pillRectWidthHalf, figure.y);
+          if (pos.distanceTo(center) <= jotCircleRadius) {
+            matches.push(figureId);
+            break;
+          }
+
+          center.set(figure.x + pillRectWidthHalf, figure.y);
+          if (pos.distanceTo(center) <= jotCircleRadius) {
+            matches.push(figureId);
+            break;
+          }
+
+          bounds.min.set(
+            figure.x - pillRectWidthHalf,
+            figure.y - jotRectangleHeight / 2
+          );
+          bounds.max.set(
+            figure.x + pillRectWidthHalf,
+            figure.y + jotRectangleHeight / 2
+          );
+          if (bounds.containsPoint(pos)) {
+            matches.push(figureId);
+            break;
+          }
+
+        case "rectangle":
+          matches.push(figureId);
+          break;
+      }
+    }
+  });
+  return matches;
+}

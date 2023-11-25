@@ -289,11 +289,15 @@ function* Svg(
         if (dragColor) {
           const jotColor = dragColor;
           removeTap(false).then(() => {
-            const node = graph.findNodeAtPosition(new Vector2(x, y));
-            if (node) {
-              node.color = jotColor;
-            } else {
+            const jotFigureIds = graph.findJotsAtPosition(new Vector2(x, y));
+            if (jotFigureIds.length === 0) {
               createCircleUI(x, y, jotColor);
+            } else {
+              for (let figureId of jotFigureIds) {
+                const jot = graph.getJot(figureId);
+                const node = graph.getNode(jot.controlsNodeId);
+                node.color = jotColor;
+              }
             }
             this.refresh();
           });

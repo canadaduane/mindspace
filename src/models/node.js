@@ -92,16 +92,6 @@ function updateNode(
   return updated;
 }
 
-export const findNodeAtPosition =
-  (nodes /*: NodesMap */) /*: (pos: Vector2) => ?Node */ => (pos) => {
-    for (let [nodeId, node] of nodes.entries()) {
-      // $FlowIgnore
-      if (pos.distanceTo(node) <= jotCircleRadius) {
-        return node;
-      }
-    }
-  };
-
 /*::
 export type NodesBundle = {
   nodes: NodesMap,
@@ -113,7 +103,6 @@ export type NodesBundle = {
   setNode:(nodeId: string, node: Node) => NodesMap, 
   updateNode:(nodeId: string, node: Partial<Node>) => Node, 
   deleteNode: (nodeId: string) => boolean,
-  findNodeAtPosition: ReturnType<typeof findNodeAtPosition> 
 }
 */
 
@@ -132,6 +121,5 @@ export function makeNodes(
     setNode: (nodeId, node) => setNode(nodes, nodeId, node),
     updateNode: (nodeId, attrs) => updateNode(nodes, nodeId, attrs),
     deleteNode: (nodeId) => deleteNode(nodes, nodeId),
-    findNodeAtPosition: findNodeAtPosition(nodes),
   };
 }
