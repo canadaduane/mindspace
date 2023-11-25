@@ -1,16 +1,23 @@
 // @flow
 import { makeNodes } from "./node.js";
-import { makeFigures, updateFigureBoundingBox } from "./figure.js";
+import {
+  makeFigures,
+  updateFigureBoundingBox,
+  getCollisionShapes,
+} from "./figure.js";
 import { Vector2 } from "../math/vector2.js";
 import { Box2 } from "../math/box2.js";
-import { jotCircleRadius, jotRectangleWidth } from "../constants.js";
+import {
+  jotCircleRadius,
+  jotRectangleWidth,
+  jotRectangleHeight,
+} from "../constants.js";
 
 /*::
 import { type NodeConstructor, type Node, type NodesBundle } from './node.js'
 import { type FigureConstructor, type Figure, type FiguresBundle } from './figure.js'
 import type { DependentFigureAttrs } from "./node.js";
-import type { FiguresMap } from "./figure.js";
-import { jotRectangleHeight } from "../constants";
+import type { FiguresMap, CollisionShape } from "./figure.js";
 
 type GraphInitial = {
   nodes: NodeConstructor[];
@@ -201,51 +208,27 @@ function findJotsAtPosition(
   figures /*: FiguresMap */,
   pos /*: Vector2 */
 ) /*: string[] */ {
-  const center = new Vector2();
-  const bounds = new Box2();
   const matches /*: string[] */ = [];
-  const pillRectWidthHalf = jotRectangleWidth / 2 - jotCircleRadius;
   figures.forEach((figure, figureId) => {
     if (figure.type !== "jot") return;
-    if (figure.bbox.containsPoint(pos)) {
-      switch (figure.shape) {
-        case "circle":
-          center.set(figure.x, figure.y);
-          if (pos.distanceTo(center) <= jotCircleRadius) {
-            matches.push(figureId);
-          }
-          break;
 
-        case "pill":
-          center.set(figure.x - pillRectWidthHalf, figure.y);
-          if (pos.distanceTo(center) <= jotCircleRadius) {
-            matches.push(figureId);
-            break;
-          }
+    const isInside = getCollisionShapes(figure).reduce(
+      (soFar /*: boolean */, shape /*: CollisionShape */) => {
+        if (soFar) return soFar;
+        switch (shape.type) {
+          case "circle":
+            return soFar || shape.center.distanceTo(pos) <= shape.radius;
+          case "rectangle":
+            return soFar || shape.box.containsPoint(pos);
+          default:
+            throw new Error(`unhandled collision shape type: ${shape.type}`);
+        }
+      },
+      false
+    );
 
-          center.set(figure.x + pillRectWidthHalf, figure.y);
-          if (pos.distanceTo(center) <= jotCircleRadius) {
-            matches.push(figureId);
-            break;
-          }
-
-          bounds.min.set(
-            figure.x - pillRectWidthHalf,
-            figure.y - jotRectangleHeight / 2
-          );
-          bounds.max.set(
-            figure.x + pillRectWidthHalf,
-            figure.y + jotRectangleHeight / 2
-          );
-          if (bounds.containsPoint(pos)) {
-            matches.push(figureId);
-            break;
-          }
-
-        case "rectangle":
-          matches.push(figureId);
-          break;
-      }
+    if (isInside) {
+      matches.push(figureId);
     }
   });
   return matches;

@@ -102,6 +102,21 @@ export type FigureConstructor =
   | TapFigureConstructor;
  
 export type FiguresMap = Map<string, Figure>;
+
+export type CollisionCircle = {
+  type: "circle",
+  center: Vector2,
+  radius: number,
+};
+
+export type CollisionRectangle = {
+  type: "rectangle",
+  box: Box2,
+};
+
+export type CollisionShape =
+  | CollisionCircle
+  | CollisionRectangle;
 */
 
 const constructJotFigure = (
@@ -387,6 +402,65 @@ export function updateFigureBoundingBox(figure /*: Figure */) {
   }
 }
 
+export function getCollisionShapes(
+  figure /*: Figure */
+) /*: CollisionShape[] */ {
+  const shapes /*: CollisionShape[] */ = [];
+  const pillRectWidthHalf = jotRectangleWidth / 2 - jotCircleRadius;
+
+  if (figure.type !== "jot") {
+    console.warn(`getCollisionShapes for ${figure.type} not supported`);
+    return [];
+  }
+
+  switch (figure.shape) {
+    case "circle":
+      shapes.push({
+        type: "circle",
+        center: new Vector2(figure.x, figure.y),
+        radius: jotCircleRadius,
+      });
+      break;
+
+    case "pill":
+      shapes.push({
+        type: "circle",
+        center: new Vector2(figure.x - pillRectWidthHalf, figure.y),
+        radius: jotCircleRadius,
+      });
+
+      shapes.push({
+        type: "circle",
+        center: new Vector2(figure.x + pillRectWidthHalf, figure.y),
+        radius: jotCircleRadius,
+      });
+
+      shapes.push({
+        type: "rectangle",
+        box: new Box2(
+          new Vector2(
+            figure.x - pillRectWidthHalf,
+            figure.y - jotRectangleHeight / 2
+          ),
+          new Vector2(
+            figure.x + pillRectWidthHalf,
+            figure.y + jotRectangleHeight / 2
+          )
+        ),
+      });
+      break;
+
+    case "rectangle":
+      shapes.push({
+        type: "rectangle",
+        box: new Box2().copy(figure.bbox),
+      });
+      break;
+  }
+
+  return shapes;
+}
+
 /*::
 export type FiguresBundle = {
   figures: FiguresMap,
@@ -417,6 +491,7 @@ export function makeFigures(
 
   return {
     figures,
+
     createFigure: (figure) => createFigure(figures, figure),
     getFigure_: (figureId) => getFigure_(figures, figureId), // can return null
     getFigure: (figureId) => getFigure(figures, figureId),
