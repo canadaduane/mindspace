@@ -54,9 +54,9 @@ export function* Jot({ figureId, controlsNodeId: nodeId, x = 0, y = 0 }) {
     }
     content = event.target.innerText.trim();
     if (content.length <= stringLengthTransition) {
-      dispatch(this, "setFigure", { figureId, figure: "circle" });
+      dispatch(this, "setJotShape", { figureId, shape: "circle" });
     } else {
-      dispatch(this, "setFigure", { figureId, figure: "rectangle" });
+      dispatch(this, "setJotShape", { figureId, shape: "rectangle" });
     }
     this.refresh();
   };
@@ -67,7 +67,7 @@ export function* Jot({ figureId, controlsNodeId: nodeId, x = 0, y = 0 }) {
     dispatch(this, "nodeActive", { nodeId });
   };
 
-  for (const { x, y, figure, color, shake } of this) {
+  for (const { x, y, shape, color, shake } of this) {
     pos.set(x, y);
 
     yield html`<!-- circle -->
@@ -77,9 +77,9 @@ export function* Jot({ figureId, controlsNodeId: nodeId, x = 0, y = 0 }) {
         onpointercancel=${end}
         onpointermove=${move}
         ontouchstart=${touchStart}
-        class="circle ${shake && figure === "rectangle"
+        class="circle ${shake && shape === "rectangle"
           ? "circle--rect-shake"
-          : figure === "rectangle"
+          : shape === "rectangle"
           ? "circle--rect"
           : shake
           ? "circle--shake"
@@ -92,8 +92,8 @@ export function* Jot({ figureId, controlsNodeId: nodeId, x = 0, y = 0 }) {
         }}
       >
         <div
-          class="edit ${figure === "circle" && "edit-circle"}"
-          spellcheck=${figure === "rectangle" ? "true" : "false"}
+          class="edit ${shape === "circle" && "edit-circle"}"
+          spellcheck=${shape === "rectangle" ? "true" : "false"}
           contenteditable="true"
           onkeydown=${onKeyDown}
           onkeyup=${onKey}

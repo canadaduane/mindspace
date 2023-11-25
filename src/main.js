@@ -1,7 +1,7 @@
 // @flow
 
 import { renderer } from "@b9g/crank/dom";
-import { html, closestSide, hasTagName, nonNull } from "./utils.js";
+import { html, closestSide, hasTagName } from "./utils.js";
 import { Vector2 } from "./math/vector2.js";
 import { Box2 } from "./math/box2.js";
 import {
@@ -119,7 +119,7 @@ function* Svg(
     this.refresh();
   });
 
-  this.addEventListener("setFigure", ({ detail: { figureId, shape } }) => {
+  this.addEventListener("setJotShape", ({ detail: { figureId, shape } }) => {
     const figure = graph.getFigure(figureId);
     setFigureValues(figure, { shape });
     this.refresh();
