@@ -1,7 +1,7 @@
 // @flow
 
 import { renderer } from "@b9g/crank/dom";
-import { html, closestSide, hasTagName } from "./utils.js";
+import { html, closestSide, hasTagName, nonNull } from "./utils.js";
 import { Vector2 } from "./math/vector2.js";
 import { Box2 } from "./math/box2.js";
 import {
@@ -11,7 +11,6 @@ import {
   rainbowBorderThickness,
 } from "./constants.js";
 import { makeGraph } from "./models/graph.js";
-import { setFigureValues } from "./models/figure.js";
 import { setNodeValues } from "./models/node.js";
 import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
 import { makeDraggable } from "./drag.js";
@@ -115,13 +114,12 @@ function* Svg(
 
   this.addEventListener("deleteLine", ({ detail: { figureId } }) => {
     unselectSelectedLine();
-    graph.setLineType(figureId, "deleted");
+    graph.updateLine(figureId, { lineType: "deleted" });
     this.refresh();
   });
 
   this.addEventListener("setJotShape", ({ detail: { figureId, shape } }) => {
-    const figure = graph.getFigure(figureId);
-    setFigureValues(figure, { shape });
+    graph.updateJot(figureId, { shape });
     this.refresh();
   });
 
@@ -130,7 +128,7 @@ function* Svg(
       console.error("bump without controlledNodeId");
       return;
     }
-    const figure = graph.setLineType(figureId, lineType);
+    const figure = graph.updateLine(figureId, { lineType });
     if (figure) {
       const connectedFigures =
         graph.getFiguresConnectedToLineFigureId(figureId);
@@ -159,14 +157,6 @@ function* Svg(
       }, 1000);
     }
   });
-
-  this.addEventListener(
-    "setFigureValues",
-    ({ detail: { figureId, ...values } }) => {
-      const figure = graph.getFigure(figureId);
-      setFigureValues(figure, values);
-    }
-  );
 
   this.addEventListener("createNode", ({ detail: { nodeId } }) => {
     const node = graph.getNode(nodeId);
@@ -218,8 +208,7 @@ function* Svg(
     if (!tapFigureId) return;
 
     if (animate) {
-      const figure = graph.getFigure(tapFigureId);
-      setFigureValues(figure, { tapState: "destroying" });
+      graph.updateTap(tapFigureId, { tapState: "destroying" });
       this.refresh();
     }
 
@@ -271,8 +260,7 @@ function* Svg(
 
           if (!tapFigureId) return;
 
-          const figure = graph.getFigure(tapFigureId);
-          setFigureValues(figure, { x, y, tapState: "creating" });
+          graph.updateTap(tapFigureId, { x, y, tapState: "creating" });
 
           setTimeout(() => {
             removeTap(false).then(() => {
@@ -334,12 +322,13 @@ function* Svg(
         clearTimeout(singleClickTimeout);
 
         if (tapFigureId) {
-          const figure = graph.getFigure(tapFigureId);
+          const figureId = nonNull(tapFigureId, "figureId is null");
+          const figure = graph.getFigure(figureId);
 
           if (figure.tapState === "color") {
-            setFigureValues(figure, { x, y });
+            graph.updateTap(figureId, { x, y });
           } else {
-            setFigureValues(figure, { x, y, tapState: "select" });
+            graph.updateTap(figureId, { x, y, tapState: "select" });
           }
           this.refresh();
         }

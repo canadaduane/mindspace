@@ -79,8 +79,6 @@ export const deleteNode =
 
 export function setNodeValues(node /*: Node */, values /*: any */) /*: Node */ {
   Object.assign(node, values);
-  if ("x" in values || "y" in values) {
-  }
   return node;
 }
 

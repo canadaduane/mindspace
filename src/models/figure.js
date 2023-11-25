@@ -10,7 +10,6 @@ import { jotRectangleHeight, jotRectangleWidth } from "../constants";
 type JotBase = {
   bbox: Box2; // Cached bounding box for this figure
 }
-    // bbox: new Box2(),
 
 // A "jot" is a note that can be in the shape of a circle or rectangle 
 export type JotShape = "circle" | "pill" | "rectangle";
@@ -101,7 +100,7 @@ export type FigureConstructor =
 export type FiguresMap = Map<string, Figure>;
 */
 
-export const constructJotFigure = (
+const constructJotFigure = (
   { figureId, ...params } /*: JotFigureConstructor */
 ) /*: JotFigure */ => ({
   ...{
@@ -117,7 +116,7 @@ export const constructJotFigure = (
   ...params,
 });
 
-export const constructLineFigure = (
+const constructLineFigure = (
   { figureId, ...params } /*: LineFigureConstructor */
 ) /*: LineFigure */ => ({
   ...{
@@ -133,7 +132,7 @@ export const constructLineFigure = (
   ...params,
 });
 
-export const constructPopFigure = (
+const constructPopFigure = (
   { figureId, ...params } /*: PopFigureConstructor */
 ) /*: PopFigure */ => ({
   ...{
@@ -146,7 +145,7 @@ export const constructPopFigure = (
   ...params,
 });
 
-export const constructTapFigure = (
+const constructTapFigure = (
   { figureId, ...params } /*: TapFigureConstructor */
 ) /*: TapFigure */ => ({
   ...{
@@ -159,7 +158,7 @@ export const constructTapFigure = (
   ...params,
 });
 
-export function constructFigure(
+function constructFigure(
   { figureId, ...params } /*: FigureConstructor */
 ) /*: Figure */ {
   switch (params.type) {
@@ -176,7 +175,7 @@ export function constructFigure(
   }
 }
 
-export function makeFiguresMap(
+function makeFiguresMap(
   figures /*: FigureConstructor[] */
 ) /*: Map<string, Figure> */ {
   return new Map(
@@ -187,74 +186,153 @@ export function makeFiguresMap(
   );
 }
 
-export const createFigure =
-  (
-    figures /*: FiguresMap */
-  ) /*: (figure: FigureConstructor) => { figureId: string, figure: Figure } */ =>
-  ({ figureId, ...initFigure }) => {
-    const newFigureId = makeId(figureId);
-    const newFigure = constructFigure(initFigure);
-    setFigure(figures)(newFigureId, newFigure);
-    return { figureId: newFigureId, figure: newFigure };
-  };
+function createFigure(
+  figures /*: FiguresMap */,
+  { figureId, ...initFigure } /*: FigureConstructor */
+) /*: { figureId: string, figure: Figure } */ {
+  const newFigureId = makeId(figureId);
+  const newFigure = constructFigure(initFigure);
+  setFigure(figures, newFigureId, newFigure);
+  return { figureId: newFigureId, figure: newFigure };
+}
 
-export const getFigure_ =
-  (figures /*: FiguresMap */) /*: (figureId: string) => Figure | void */ =>
-  (figureId) =>
-    figures.get(figureId);
+function getFigure_(
+  figures /*: FiguresMap */,
+  figureId /*: string */
+) /*: ?Figure */ {
+  return figures.get(figureId);
+}
 
-export const getFigure =
-  (figures /*: FiguresMap */) /*: (figureId: string) => Figure */ =>
-  (figureId) =>
-    nonNull(figures.get(figureId), "null figureId");
+function getFigure(
+  figures /*: FiguresMap */,
+  figureId /*: string */
+) /*: Figure */ {
+  return nonNull(figures.get(figureId), "null figureId");
+}
 
-export const hasFigure =
-  (figures /*: FiguresMap */) /*: (figureId: string) => boolean */ =>
-  (figureId) =>
-    figures.has(figureId);
+function getFigureType /*:: <T: Figure> */(
+  figures /*: FiguresMap */,
+  typeGuard /*: (figure: Figure) => {typeName: string, type: ?T} */,
+  figureId /*: string */
+) /*: T */ {
+  const { type, typeName } = typeGuard(getFigure(figures, figureId));
+  if (!type) throw new Error(`figure is not a ${typeName}: ${figureId}`);
+  return type;
+}
 
-export const setFigure =
-  (
-    figures /*: FiguresMap */
-  ) /*: (figureId: string, figure: Figure) => FiguresMap */ =>
-  (figureId, figure) =>
-    figures.set(figureId, figure);
+const jotType = (
+  figure /*: Figure */
+) /*: { type: ?JotFigure, typeName: string } */ => ({
+  type: figure.type === "jot" ? figure : undefined,
+  typeName: "JotFigure",
+});
 
-export const deleteFigure =
-  (figures /*: FiguresMap */) /*: (figureId: string) => boolean */ =>
-  (figureId) =>
-    figures.delete(figureId);
+const lineType = (
+  figure /*: Figure */
+) /*: { type: ?LineFigure, typeName: string } */ => ({
+  type: figure.type === "line" ? figure : undefined,
+  typeName: "LineFigure",
+});
 
-export const setLineType =
-  (
-    figures /*: FiguresMap */
-  ) /*: (figureId: string, lineType: LineType) => Figure */ =>
-  (figureId, lineType) => {
-    const figure = figures.get(figureId);
-    if (!figure) throw new Error(`can't get Line figure: ${figureId}`);
-    if (figure.type !== "line")
-      throw new Error(`figure not a line: ${figureId} (${figure.type})`);
-    return setFigureValues(figure, { lineType });
-  };
+const popType = (
+  figure /*: Figure */
+) /*: { type: ?PopFigure, typeName: string } */ => ({
+  type: figure.type === "pop" ? figure : undefined,
+  typeName: "PopFigure",
+});
+
+const tapType = (
+  figure /*: Figure */
+) /*: { type: ?TapFigure, typeName: string } */ => ({
+  type: figure.type === "tap" ? figure : undefined,
+  typeName: "TapFigure",
+});
+
+const getJot = function (figures /*: FiguresMap */, figureId /*: string */) {
+  return getFigureType(figures, jotType, figureId);
+};
+
+const getLine = function (figures /*: FiguresMap */, figureId /*: string */) {
+  return getFigureType(figures, lineType, figureId);
+};
+
+const getPop = function (figures /*: FiguresMap */, figureId /*: string */) {
+  return getFigureType(figures, popType, figureId);
+};
+
+const getTap = function (figures /*: FiguresMap */, figureId /*: string */) {
+  return getFigureType(figures, tapType, figureId);
+};
+
+function hasFigure(
+  figures /*: FiguresMap */,
+  figureId /*: string */
+) /*: boolean */ {
+  return figures.has(figureId);
+}
+
+function setFigure(
+  figures /*: FiguresMap */,
+  figureId /*: string */,
+  figure /*: Figure */
+) /*: FiguresMap */ {
+  return figures.set(figureId, figure);
+}
+
+function deleteFigure(
+  figures /*: FiguresMap */,
+  figureId /*: string */
+) /*: boolean */ {
+  return figures.delete(figureId);
+}
+
+function updateJot(
+  figures /*: FiguresMap */,
+  figureId /*: string */,
+  jot /*: Partial<JotFigure> */
+) /*: JotFigure */ {
+  const figure = getJot(figures, figureId);
+  const updated = { ...figure, ...jot };
+  setFigure(figures, figureId, updated);
+  return updated;
+}
+
+function updateLine(
+  figures /*: FiguresMap */,
+  figureId /*: string */,
+  line /*: Partial<LineFigure> */
+) /*: LineFigure */ {
+  const figure = getLine(figures, figureId);
+  const updated = { ...figure, ...line };
+  setFigure(figures, figureId, updated);
+  return updated;
+}
+
+function updatePop(
+  figures /*: FiguresMap */,
+  figureId /*: string */,
+  pop /*: Partial<PopFigure> */
+) /*: PopFigure */ {
+  const figure = getPop(figures, figureId);
+  const updated = { ...figure, ...pop };
+  setFigure(figures, figureId, updated);
+  return updated;
+}
+
+function updateTap(
+  figures /*: FiguresMap */,
+  figureId /*: string */,
+  tap /*: Partial<TapFigure> */
+) /*: TapFigure */ {
+  const figure = getTap(figures, figureId);
+  const updated = { ...figure, ...tap };
+  setFigure(figures, figureId, updated);
+  return updated;
+}
 
 /* Utility Functions */
 
-export function setFigureValues(
-  figure /*: Figure */,
-  values /*: any */
-) /*: Figure */ {
-  const definedValues = Object.assign({}, values);
-  for (var k in definedValues) {
-    if (definedValues[k] === undefined) delete definedValues[k];
-  }
-
-  Object.assign(figure, definedValues);
-
-  return figure;
-}
-
 const p = new Vector2();
-
 function setCircleBoundingBox(
   target /*: Box2 */,
   x /*: number | void */,
@@ -308,14 +386,19 @@ export function updateFigureBoundingBox(figure /*: Figure */) {
 export type FiguresBundle = {
   figures: FiguresMap,
 
-  createFigure: ReturnType<typeof createFigure>,
-  getFigure_: ReturnType<typeof getFigure_>,
-  getFigure: ReturnType<typeof getFigure>,
-  hasFigure: ReturnType<typeof hasFigure>,
-  setFigure: ReturnType<typeof setFigure>,
-  deleteFigure: ReturnType<typeof deleteFigure>,
-  setLineType: ReturnType<typeof setLineType>,
+  createFigure: (figure: FigureConstructor) => { figure: Figure, figureId: string },
+  getFigure_: (figureId: string) => ?Figure,
+  getFigure: (figureId: string) => Figure,
+  hasFigure: (figureId: string) => boolean,
+  setFigure: (figureId: string, figure: Figure) => FiguresMap,
+  updateJot: (figureId: string, Partial<JotFigure>) => JotFigure,
+  updateLine: (figureId: string, Partial<LineFigure>) => LineFigure,
+  updatePop: (figureId: string, Partial<PopFigure>) => PopFigure,
+  updateTap: (figureId: string, Partial<TapFigure>) => TapFigure,
+  deleteFigure: (figureId: string) => boolean,
 }
+
+type T = Parameters<typeof createFigure>;
 */
 
 export function makeFigures(
@@ -325,12 +408,15 @@ export function makeFigures(
 
   return {
     figures,
-    createFigure: createFigure(figures),
-    getFigure_: getFigure_(figures), // can be null
-    getFigure: getFigure(figures),
-    hasFigure: hasFigure(figures),
-    setFigure: setFigure(figures),
-    deleteFigure: deleteFigure(figures),
-    setLineType: setLineType(figures),
+    createFigure: (figure) => createFigure(figures, figure),
+    getFigure_: (figureId) => getFigure_(figures, figureId), // can return null
+    getFigure: (figureId) => getFigure(figures, figureId),
+    hasFigure: (figureId) => hasFigure(figures, figureId),
+    setFigure: (figureId, figure) => setFigure(figures, figureId, figure),
+    updateJot: (figureId, figure) => updateJot(figures, figureId, figure),
+    updateLine: (figureId, figure) => updateLine(figures, figureId, figure),
+    updatePop: (figureId, figure) => updatePop(figures, figureId, figure),
+    updateTap: (figureId, figure) => updateTap(figures, figureId, figure),
+    deleteFigure: (figureId) => deleteFigure(figures, figureId),
   };
 }
