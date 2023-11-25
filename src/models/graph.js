@@ -19,7 +19,7 @@ type Graph = {
 
   applyNodesToFigures: () => void,
   createCircleControllingNode: CreateCircleControllingNodeFn,
-  removeNodeWithDependents: RemoveNodeWithDependentsFn,
+  deleteNodeWithDependents: RemoveNodeWithDependentsFn,
   getFiguresConnectedToLineFigureId: GetFiguresConnectedFn,
 
   debug: () => void
@@ -51,7 +51,7 @@ export function makeGraph(
     },
 
     createCircleControllingNode: createCircleControllingNode(nodes, figures),
-    removeNodeWithDependents: removeNodeWithDependents(nodes, figures),
+    deleteNodeWithDependents: deleteNodeWithDependents(nodes, figures),
     getFiguresConnectedToLineFigureId: getFiguresConnectedToLineFigureId(
       nodes,
       figures
@@ -167,7 +167,7 @@ const createConnectedLine = (
 };
 
 // Remove node and its dependents
-const removeNodeWithDependents = (
+const deleteNodeWithDependents = (
   nodes /*: NodesBundle */,
   figures /*: FiguresBundle */
 ) /*: RemoveNodeWithDependentsFn */ =>
@@ -176,7 +176,7 @@ const removeNodeWithDependents = (
     node.dependents.forEach((_attrs, depFigureId) => {
       if (!figures.hasFigure(depFigureId)) return;
       const depFigure = figures.getFigure(depFigureId);
-      figures.removeFigure(depFigureId);
+      figures.deleteFigure(depFigureId);
       if (depFigure.type === "line") {
         if (nodes.hasNode(depFigure.connectedNodeId1)) {
           const connectedNode = nodes.getNode(depFigure.connectedNodeId1);
@@ -188,5 +188,5 @@ const removeNodeWithDependents = (
         }
       }
     });
-    return nodes.removeNode(nodeId);
+    return nodes.deleteNode(nodeId);
   };

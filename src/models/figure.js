@@ -107,7 +107,7 @@ export const setFigure =
   (figureId, figure) =>
     figures.set(figureId, figure);
 
-export const removeFigure =
+export const deleteFigure =
   (figures /*: FiguresMap */) /*: (figureId: string) => boolean */ =>
   (figureId) =>
     figures.delete(figureId);
@@ -197,7 +197,7 @@ export type FiguresBundle = {
   getFigure: ReturnType<typeof getFigure>,
   hasFigure: ReturnType<typeof hasFigure>,
   setFigure: ReturnType<typeof setFigure>,
-  removeFigure: ReturnType<typeof removeFigure>,
+  deleteFigure: ReturnType<typeof deleteFigure>,
   setLineType: ReturnType<typeof setLineType>,
 }
 */
@@ -213,7 +213,7 @@ export function makeFigures(
     getFigure: getFigure(figures),
     hasFigure: hasFigure(figures),
     setFigure: setFigure(figures),
-    removeFigure: removeFigure(figures),
+    deleteFigure: deleteFigure(figures),
     setLineType: setLineType(figures),
   };
 }

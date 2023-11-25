@@ -79,7 +79,7 @@ export const hasNode =
   (nodes /*: NodesMap */) /*: (nodeId: string) => boolean */ => (nodeId) =>
     nodes.has(nodeId);
 
-export const removeNode =
+export const deleteNode =
   (nodes /*: NodesMap */) /*: (nodeId: string) => boolean */ => (nodeId) =>
     nodes.delete(nodeId);
 
@@ -108,7 +108,7 @@ export type NodesBundle = {
   getNode: ReturnType<typeof getNode>,
   hasNode: ReturnType<typeof hasNode>,
   setNode: ReturnType<typeof setNode>,
-  removeNode: ReturnType<typeof removeNode>,
+  deleteNode: ReturnType<typeof deleteNode>,
   findNodeAtPosition: ReturnType<typeof findNodeAtPosition> 
 }
 */
@@ -125,7 +125,7 @@ export function makeNodes(
     getNode: getNode(nodes),
     hasNode: hasNode(nodes),
     setNode: setNode(nodes),
-    removeNode: removeNode(nodes),
+    deleteNode: deleteNode(nodes),
     findNodeAtPosition: findNodeAtPosition(nodes),
   };
 }

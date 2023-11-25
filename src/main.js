@@ -92,7 +92,7 @@ function* Svg(
   });
 
   this.addEventListener("destroyNode", ({ detail: { nodeId } }) => {
-    if (graph.removeNodeWithDependents(nodeId)) {
+    if (graph.deleteNodeWithDependents(nodeId)) {
       this.refresh();
     }
   });
@@ -100,9 +100,9 @@ function* Svg(
   this.addEventListener("destroyFigure", ({ detail: { figureId } }) => {
     const figure = graph.getFigure(figureId);
     if (figure.type === "jot") {
-      graph.removeNodeWithDependents(figure.controlsNodeId);
+      graph.deleteNodeWithDependents(figure.controlsNodeId);
       this.refresh();
-    } else if (graph.removeFigure(figureId)) {
+    } else if (graph.deleteFigure(figureId)) {
       this.refresh();
     }
   });
@@ -233,7 +233,7 @@ function* Svg(
     await new Promise((resolve) => setTimeout(resolve, tapAnimationMs));
 
     if (tapFigureIdToRemove) {
-      graph.removeFigure(tapFigureIdToRemove);
+      graph.deleteFigure(tapFigureIdToRemove);
     }
 
     this.refresh();
