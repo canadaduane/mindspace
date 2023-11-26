@@ -1,3 +1,5 @@
+// @flow
+
 import { Vector2 } from "./math/vector2.js";
 
 // How far can the drag movement drift from the start position before
@@ -5,8 +7,17 @@ import { Vector2 } from "./math/vector2.js";
 const defaultMaxDrift = 3;
 
 const scrollPos = new Vector2();
-export function getScroll() {
+
+const getScrollSize = () => {
+  const scrollWidth = document.documentElement?.scrollWidth ?? 0;
+  const scrollHeight = document.documentElement?.scrollHeight ?? 0;
+  return new Vector2(scrollWidth, scrollHeight);
+};
+
+export function getScroll() /*: Vector2 */ {
   const doc = document.documentElement;
+
+  if (!doc) return scrollPos;
 
   scrollPos.set(
     doc.scrollLeft - (doc.clientLeft || 0),
@@ -16,17 +27,45 @@ export function getScroll() {
   return scrollPos;
 }
 
+/*::
+type Draggable = {
+  onStart: (Omit<DraggableParams, 'didDrift'>) => void,
+  onEnd: (DraggableParams) => void,
+  onMove: (DraggableParams) => void,
+  onLongPress?: ({ x: number, y: number}) => void,
+  longPressMs?: number,
+  maxDrift?: number,
+}
+
+type DraggableHandlers = {
+  start: (event: PointerEvent) => void,
+  end: (event: PointerEvent) => void,
+  move: (event: PointerEvent) => void,
+  touchStart: (event: PointerEvent) => void,
+  cancel: (event: PointerEvent) => void,
+}
+
+type DraggableParams = {
+  event: PointerEvent,
+  x: number,
+  y: number,
+  offset: Vector2,
+  didDrift: boolean
+}
+
+*/
+
 export function makeDraggable(
-  pos /*: {x: number, y: number} */,
+  pos /*: { x: number, y: number } */,
   {
     onStart,
     onEnd,
     onMove,
-    onLongPress = undefined,
+    onLongPress,
     longPressMs = 1200,
     maxDrift = defaultMaxDrift,
-  }
-) {
+  } /*: Draggable */
+) /*: DraggableHandlers */ {
   let isDragging = false;
   let canceled = false;
   // pixel offset from center of object being dragged
@@ -34,10 +73,10 @@ export function makeDraggable(
   const worldPos = new Vector2();
   const initialWorldPos = new Vector2();
 
-  let longPressTimeout /*: Timeout */;
+  let longPressTimeout /*: TimeoutID */;
   let didDrift = false;
 
-  const start = (event) => {
+  const start = (event /*: PointerEvent */) => {
     const { target, clientX, clientY, pointerId, button } = event;
 
     if (button !== 0) return; // left button only
@@ -57,15 +96,18 @@ export function makeDraggable(
     canceled = false;
 
     isDragging = true;
-    offset.copy(pos).sub(worldPos);
+    offset.x = pos.x;
+    offset.y = pos.y;
+    offset.sub(worldPos);
 
     const allow = onStart?.({ event, x: worldPos.x, y: worldPos.y, offset });
-    if (allow === true || allow === undefined) {
+    if (allow === undefined || allow) {
+      // $FlowIgnore
       target.setPointerCapture(pointerId);
     }
   };
 
-  const end = (event) => {
+  const end = (event /*: PointerEvent */) => {
     if (canceled) return;
 
     isDragging = false;
@@ -85,7 +127,7 @@ export function makeDraggable(
     });
   };
 
-  const move = (event) => {
+  const move = (event /*: PointerEvent */) => {
     if (canceled) return;
     if (!isDragging) return;
 
@@ -107,7 +149,7 @@ export function makeDraggable(
     onMove?.({ event, x: worldPos.x, y: worldPos.y, offset, didDrift });
   };
 
-  const touchStart = (e) => e.preventDefault();
+  const touchStart = (e /*: PointerEvent */) => e.preventDefault();
 
   const cancel = () => {
     canceled = true;
