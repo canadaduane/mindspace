@@ -1,10 +1,7 @@
 // @flow
 import { jsx } from "@b9g/crank/standalone";
 import { nanoid } from "nanoid";
-
-/*::
 import { Vector2 } from "./math/vector2.js";
-*/
 
 // Export jsx as both html and svg so that we get lit-html syntax highlighting
 export const html = jsx;
@@ -111,4 +108,25 @@ export function nonNull /*:: <T> */(
 
 export function makeId(defaultId /*: ?string */) /*: string */ {
   return defaultId ?? nanoid(12);
+}
+
+const scrollPos = new Vector2();
+
+export const getScrollSize = () /*: Vector2 */ => {
+  const scrollWidth = document.documentElement?.scrollWidth ?? 0;
+  const scrollHeight = document.documentElement?.scrollHeight ?? 0;
+  return new Vector2(scrollWidth, scrollHeight);
+};
+
+export function getScroll() /*: Vector2 */ {
+  const doc = document.documentElement;
+
+  if (!doc) return scrollPos;
+
+  scrollPos.set(
+    doc.scrollLeft - (doc.clientLeft || 0),
+    doc.scrollTop - (doc.clientTop || 0)
+  );
+
+  return scrollPos;
 }

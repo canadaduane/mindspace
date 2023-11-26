@@ -1,6 +1,7 @@
+// @flow
+
 import Color from "colorjs.io";
 import { Vector2 } from "../math/vector2.js";
-import { dispatch, svg, squash } from "../utils.js";
 import {
   distanceFromPointToLine,
   normalizedOrthogonalVectorToPointOnLine,
@@ -10,6 +11,7 @@ import {
   lineTransition,
   jotCircleRadius,
 } from "../constants.js";
+import { dispatch, html, svg, squash } from "../utils.js";
 import { makeDraggable } from "../drag.js";
 
 const opacityThreshold = 0.001;
@@ -17,6 +19,8 @@ const defaultStroke = "rgba(240, 240, 240, 1)";
 const warnColor = "rgba(240, 60, 30, 1)";
 
 /*::
+import type { LineType } from "../models/figure.js";
+
 type LineProps = {
   opacity: number;
   strokeWidth: number;
@@ -24,35 +28,29 @@ type LineProps = {
 }
 */
 
-export function* Line({ figureId /*: string */ }) {
+export function* Line(
+  /*:: this: any, */ { figureId } /*: { figureId: string } */
+) /*: any */ {
   let canBump = false;
   let broken = false;
   let brokenRatio = 0;
 
   let isDragging = false;
-  const pos = new Vector2(0, 0);
   const dragPos = new Vector2(0, 0);
-  const {
-    start,
-    end,
-    move,
-    touchStart,
-    cancel: cancelDrag,
-  } = makeDraggable(pos, {
-    onLongPress: () => {
-      // nothing for now
-    },
-    onStart: () => {
-      dispatch(this, "selectLine", { figureId });
-    },
-    onEnd: () => {
-      isDragging = false;
-    },
-    onMove: ({ x, y }) => {
-      isDragging = true;
-      dragPos.set(x, y);
-      this.refresh();
-    },
+  const { events, handlers, cancel: cancelDrag } = makeDraggable();
+
+  events.on("start", () => {
+    dispatch(this, "selectLine", { figureId });
+  });
+
+  events.on("end", () => {
+    isDragging = false;
+  });
+
+  events.on("move", ({ x, y }) => {
+    isDragging = true;
+    dragPos.set(x, y);
+    this.refresh();
   });
 
   const p1 = new Vector2();
@@ -79,8 +77,8 @@ export function* Line({ figureId /*: string */ }) {
       canBump = true;
     }
 
-    let line /*: LineProps | undefined */;
-    let nearIndicator /*: LineProps| undefined */;
+    let line /*: ?LineProps */;
+    let nearIndicator /*: ?LineProps */;
 
     if (type === "strong") {
       let strokeWidth = 7;
@@ -165,13 +163,13 @@ export function* Line({ figureId /*: string */ }) {
     }
 
     yield connected &&
-      svg`
+      html`
         <path d=${path}
-          onpointerdown=${start}
-          onpointerup=${end}
-          onpointercancel=${end}
-          onpointermove=${move}
-          ontouchstart=${touchStart}
+          onpointerdown=${handlers.start}
+          onpointerup=${handlers.end}
+          onpointercancel=${handlers.end}
+          onpointermove=${handlers.move}
+          ontouchstart=${handlers.touchStart}
           fill="none"
           stroke=${
             selected && !broken
@@ -237,9 +235,7 @@ export function* Line({ figureId /*: string */ }) {
   }
 }
 
-export function promoteLineType(
-  type /*: "short" | "strong" | "deleted" | "disabled" */
-) {
+export function promoteLineType(type /*: LineType */) /*: LineType */ {
   switch (type) {
     case "deleted":
       return "strong";
@@ -250,9 +246,7 @@ export function promoteLineType(
   }
 }
 
-export function demoteLineType(
-  type /*: "short" | "strong" | "deleted" | "disabled" */
-) {
+export function demoteLineType(type /*: LineType */) /*: LineType */ {
   switch (type) {
     case "strong":
       return "deleted";

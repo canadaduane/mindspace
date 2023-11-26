@@ -1,3 +1,5 @@
+// @flow
+
 import { Vector2 } from "../math/vector2.js";
 import { css } from "../styles.js";
 import { dispatch, html, isFirefox } from "../utils.js";
@@ -11,39 +13,55 @@ import {
 const circleToPillTextLength = 3;
 const pillToRectangleTextLength = 16;
 
-export function* Jot({
-  figureId,
-  controlsNodeId: nodeId,
-  shape,
-  x = 0,
-  y = 0,
-}) {
-  const pos = new Vector2(x, y);
+/*::
+import type { JotShape } from "../models/figure.js";
 
+type JotParams = {
+  figureId: string,
+  controlsNodeId: string,
+  shape: JotShape,
+  x: number,
+  y: number,
+}
+*/
+
+export function* Jot(
+  /*:: this: any, */ {
+    figureId,
+    controlsNodeId: nodeId,
+    shape,
+    x = 0,
+    y = 0,
+  } /*: JotParams */
+) /*: any */ {
   let editEl;
   let didDrag = false;
   let content = "";
   let currentShape = shape;
   let animateClass = "";
 
-  const { start, end, move, touchStart } = makeDraggable(pos, {
-    onStart: () => {
-      didDrag = false;
-
-      dispatch(this, "controllingNode", { nodeId });
-    },
-    onEnd: () => {
-      if (!didDrag) {
-        setTimeout(() => editEl?.focus(), 100);
-      }
-    },
-    onMove: ({ x, y }) => {
-      didDrag = true;
-      dispatch(this, "nodeMoved", { nodeId, ...pos });
-    },
+  const { handlers, events, position } = makeDraggable({
+    position: new Vector2(x, y),
   });
 
-  const onKeyDown = (event) => {
+  events.on("start", () => {
+    didDrag = false;
+
+    dispatch(this, "controllingNode", { nodeId });
+  });
+
+  events.on("end", () => {
+    if (!didDrag) {
+      setTimeout(() => editEl?.focus(), 100);
+    }
+  });
+
+  events.on("move", ({ x, y }) => {
+    didDrag = true;
+    dispatch(this, "nodeMoved", { nodeId, x, y });
+  });
+
+  const onKeyDown = (event /*: KeyboardEvent */) => {
     if (event.key === "Enter" && !event.shiftKey) {
       dispatch(this, "createNode", { nodeId });
       event.preventDefault();
@@ -53,7 +71,7 @@ export function* Jot({
     }
   };
 
-  const onKey = (event) => {
+  const onKey = (event /*: KeyboardEvent */) => {
     if (event.key === "Backspace" || event.key === "Delete") {
       if (content.length === 0) {
         dispatch(this, "destroyNode", { nodeId });
@@ -62,6 +80,8 @@ export function* Jot({
     } else if (event.key === "Escape") {
       editEl?.blur();
     }
+
+    // $FlowIgnore
     content = event.target.innerText.trim();
 
     let newShape;
@@ -82,13 +102,13 @@ export function* Jot({
 
   this.schedule(() => setTimeout(() => editEl?.focus(), 50));
 
-  const onFocus = (event) => {
+  const onFocus = (event /*: FocusEvent */) => {
     dispatch(this, "nodeActive", { nodeId });
   };
 
   for (const { shape, x, y, color, shake } of this) {
     currentShape = shape;
-    pos.set(x, y);
+    position.set(x, y);
 
     const shapeClasses = [];
     if (shake) shapeClasses.push("shake");
@@ -96,15 +116,15 @@ export function* Jot({
 
     yield html`<!-- jot -->
       <div
-        onpointerdown=${start}
-        onpointerup=${end}
-        onpointercancel=${end}
-        onpointermove=${move}
-        ontouchstart=${touchStart}
+        onpointerdown=${handlers.start}
+        onpointerup=${handlers.end}
+        onpointercancel=${handlers.end}
+        onpointermove=${handlers.move}
+        ontouchstart=${handlers.touchStart}
         class="jot ${"jot--" + shapeClasses.join("-")}"
         style=${{
-          "left": `${pos.x}px`,
-          "top": `${pos.y}px`,
+          "left": `${position.x}px`,
+          "top": `${position.y}px`,
           "border-color": color,
         }}
       >
@@ -115,7 +135,7 @@ export function* Jot({
           onkeydown=${onKeyDown}
           onkeyup=${onKey}
           onfocus=${onFocus}
-          c-ref=${(el) => (editEl = el)}
+          $ref=${(el /*: HTMLElement */) => (editEl = el)}
         ></div>
       </div>`;
   }

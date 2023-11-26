@@ -47,12 +47,6 @@ function* Svg(
 
   let rainbowFocus;
 
-  const getScrollSize = () => {
-    const scrollWidth = document.documentElement?.scrollWidth ?? 0;
-    const scrollHeight = document.documentElement?.scrollHeight ?? 0;
-    return new Vector2(scrollWidth, scrollHeight);
-  };
-
   const resizeWithoutRefresh = () => {
     winSize.set(window.innerWidth, window.innerHeight);
   };
@@ -226,121 +220,121 @@ function* Svg(
     this.refresh();
   };
 
-  const { start, end, move, touchStart } = makeDraggable(
-    { x: 0, y: 0 },
-    {
-      onStart: ({ x, y }) => {
-        unselectSelectedLine();
+  const { handlers, events } = makeDraggable();
 
-        const side = closestSide(new Vector2(x, y), winSize);
-        if (side.distance < 40) {
-          dragColor = getColorFromScreenCoord(new Vector2(x, y), winSize);
+  events.on("start", ({ x, y }) => {
+    console.log('start')
+    unselectSelectedLine();
 
-          tapFigureId = graph.createFigure({
-            type: "tap",
-            tapState: "color",
-            color: dragColor,
-            x,
-            y,
-          }).figureId;
-          return;
-        }
+    const side = closestSide(new Vector2(x, y), winSize);
+    if (side.distance < 40) {
+      dragColor = getColorFromScreenCoord(new Vector2(x, y), winSize);
 
-        const doubleTapDistance = singleTapPos
-          ? singleTapPos.distanceTo(new Vector2(x, y))
-          : 0;
-
-        if (singleClickTimeout && !isDoubleTap && doubleTapDistance < 5) {
-          if (!tapFigureId) return;
-
-          isDoubleTap = true;
-
-          clearTimeout(singleClickTimeout);
-          singleClickTimeout = undefined;
-
-          if (!tapFigureId) return;
-
-          graph.updateTap(tapFigureId, { x, y, tapState: "creating" });
-
-          setTimeout(() => {
-            removeTap(false).then(() => {
-              createCircleUI(x, y);
-            });
-          }, tapAnimationMs - 50);
-
-          this.refresh();
-        } else {
-          const createNewTap = () => {
-            tapFigureId = graph.createFigure({
-              type: "tap",
-              tapState: "create",
-              x,
-              y,
-            }).figureId;
-          };
-          if (tapFigureId) {
-            removeTap(false).then(createNewTap);
-          } else {
-            createNewTap();
-          }
-        }
-
-        this.refresh();
-      },
-      onEnd: ({ x, y }) => {
-        if (dragColor) {
-          const jotColor = dragColor;
-          removeTap(false).then(() => {
-            const jotFigureIds = graph.findJotsAtPosition(new Vector2(x, y));
-            if (jotFigureIds.length === 0) {
-              createCircleUI(x, y, jotColor);
-            } else {
-              for (let figureId of jotFigureIds) {
-                const jot = graph.getJot(figureId);
-                const node = graph.getNode(jot.controlsNodeId);
-                node.color = jotColor;
-              }
-            }
-            this.refresh();
-          });
-          dragColor = undefined;
-        }
-
-        if (isDoubleTap) {
-          isDoubleTap = false;
-          singleTapPos = undefined;
-          return;
-        }
-
-        singleTapPos = new Vector2(x, y);
-
-        // Clean up Tap figure if needed
-        singleClickTimeout = setTimeout(() => {
-          removeTap(true);
-          singleClickTimeout = undefined;
-        }, doubleTapMs);
-
-        this.refresh();
-      },
-      onMove: ({ x, y }) => {
-        clearTimeout(singleClickTimeout);
-
-        if (tapFigureId) {
-          const figureId = nonNull(tapFigureId, "figureId is null");
-          const figure = graph.getFigure(figureId);
-
-          if (figure.tapState === "color") {
-            graph.updateTap(figureId, { x, y });
-          } else {
-            graph.updateTap(figureId, { x, y, tapState: "select" });
-          }
-          this.refresh();
-        }
-
-        this.refresh();
-      },
+      tapFigureId = graph.createFigure({
+        type: "tap",
+        tapState: "color",
+        color: dragColor,
+        x,
+        y,
+      }).figureId;
+      return;
     }
-  );
+
+    const doubleTapDistance = singleTapPos
+      ? singleTapPos.distanceTo(new Vector2(x, y))
+      : 0;
+
+    if (singleClickTimeout && !isDoubleTap && doubleTapDistance < 5) {
+      if (!tapFigureId) return;
+
+      isDoubleTap = true;
+
+      clearTimeout(singleClickTimeout);
+      singleClickTimeout = undefined;
+
+      if (!tapFigureId) return;
+
+      graph.updateTap(tapFigureId, { x, y, tapState: "creating" });
+
+      setTimeout(() => {
+        removeTap(false).then(() => {
+          createCircleUI(x, y);
+        });
+      }, tapAnimationMs - 50);
+
+      this.refresh();
+    } else {
+      const createNewTap = () => {
+        tapFigureId = graph.createFigure({
+          type: "tap",
+          tapState: "create",
+          x,
+          y,
+        }).figureId;
+      };
+      if (tapFigureId) {
+        removeTap(false).then(createNewTap);
+      } else {
+        createNewTap();
+      }
+    }
+
+    this.refresh();
+  });
+
+  events.on("end", ({ x, y }) => {
+    if (dragColor) {
+      const jotColor = dragColor;
+      removeTap(false).then(() => {
+        const jotFigureIds = graph.findJotsAtPosition(new Vector2(x, y));
+        if (jotFigureIds.length === 0) {
+          createCircleUI(x, y, jotColor);
+        } else {
+          for (let figureId of jotFigureIds) {
+            const jot = graph.getJot(figureId);
+            const node = graph.getNode(jot.controlsNodeId);
+            node.color = jotColor;
+          }
+        }
+        this.refresh();
+      });
+      dragColor = undefined;
+    }
+
+    if (isDoubleTap) {
+      isDoubleTap = false;
+      singleTapPos = undefined;
+      return;
+    }
+
+    singleTapPos = new Vector2(x, y);
+
+    // Clean up Tap figure if needed
+    singleClickTimeout = setTimeout(() => {
+      removeTap(true);
+      singleClickTimeout = undefined;
+    }, doubleTapMs);
+
+    this.refresh();
+  });
+
+  events.on("move", ({ x, y }) => {
+    clearTimeout(singleClickTimeout);
+
+    if (tapFigureId) {
+      const figureId = nonNull(tapFigureId, "figureId is null");
+      const figure = graph.getFigure(figureId);
+
+      if (figure.tapState === "color") {
+        graph.updateTap(figureId, { x, y });
+      } else {
+        graph.updateTap(figureId, { x, y, tapState: "select" });
+      }
+      this.refresh();
+    }
+
+    this.refresh();
+  });
 
   /** Helper Functions */
 
@@ -418,11 +412,11 @@ function* Svg(
           viewBox="0 0 ${w} ${h}"
           style="width: ${w}px; height: ${h}px;"
           xmlns="http://www.w3.org/2000/svg"
-          onpointerdown=${start}
-          onpointerup=${end}
-          onpointercancel=${end}
-          onpointermove=${move}
-          ontouchstart=${touchStart}
+          onpointerdown=${handlers.start}
+          onpointerup=${handlers.end}
+          onpointercancel=${handlers.end}
+          onpointermove=${handlers.move}
+          ontouchstart=${handlers.touchStart}
         >
           ${svgFigures}
         </svg>

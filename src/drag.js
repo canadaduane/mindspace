@@ -1,73 +1,62 @@
 // @flow
 
+import { createEvents } from "./events.js";
 import { Vector2 } from "./math/vector2.js";
+import { getScroll } from "./utils.js";
 
 // How far can the drag movement drift from the start position before
 // it registers as a "movement" and, e.g. cancels long-press?
 const defaultMaxDrift = 3;
 
-const scrollPos = new Vector2();
+/*::
+import type { Emitter } from "./events.js";
 
-const getScrollSize = () => {
-  const scrollWidth = document.documentElement?.scrollWidth ?? 0;
-  const scrollHeight = document.documentElement?.scrollHeight ?? 0;
-  return new Vector2(scrollWidth, scrollHeight);
-};
-
-export function getScroll() /*: Vector2 */ {
-  const doc = document.documentElement;
-
-  if (!doc) return scrollPos;
-
-  scrollPos.set(
-    doc.scrollLeft - (doc.clientLeft || 0),
-    doc.scrollTop - (doc.clientTop || 0)
-  );
-
-  return scrollPos;
+export type DraggableEvents = {
+  "start": (Omit<DraggableEventPayload, "didDrift">) => void,
+  "end": (DraggableEventPayload) => void,
+  "move": (DraggableEventPayload) => void,
+  "longPress": ({ x: number, y: number}) => void,
 }
 
-/*::
-type Draggable = {
-  onStart: (Omit<DraggableParams, 'didDrift'>) => void,
-  onEnd: (DraggableParams) => void,
-  onMove: (DraggableParams) => void,
-  onLongPress?: ({ x: number, y: number}) => void,
+export type DraggableOptions = {
+  position?: Vector2,
   longPressMs?: number,
   maxDrift?: number,
+  allowStart?: (params: Omit<DraggableEventPayload, "didDrift">) => boolean,
 }
 
-type DraggableHandlers = {
+export type DraggableBundle = {
+  events: Emitter<DraggableEvents>,
+  position: Vector2,
+  handlers: DraggableHandlers,
+  cancel: () => void,
+}
+
+export type DraggableHandlers = {
   start: (event: PointerEvent) => void,
   end: (event: PointerEvent) => void,
   move: (event: PointerEvent) => void,
   touchStart: (event: PointerEvent) => void,
-  cancel: (event: PointerEvent) => void,
 }
 
-type DraggableParams = {
+export type DraggableEventPayload = {
   event: PointerEvent,
   x: number,
   y: number,
   offset: Vector2,
   didDrift: boolean
 }
-
 */
 
-export function makeDraggable(
-  pos /*: { x: number, y: number } */,
-  {
-    onStart,
-    onEnd,
-    onMove,
-    onLongPress,
-    longPressMs = 1200,
-    maxDrift = defaultMaxDrift,
-  } /*: Draggable */
-) /*: DraggableHandlers */ {
+export function makeDraggable({
+  position = new Vector2(),
+  allowStart = () => true,
+  longPressMs = 1200,
+  maxDrift = defaultMaxDrift,
+} /*: DraggableOptions */ = {}) /*: DraggableBundle */ {
   let isDragging = false;
   let canceled = false;
+
   // pixel offset from center of object being dragged
   const offset = new Vector2();
   const worldPos = new Vector2();
@@ -75,6 +64,8 @@ export function makeDraggable(
 
   let longPressTimeout /*: TimeoutID */;
   let didDrift = false;
+
+  const events = createEvents/*:: <DraggableEvents> */();
 
   const start = (event /*: PointerEvent */) => {
     const { target, clientX, clientY, pointerId, button } = event;
@@ -90,18 +81,19 @@ export function makeDraggable(
 
     longPressTimeout = setTimeout(() => {
       if (didDrift) return;
-      onLongPress?.({ x: worldPos.x, y: worldPos.y });
+      events.emit("longPress", { x: worldPos.x, y: worldPos.y });
     }, longPressMs);
 
     canceled = false;
 
     isDragging = true;
-    offset.x = pos.x;
-    offset.y = pos.y;
-    offset.sub(worldPos);
 
-    const allow = onStart?.({ event, x: worldPos.x, y: worldPos.y, offset });
-    if (allow === undefined || allow) {
+    // Offset of grab point on the dragged thing
+    offset.copy(position).sub(worldPos);
+
+    const startParams = { event, x: worldPos.x, y: worldPos.y, offset };
+    if (allowStart(startParams)) {
+      events.emit("start", startParams);
       // $FlowIgnore
       target.setPointerCapture(pointerId);
     }
@@ -118,7 +110,7 @@ export function makeDraggable(
 
     clearTimeout(longPressTimeout);
 
-    onEnd?.({
+    events.emit("end", {
       event,
       x: worldPos.x,
       y: worldPos.y,
@@ -142,19 +134,26 @@ export function makeDraggable(
       didDrift = true;
     }
 
-    pos.x = worldPos.x + offset.x;
-    pos.y = worldPos.y + offset.y;
-    // pos.copy(worldPos).add(offset);
+    position.copy(worldPos).add(offset);
 
-    onMove?.({ event, x: worldPos.x, y: worldPos.y, offset, didDrift });
+    events.emit("move", {
+      event,
+      x: worldPos.x,
+      y: worldPos.y,
+      offset,
+      didDrift,
+    });
   };
 
   const touchStart = (e /*: PointerEvent */) => e.preventDefault();
 
-  const cancel = () => {
-    canceled = true;
-    clearTimeout(longPressTimeout);
+  return {
+    events,
+    position,
+    handlers: { start, end, move, touchStart },
+    cancel: () => {
+      canceled = true;
+      clearTimeout(longPressTimeout);
+    },
   };
-
-  return { start, end, move, touchStart, cancel };
 }
