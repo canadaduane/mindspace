@@ -63,14 +63,49 @@ function* Svg(
     this.refresh();
   };
 
+  const pointerout = () => {
+    rainbowFocus = undefined;
+    this.refresh();
+  };
+
+  const pointermove = (event /*: PointerEvent */) => {
+    const pos = new Vector2(event.clientX, event.clientY);
+    rainbowFocus = getRainbowFocus(pos, winSize, rainbowBorderThickness);
+    this.refresh();
+  };
+
+  const keydown = (event /*: KeyboardEvent */) => {
+    if (!hasTagName(event.target, "body")) return;
+
+    if (event.key === "Enter") {
+      if (graph.hasNode(mostRecentlyActiveNodeId)) {
+        createNodeAroundNode(mostRecentlyActiveNodeId);
+      } else {
+        createCircleUI(window.innerWidth, window.innerHeight);
+      }
+    } else if (event.key === "Backspace" || event.key === "Delete") {
+      if (selectedLineFigureId) {
+        const lineFigure = graph.getFigure(selectedLineFigureId);
+        if (lineFigure.type === "line") {
+          unselectSelectedLine();
+          lineFigure.lineType = "deleted";
+          this.refresh();
+        }
+      } else {
+        console.log("No line selected to delete");
+      }
+    }
+  };
+
   /** Event Listeners */
 
   window.addEventListener("resize", resize);
 
-  window.addEventListener("mouseout", () => {
-    rainbowFocus = undefined;
-    this.refresh();
-  });
+  window.addEventListener("pointerout", pointerout);
+
+  window.addEventListener("pointermove", pointermove);
+
+  document.body?.addEventListener("keydown", keydown);
 
   this.addEventListener("controllingNode", ({ detail: { nodeId } }) => {
     controlledNodeId = nodeId;
@@ -160,39 +195,6 @@ function* Svg(
   this.addEventListener("createNode", ({ detail: { nodeId } }) => {
     createNodeAroundNode(nodeId);
   });
-
-  const onKeyDown = (event /*: KeyboardEvent */) => {
-    if (!hasTagName(event.target, "body")) return;
-
-    if (event.key === "Enter") {
-      if (graph.hasNode(mostRecentlyActiveNodeId)) {
-        createNodeAroundNode(mostRecentlyActiveNodeId);
-      } else {
-        createCircleUI(window.innerWidth, window.innerHeight);
-      }
-    } else if (event.key === "Backspace" || event.key === "Delete") {
-      if (selectedLineFigureId) {
-        const lineFigure = graph.getFigure(selectedLineFigureId);
-        if (lineFigure.type === "line") {
-          unselectSelectedLine();
-          lineFigure.lineType = "deleted";
-          this.refresh();
-        }
-      } else {
-        console.log("No line selected to delete");
-      }
-    }
-  };
-
-  window.addEventListener("pointermove", (event) => {
-    const pos = new Vector2(event.clientX, event.clientY);
-
-    rainbowFocus = getRainbowFocus(pos, winSize, rainbowBorderThickness);
-
-    this.refresh();
-  });
-
-  document.body?.addEventListener("keydown", onKeyDown);
 
   let tapFigureId /*: ?string */;
   let singleClickTimeout /*: ?TimeoutID */;
@@ -433,8 +435,10 @@ function* Svg(
         <!-- end -->`;
     }
   } finally {
-    document.body?.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("resize", resize);
+    window.removeEventListener("pointerout", pointerout);
+    window.removeEventListener("pointermove", pointermove);
+    document.body?.removeEventListener("keydown", keydown);
   }
 }
 

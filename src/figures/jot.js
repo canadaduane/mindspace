@@ -132,6 +132,11 @@ function styles() {
       border-style: solid;
       transition: border-width 200ms ease-in-out, border-color 200ms linear;
 
+      /* outline-width: 3px;
+      outline-style: solid;
+      outline-color: rgba(255, 230, 51, 0.5);
+      outline-offset: 5px;  */
+
       width: ${jotCircleRadius * 2}px;
       height: ${jotCircleRadius * 2}px;
       color: var(--brightText);
