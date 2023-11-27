@@ -372,18 +372,6 @@ function* Svg(
     figure.selected = true;
   };
 
-  const getColorFromNearestNode = (p /*: Vector2 */) /*: ?string */ => {
-    const sorted = [...graph.nodes.values()].sort(
-      (a, b) =>
-        p.distanceTo(new Vector2(a.x, a.y)) -
-        p.distanceTo(new Vector2(b.x, b.y))
-    );
-    const node = sorted[0];
-    if (node) return node.color;
-
-    // if no nodes, return undefined
-  };
-
   const createCircleUI = (
     x /*: number */,
     y /*: number */,
@@ -391,7 +379,9 @@ function* Svg(
   ) => {
     const p = new Vector2(x, y);
     const color =
-      colorOverride || getColorFromNearestNode(p) || getColorFromWorldCoord(p);
+      colorOverride ||
+      graph.getNearestNode(p)?.color ||
+      getColorFromWorldCoord(p);
     const { nodeId, figureId } = graph.createJotWithNode(p, color);
 
     this.refresh();

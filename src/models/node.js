@@ -62,6 +62,15 @@ function getNode(nodes /*: NodesMap */, nodeId /*: string */) /*: Node */ {
   return nonNull(nodes.get(nodeId), "null nodeId");
 }
 
+function getNearestNode(
+  nodes /*: NodesMap */,
+  position /*: Vector2 */
+) /*: ?Node */ {
+  return [...nodes.values()].sort(
+    (a, b) => position.distanceTo(a) - position.distanceTo(b)
+  )[0];
+}
+
 function setNode(
   nodes /*: NodesMap */,
   nodeId /*: string */,
@@ -99,6 +108,7 @@ export type NodesBundle = {
   createNode: (node: NodeConstructor) => { nodeId: string, node: Node },
   getNode_: (nodeId: string) => ?Node,
   getNode: (nodeId: string) => Node,
+  getNearestNode: (position: Vector2) => ?Node,
   hasNode: (nodeId: string) => boolean,
   setNode:(nodeId: string, node: Node) => NodesMap, 
   updateNode:(nodeId: string, node: Partial<Node>) => Node, 
@@ -117,6 +127,7 @@ export function makeNodes(
     createNode: (node) => createNode(nodes, node),
     getNode_: (nodeId) => getNode_(nodes, nodeId),
     getNode: (nodeId) => getNode(nodes, nodeId),
+    getNearestNode: (position) => getNearestNode(nodes, position),
     hasNode: (nodeId) => hasNode(nodes, nodeId),
     setNode: (nodeId, node) => setNode(nodes, nodeId, node),
     updateNode: (nodeId, attrs) => updateNode(nodes, nodeId, attrs),
