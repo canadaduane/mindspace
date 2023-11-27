@@ -1,14 +1,20 @@
+// @flow
+
 import { html } from "../utils.js";
 import { css } from "../styles.js";
-import { tapRadius, jotCircleRadius } from "../constants.js";
+import { tapRadius, tapAnimationMs, jotCircleRadius } from "../constants.js";
 
 /*::
-import type { TapState } from "../figures.js"
+import type { TapState } from "../models/figure.js";
 */
 
-export const tapAnimationMs = 200;
-
-export function* Tap({ x, y, tapState }) {
+export function* Tap(
+  /*:: this: any, */ {
+    x,
+    y,
+    tapState,
+  } /*: { x: number, y: number, tapState: TapState } */
+) /*: any */ {
   let initialDot = true;
 
   this.schedule(() => {

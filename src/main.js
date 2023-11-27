@@ -5,23 +5,28 @@ import { html, closestSide, hasTagName, nonNull } from "./utils.js";
 import { Vector2 } from "./math/vector2.js";
 import { Box2 } from "./math/box2.js";
 import {
+  rainbowBorderThickness,
   spiralRadius,
   spiralInitial,
   spiralAddend,
-  rainbowBorderThickness,
+  tapAnimationMs,
 } from "./constants.js";
 import { makeGraph } from "./models/graph.js";
 import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
 import { makeDraggable } from "./drag.js";
 import { figuresMapToComponents } from "./figures/index.js";
 import { styles } from "./styles.js";
-import { tapAnimationMs } from "./figures/tap.js";
-import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
+import {
+  RainbowBorder,
+  getRainbowFocus,
+  handleRainbowDrag,
+} from "./rainbow-border.js";
 
 /*::
 import type { Node, NodeConstructor } from "./models/node.js";
 import type { Figure, FigureConstructor } from "./models/figure.js";
 import type { Graph } from "./models/graph.js";
+import type { RainbowFocus } from "./rainbow-border.js";
 */
 
 function* Svg(
@@ -46,7 +51,7 @@ function* Svg(
   let controlledNodeId;
   let selectedLineFigureId;
 
-  let rainbowFocus;
+  let rainbowFocus /*: ?RainbowFocus */;
 
   const resizeWithoutRefresh = () => {
     winSize.set(window.innerWidth, window.innerHeight);
@@ -226,55 +231,7 @@ function* Svg(
 
   const { handlers, events } = makeDraggable();
 
-  const handleRainbowDrag = (
-    events /*: ReturnType<typeof makeDraggable>["events"] */,
-    graph /*: Graph */
-  ) => {
-    let dragColor /*: ?string */;
-
-    events.on("start", ({ x, y }, control) => {
-      const side = closestSide(new Vector2(x, y), winSize);
-      if (side.distance < 40) {
-        dragColor = getColorFromScreenCoord(new Vector2(x, y), winSize);
-
-        tapFigureId = graph.createFigure({
-          type: "tap",
-          tapState: "color",
-          color: dragColor,
-          x,
-          y,
-        }).figureId;
-
-        control.stop();
-      }
-    });
-
-    events.on("end", ({ x, y }, control) => {
-      if (dragColor) {
-        const jotColor = dragColor;
-
-        removeTap(false).then(() => {
-          const jotFigureIds = graph.findJotsAtPosition(new Vector2(x, y));
-          if (jotFigureIds.length === 0) {
-            graph.createDefaultJotWithNode(new Vector2(x, y), jotColor);
-          } else {
-            for (let figureId of jotFigureIds) {
-              const jot = graph.getJot(figureId);
-              const node = graph.getNode(jot.controlsNodeId);
-              node.color = jotColor;
-            }
-          }
-          this.refresh();
-        });
-
-        dragColor = undefined;
-
-        control.stop();
-      }
-    });
-  };
-
-  handleRainbowDrag(events, graph);
+  handleRainbowDrag(events, graph, () => this.refresh());
 
   events.on("start", ({ x, y }, control) => {
     unselectSelectedLine();
@@ -352,7 +309,6 @@ function* Svg(
       } else {
         graph.updateTap(figureId, { x, y, tapState: "select" });
       }
-      this.refresh();
     }
 
     this.refresh();

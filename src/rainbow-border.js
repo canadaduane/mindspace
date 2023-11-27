@@ -1,17 +1,34 @@
-import { html, closestSide } from "./utils.js";
+// @flow
+
+import { html, closestSide, nonNull } from "./utils.js";
+import { tapAnimationMs } from "./constants.js";
 import { css } from "./styles.js";
 import { startAnimation } from "./animation.js";
 import { DEG2RAD, clamp } from "./math/utils.js";
+import { Vector2 } from "./math/vector2.js";
+import { getColorFromScreenCoord } from "./color.js";
+
+/*::
+import type { Side } from "./utils.js";
+import type { DraggableEvents } from "./drag.js";
+import type { Graph } from "./models/graph.js";
+
+export type RainbowFocus = {
+  side: Side["side"],
+  point: number,
+  magnitude: number
+};
+*/
 
 const viscosity = 0.9;
 
-const wrapIdx = (i, length) => {
+const wrapIdx = (i /*: number */, length /*: number */) => {
   if (i >= length) return i % length;
   if (i < 0) return length + (i % length);
   return i;
 };
 
-export function* RainbowBorder() {
+export function* RainbowBorder(/*:: this: any, */) /*: any */ {
   const length = 500;
   const heightMap = Array.from({ length }, () => 0);
   const velocityMap = Array.from({ length }, () => 0);
@@ -51,13 +68,19 @@ export function* RainbowBorder() {
     // convert vec units to pixels
     const vU = perimeter / vecCorner4;
 
-    const getPosTop = (i) => ({ x: th + i * vU, y: th });
-    const getPosRight = (i) => ({ x: size.width - th, y: th + i * vU });
-    const getPosBottom = (i) => ({
+    const getPosTop = (i /*: number */) => ({ x: th + i * vU, y: th });
+    const getPosRight = (i /*: number */) => ({
+      x: size.width - th,
+      y: th + i * vU,
+    });
+    const getPosBottom = (i /*: number */) => ({
       x: size.width - th - i * vU,
       y: size.height - th,
     });
-    const getPosLeft = (i) => ({ x: th, y: size.height - th - i * vU });
+    const getPosLeft = (i /*: number */) => ({
+      x: th,
+      y: size.height - th - i * vU,
+    });
 
     if (focus) {
       let vecFocusPoint;
@@ -69,11 +92,13 @@ export function* RainbowBorder() {
         vecFocusPoint = vecCorner3 - focus.point / vU;
       } else if (focus.side === "left") {
         vecFocusPoint = vecCorner4 - focus.point / vU;
+      } else {
+        throw new Error("no focus point");
       }
 
       const m = focus.magnitude;
 
-      for (let i = -40; i < vecCorner4 + 40; i++) {
+      for (let i /*: number */ = -40; i < vecCorner4 + 40; i++) {
         const dist = i - vecFocusPoint;
         const height = Math.max(0, m - (m * (dist * dist) * vU) / 800);
         if (height > 0) heightMap[wrapIdx(i, length)] = height;
@@ -82,7 +107,7 @@ export function* RainbowBorder() {
 
     const cornerRadiusVec = 10;
     const cornerBoostMax = perimeter / (220 / (cornerRadiusVec / 10));
-    const cornerHeightBoost = (i, max) => {
+    const cornerHeightBoost = (i /*: number */, max /*: number */) => {
       const p = 2;
       if (i < cornerRadiusVec) {
         return (
@@ -104,7 +129,12 @@ export function* RainbowBorder() {
       }
     };
 
-    const toBorder = (getPos, slice, size, degStart) =>
+    const toBorder = (
+      getPos /*: (i: number) => { x: number, y: number} */,
+      slice /*: number[] */,
+      size /*: number */,
+      degStart /*: number */
+    ) =>
       slice.map((height, i) => {
         const boost = cornerHeightBoost(i, size);
         const theta =
@@ -179,13 +209,22 @@ export function* RainbowBorder() {
 
 // Given a threshold t, and two distances that may or may not be within that
 // threshold, calculate a magnitude of influence
-function calculateMagnitude(t, d1, d2) {
+function calculateMagnitude(
+  t /*: number */,
+  d1 /*: number */,
+  d2 /*: number */
+) {
   const m1 = Math.max(0, 2 * Math.min(t / 2, t - d1));
   const m2 = Math.max(0, 2 * Math.min(t / 2, t - d2));
   return Math.min(t, Math.sqrt(m1 * m1 + m2 * m2));
 }
 
-export function getRainbowFocus(pos, size, borderThickness, threshold = 50) {
+export function getRainbowFocus(
+  pos /*: Vector2 */,
+  size /*: Vector2 */,
+  borderThickness /*: number */,
+  threshold /*: number */ = 50
+) /*: RainbowFocus */ {
   const closest = closestSide(pos, size);
   const nextClosest = closestSide(pos, size, closest.side);
 
@@ -240,3 +279,76 @@ function styles() {
 }
 
 styles();
+
+export function handleRainbowDrag(
+  events /*: DraggableEvents */,
+  graph /*: Graph */,
+  refresh /*: () => void */
+) {
+  let dragColor /*: ?string */;
+  let tapFigureId /*: ?string */;
+
+  events.on("start", ({ x, y }, control) => {
+    const winSize = new Vector2(window.innerWidth, window.innerHeight);
+
+    const side = closestSide(new Vector2(x, y), winSize);
+    if (side.distance < 40) {
+      dragColor = getColorFromScreenCoord(new Vector2(x, y), winSize);
+
+      tapFigureId = graph.createFigure({
+        type: "tap",
+        tapState: "color",
+        color: dragColor,
+        x,
+        y,
+      }).figureId;
+
+      refresh();
+
+      control.stop();
+    }
+  });
+
+  events.on("end", ({ x, y }, control) => {
+    if (dragColor) {
+      const jotColor = dragColor;
+
+      const jotFigureIds = graph.findJotsAtPosition(new Vector2(x, y));
+      if (jotFigureIds.length === 0) {
+        if (tapFigureId) graph.deleteFigure(tapFigureId);
+        graph.createJotWithNode(new Vector2(x, y), jotColor);
+      } else {
+        if (tapFigureId) {
+          const figureId = tapFigureId;
+
+          graph.updateTap(figureId, { tapState: "destroying" });
+
+          setTimeout(() => {
+            graph.deleteFigure(figureId);
+            refresh();
+          }, tapAnimationMs);
+        }
+
+        for (let figureId of jotFigureIds) {
+          const jot = graph.getJot(figureId);
+          const node = graph.getNode(jot.controlsNodeId);
+          node.color = jotColor;
+        }
+      }
+
+      refresh();
+
+      dragColor = undefined;
+
+      control.stop();
+    }
+  });
+
+  events.on("move", ({ x, y }, control) => {
+    if (!tapFigureId) return;
+
+    graph.updateTap(tapFigureId, { x, y });
+
+    refresh();
+  });
+}

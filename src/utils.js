@@ -58,7 +58,7 @@ export function dispatch(
 }
 
 /*::
-type Side = {
+export type Side = {
   side: "top" | "left" | "right" | "bottom";
   distance: number;
 }
