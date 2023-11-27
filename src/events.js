@@ -11,6 +11,11 @@ type EventsMap = {
 
 type Unsubscribe = () => void;
 
+type Control = { stop: () => void };
+
+type CallbackControl<Events, K> = 
+  (...[...Parameters<Events[K]>, Control]) => void;
+
 export type Emitter<Events: EventsMap> = {
   // Calls each of the listeners registered for a given event.
   emit<K: $Keys<Events>>(
@@ -26,7 +31,7 @@ export type Emitter<Events: EventsMap> = {
   // Add a listener for a given event.
   on<K: $Keys<Events>>(
     event: K,
-    cb: Events[K]
+    cb: CallbackControl<Events, K>
   ): Unsubscribe,
 };
 */
@@ -35,6 +40,10 @@ export function createEvents /*:: <Events: EventsMap> */() /*: Emitter<Events> *
   const emitter /*: Emitter<Events> */ = {
     events: {},
     emit(event, ...args) {
+      let stopped = false;
+      const control = {
+        stop: () => (stopped = true),
+      };
       for (
         let i = 0,
           callbacks = emitter.events[event] || [],
@@ -42,7 +51,7 @@ export function createEvents /*:: <Events: EventsMap> */() /*: Emitter<Events> *
         i < length;
         i++
       ) {
-        callbacks[i](...args);
+        if (!stopped) callbacks[i](...args, control);
       }
     },
     on(event, cb) {
