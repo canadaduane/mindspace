@@ -10,7 +10,7 @@ import { getColorFromScreenCoord } from "./color.js";
 
 /*::
 import type { Side } from "./utils.js";
-import type { DraggableEvents } from "./drag.js";
+import type { PointableEvents } from "./pointable.js";
 import type { Graph } from "./models/graph.js";
 
 export type RainbowFocus = {
@@ -281,7 +281,7 @@ function styles() {
 styles();
 
 export function handleRainbowDrag(
-  events /*: DraggableEvents */,
+  events /*: PointableEvents */,
   graph /*: Graph */,
   refresh /*: () => void */
 ) {

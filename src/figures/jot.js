@@ -3,7 +3,7 @@
 import { Vector2 } from "../math/vector2.js";
 import { css } from "../styles.js";
 import { dispatch, html, isFirefox } from "../utils.js";
-import { makeDraggable } from "../drag.js";
+import { makePointable } from "../pointable.js";
 import {
   jotCircleRadius,
   jotRectangleWidth,
@@ -40,7 +40,7 @@ export function* Jot(
   let currentShape = shape;
   let animateClass = "";
 
-  const { handlers, events, position } = makeDraggable({
+  const { handlers, events, position } = makePointable({
     position: new Vector2(x, y),
   });
 

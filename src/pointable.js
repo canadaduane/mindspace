@@ -11,37 +11,37 @@ const defaultMaxDrift = 3;
 /*::
 import type { Emitter } from "./events.js";
 
-type DraggableEmitterEvents = {
-  "start": (Omit<DraggableEventPayload, "didDrift">) => void,
-  "end": (DraggableEventPayload) => void,
-  "move": (DraggableEventPayload) => void,
+type PointableEmitterEvents = {
+  "start": (Omit<PointableEventPayload, "didDrift">) => void,
+  "end": (PointableEventPayload) => void,
+  "move": (PointableEventPayload) => void,
   "longPress": ({ x: number, y: number}) => void,
 }
 
-export type DraggableEvents = Emitter<DraggableEmitterEvents>;
+export type PointableEvents = Emitter<PointableEmitterEvents>;
 
-export type DraggableOptions = {
+export type PointableOptions = {
   position?: Vector2,
   longPressMs?: number,
   maxDrift?: number,
-  allowStart?: (params: Omit<DraggableEventPayload, "didDrift">) => boolean,
+  allowStart?: (params: Omit<PointableEventPayload, "didDrift">) => boolean,
 }
 
-export type DraggableBundle = {
-  events: DraggableEvents,
+export type PointableBundle = {
+  events: PointableEvents,
   position: Vector2,
-  handlers: DraggableHandlers,
+  handlers: PointableHandlers,
   cancel: () => void,
 }
 
-export type DraggableHandlers = {
+export type PointableHandlers = {
   start: (event: PointerEvent) => void,
   end: (event: PointerEvent) => void,
   move: (event: PointerEvent) => void,
   touchStart: (event: PointerEvent) => void,
 }
 
-export type DraggableEventPayload = {
+export type PointableEventPayload = {
   event: PointerEvent,
   x: number,
   y: number,
@@ -50,12 +50,12 @@ export type DraggableEventPayload = {
 }
 */
 
-export function makeDraggable({
+export function makePointable({
   position = new Vector2(),
   allowStart = () => true,
   longPressMs = 1200,
   maxDrift = defaultMaxDrift,
-} /*: DraggableOptions */ = {}) /*: DraggableBundle */ {
+} /*: PointableOptions */ = {}) /*: PointableBundle */ {
   let isDragging = false;
   let canceled = false;
 
@@ -67,7 +67,7 @@ export function makeDraggable({
   let longPressTimeout /*: TimeoutID */;
   let didDrift = false;
 
-  const events = createEvents/*:: <DraggableEmitterEvents> */();
+  const events = createEvents/*:: <PointableEmitterEvents> */();
 
   const start = (event /*: PointerEvent */) => {
     const { target, clientX, clientY, pointerId, button } = event;

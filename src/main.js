@@ -13,7 +13,7 @@ import {
 } from "./constants.js";
 import { makeGraph } from "./models/graph.js";
 import { getColorFromWorldCoord, getColorFromScreenCoord } from "./color.js";
-import { makeDraggable } from "./drag.js";
+import { makePointable } from "./pointable.js";
 import { figuresMapToComponents } from "./figures/index.js";
 import { styles } from "./styles.js";
 import {
@@ -230,7 +230,7 @@ function* Svg(
     this.refresh();
   };
 
-  const { handlers, events } = makeDraggable();
+  const { handlers, events } = makePointable();
 
   events.on("start", () => {
     unselectSelectedLine();

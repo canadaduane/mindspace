@@ -12,7 +12,7 @@ import {
   jotCircleRadius,
 } from "../constants.js";
 import { dispatch, html, svg, squash } from "../utils.js";
-import { makeDraggable } from "../drag.js";
+import { makePointable } from "../pointable.js";
 
 const opacityThreshold = 0.001;
 const defaultStroke = "rgba(240, 240, 240, 1)";
@@ -37,7 +37,7 @@ export function* Line(
 
   let isDragging = false;
   const dragPos = new Vector2(0, 0);
-  const { events, handlers, cancel: cancelDrag } = makeDraggable();
+  const { events, handlers, cancel: cancelDrag } = makePointable();
 
   events.on("start", () => {
     dispatch(this, "selectLine", { figureId });
