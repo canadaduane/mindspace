@@ -392,7 +392,7 @@ function* Svg(
     const p = new Vector2(x, y);
     const color =
       colorOverride || getColorFromNearestNode(p) || getColorFromWorldCoord(p);
-    const { nodeId, figureId } = graph.createCircleControllingNode(p, color);
+    const { nodeId, figureId } = graph.createJotWithNode(p, color);
 
     this.refresh();
 

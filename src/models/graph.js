@@ -29,7 +29,7 @@ export type Graph = {
   ...FiguresBundle;
 
   applyNodesToFigures: () => void;
-  createCircleControllingNode: CreateCircleControllingNodeFn;
+  createJotWithNode: CreateJotWithNodeFn;
   deleteNodeWithDependents: RemoveNodeWithDependentsFn;
   getFiguresConnectedToLineFigureId: GetFiguresConnectedFn;
   findJotsAtPosition: (pos: Vector2) => string[]; 
@@ -37,7 +37,7 @@ export type Graph = {
   debug: () => void;
 };
 
-type CreateCircleControllingNodeFn = ( pos: Vector2, color: string ) =>
+type CreateJotWithNodeFn = ( pos: Vector2, color: string ) =>
   { nodeId: string; node: Node; figureId: string; figure: Figure };
 
 type RemoveNodeWithDependentsFn = ( nodeId: string ) => boolean;
@@ -62,7 +62,7 @@ export function makeGraph(
       });
     },
 
-    createCircleControllingNode: createCircleControllingNode(nodes, figures),
+    createJotWithNode: createJotWithNode(nodes, figures),
     deleteNodeWithDependents: deleteNodeWithDependents(nodes, figures),
     getFiguresConnectedToLineFigureId: getFiguresConnectedToLineFigureId(
       nodes,
@@ -120,11 +120,11 @@ export function applyNodeToFigures(
   });
 }
 
-const createCircleControllingNode =
+const createJotWithNode =
   (
     nodes /*: NodesBundle */,
     figures /*: FiguresBundle */
-  ) /*: CreateCircleControllingNodeFn */ =>
+  ) /*: CreateJotWithNodeFn */ =>
   (pos, color) => {
     const { nodeId, node } = nodes.createNode({
       x: pos.x,
