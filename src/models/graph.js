@@ -24,7 +24,7 @@ type GraphInitial = {
   figures: FigureConstructor[];
 };
 
-type Graph = {
+export type Graph = {
   ...NodesBundle;
   ...FiguresBundle;
 

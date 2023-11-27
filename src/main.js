@@ -19,8 +19,9 @@ import { tapAnimationMs } from "./figures/tap.js";
 import { RainbowBorder, getRainbowFocus } from "./rainbow-border.js";
 
 /*::
-import type { Node, NodeConstructor } from "./models/node";
-import type { Figure, FigureConstructor } from "./models/figure";
+import type { Node, NodeConstructor } from "./models/node.js";
+import type { Figure, FigureConstructor } from "./models/figure.js";
+import type { Graph } from "./models/graph.js";
 */
 
 function* Svg(
@@ -75,7 +76,7 @@ function* Svg(
       if (graph.hasNode(mostRecentlyActiveNodeId)) {
         createNodeAroundNode(mostRecentlyActiveNodeId);
       } else {
-        createCircleUI(window.innerWidth, window.innerHeight);
+        createCircleUI(window.innerWidth / 2, window.innerHeight / 2);
       }
     } else if (event.key === "Backspace" || event.key === "Delete") {
       if (selectedLineFigureId) {
@@ -193,7 +194,6 @@ function* Svg(
   let tapFigureId /*: ?string */;
   let singleClickTimeout /*: ?TimeoutID */;
   let singleTapPos /*: ?Vector2 */;
-  let dragColor /*: ?string */;
 
   const doubleTapMs = 500;
   let isDoubleTap = false;
@@ -222,23 +222,58 @@ function* Svg(
 
   const { handlers, events } = makeDraggable();
 
-  events.on("start", ({ x, y }) => {
-    console.log('start')
+  const handleRainbowDrag = (
+    events /*: ReturnType<typeof makeDraggable>["events"] */,
+    graph /*: Graph */
+  ) => {
+    let dragColor /*: ?string */;
+
+    events.on("start", ({ x, y }, control) => {
+      const side = closestSide(new Vector2(x, y), winSize);
+      if (side.distance < 40) {
+        dragColor = getColorFromScreenCoord(new Vector2(x, y), winSize);
+
+        tapFigureId = graph.createFigure({
+          type: "tap",
+          tapState: "color",
+          color: dragColor,
+          x,
+          y,
+        }).figureId;
+
+        control.stop();
+      }
+    });
+
+    events.on("end", ({ x, y }, control) => {
+      if (dragColor) {
+        const jotColor = dragColor;
+
+        removeTap(false).then(() => {
+          const jotFigureIds = graph.findJotsAtPosition(new Vector2(x, y));
+          if (jotFigureIds.length === 0) {
+            createCircleUI(x, y, jotColor);
+          } else {
+            for (let figureId of jotFigureIds) {
+              const jot = graph.getJot(figureId);
+              const node = graph.getNode(jot.controlsNodeId);
+              node.color = jotColor;
+            }
+          }
+          this.refresh();
+        });
+
+        dragColor = undefined;
+
+        control.stop();
+      }
+    });
+  };
+
+  handleRainbowDrag(events, graph);
+
+  events.on("start", ({ x, y }, control) => {
     unselectSelectedLine();
-
-    const side = closestSide(new Vector2(x, y), winSize);
-    if (side.distance < 40) {
-      dragColor = getColorFromScreenCoord(new Vector2(x, y), winSize);
-
-      tapFigureId = graph.createFigure({
-        type: "tap",
-        tapState: "color",
-        color: dragColor,
-        x,
-        y,
-      }).figureId;
-      return;
-    }
 
     const doubleTapDistance = singleTapPos
       ? singleTapPos.distanceTo(new Vector2(x, y))
@@ -283,24 +318,6 @@ function* Svg(
   });
 
   events.on("end", ({ x, y }) => {
-    if (dragColor) {
-      const jotColor = dragColor;
-      removeTap(false).then(() => {
-        const jotFigureIds = graph.findJotsAtPosition(new Vector2(x, y));
-        if (jotFigureIds.length === 0) {
-          createCircleUI(x, y, jotColor);
-        } else {
-          for (let figureId of jotFigureIds) {
-            const jot = graph.getJot(figureId);
-            const node = graph.getNode(jot.controlsNodeId);
-            node.color = jotColor;
-          }
-        }
-        this.refresh();
-      });
-      dragColor = undefined;
-    }
-
     if (isDoubleTap) {
       isDoubleTap = false;
       singleTapPos = undefined;
