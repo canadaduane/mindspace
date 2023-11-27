@@ -231,11 +231,13 @@ function* Svg(
 
   const { handlers, events } = makeDraggable();
 
+  events.on("start", () => {
+    unselectSelectedLine();
+  });
+
   handleRainbowDrag(events, graph, () => this.refresh());
 
   events.on("start", ({ x, y }, control) => {
-    unselectSelectedLine();
-
     const doubleTapDistance = singleTapPos
       ? singleTapPos.distanceTo(new Vector2(x, y))
       : 0;
