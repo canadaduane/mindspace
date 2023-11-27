@@ -76,8 +76,11 @@ function* Svg(
       if (graph.hasNode(mostRecentlyActiveNodeId)) {
         createNodeAroundNode(mostRecentlyActiveNodeId);
       } else {
-        createCircleUI(window.innerWidth / 2, window.innerHeight / 2);
+        graph.createDefaultJotWithNode(
+          new Vector2(window.innerWidth / 2, window.innerHeight / 2)
+        );
       }
+      this.refresh();
     } else if (event.key === "Backspace" || event.key === "Delete") {
       if (selectedLineFigureId) {
         const lineFigure = graph.getFigure(selectedLineFigureId);
@@ -189,6 +192,7 @@ function* Svg(
 
   this.addEventListener("createNode", ({ detail: { nodeId } }) => {
     createNodeAroundNode(nodeId);
+    this.refresh();
   });
 
   let tapFigureId /*: ?string */;
@@ -252,7 +256,7 @@ function* Svg(
         removeTap(false).then(() => {
           const jotFigureIds = graph.findJotsAtPosition(new Vector2(x, y));
           if (jotFigureIds.length === 0) {
-            createCircleUI(x, y, jotColor);
+            graph.createDefaultJotWithNode(new Vector2(x, y), jotColor);
           } else {
             for (let figureId of jotFigureIds) {
               const jot = graph.getJot(figureId);
@@ -293,7 +297,8 @@ function* Svg(
 
       setTimeout(() => {
         removeTap(false).then(() => {
-          createCircleUI(x, y);
+          graph.createDefaultJotWithNode(new Vector2(x, y));
+          this.refresh();
         });
       }, tapAnimationMs - 50);
 
@@ -372,23 +377,6 @@ function* Svg(
     figure.selected = true;
   };
 
-  const createCircleUI = (
-    x /*: number */,
-    y /*: number */,
-    colorOverride /*: ?string */
-  ) => {
-    const p = new Vector2(x, y);
-    const color =
-      colorOverride ||
-      graph.getNearestNode(p)?.color ||
-      getColorFromWorldCoord(p);
-    const { nodeId, figureId } = graph.createJotWithNode(p, color);
-
-    this.refresh();
-
-    return { nodeId, figureId };
-  };
-
   // Approximate Archimedean Spiral
   const createNodeAroundNode = (nodeId /*: string */) => {
     const node = graph.getNode(nodeId);
@@ -399,7 +387,9 @@ function* Svg(
     const x = cx + Math.cos(r) * spiralRadius;
     const y = cy + Math.sin(r) * spiralRadius;
 
-    const { nodeId: createdNodeId } = createCircleUI(x, y);
+    const { nodeId: createdNodeId } = graph.createDefaultJotWithNode(
+      new Vector2(x, y)
+    );
 
     // Pass the spirality on to the next node
     graph.updateNode(createdNodeId, { spiral: node.spiral + spiralAddend });

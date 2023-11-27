@@ -12,6 +12,7 @@ import {
   jotRectangleWidth,
   jotRectangleHeight,
 } from "../constants.js";
+import { getColorFromWorldCoord } from "../color.js";
 
 /*::
 import { type NodeConstructor, type Node, type NodesBundle } from './node.js'
@@ -20,25 +21,30 @@ import type { DependentFigureAttrs } from "./node.js";
 import type { FiguresMap, CollisionShape } from "./figure.js";
 
 type GraphInitial = {
-  nodes: NodeConstructor[];
-  figures: FigureConstructor[];
+  nodes: NodeConstructor[],
+  figures: FigureConstructor[],
+};
+
+type NodeAndFigure = {
+  nodeId: string,
+  node: Node,
+  figureId: string,
+  figure: Figure,
 };
 
 export type Graph = {
-  ...NodesBundle;
-  ...FiguresBundle;
+  ...NodesBundle,
+  ...FiguresBundle,
 
-  applyNodesToFigures: () => void;
-  createJotWithNode: CreateJotWithNodeFn;
-  deleteNodeWithDependents: RemoveNodeWithDependentsFn;
-  getFiguresConnectedToLineFigureId: GetFiguresConnectedFn;
+  applyNodesToFigures: () => void,
+  createJotWithNode: (pos: Vector2, color: string) => NodeAndFigure,
+  deleteNodeWithDependents: RemoveNodeWithDependentsFn,
+  getFiguresConnectedToLineFigureId: GetFiguresConnectedFn,
   findJotsAtPosition: (pos: Vector2) => string[]; 
+  createDefaultJotWithNode: (pos: Vector2, colorOverride: ?string) => NodeAndFigure;
 
   debug: () => void;
 };
-
-type CreateJotWithNodeFn = ( pos: Vector2, color: string ) =>
-  { nodeId: string; node: Node; figureId: string; figure: Figure };
 
 type RemoveNodeWithDependentsFn = ( nodeId: string ) => boolean;
  
@@ -62,13 +68,16 @@ export function makeGraph(
       });
     },
 
-    createJotWithNode: createJotWithNode(nodes, figures),
+    createJotWithNode: (pos, color) =>
+      createJotWithNode(nodes, figures, pos, color),
     deleteNodeWithDependents: deleteNodeWithDependents(nodes, figures),
     getFiguresConnectedToLineFigureId: getFiguresConnectedToLineFigureId(
       nodes,
       figures
     ),
     findJotsAtPosition: (pos) => findJotsAtPosition(figures.figures, pos),
+    createDefaultJotWithNode: (pos, colorOverride) =>
+      createDefaultJotWithNode(nodes, figures, pos, colorOverride),
 
     debug: () => {
       console.log("nodes", nodes.nodes);
@@ -120,44 +129,44 @@ export function applyNodeToFigures(
   });
 }
 
-const createJotWithNode =
-  (
-    nodes /*: NodesBundle */,
-    figures /*: FiguresBundle */
-  ) /*: CreateJotWithNodeFn */ =>
-  (pos, color) => {
-    const { nodeId, node } = nodes.createNode({
-      x: pos.x,
-      y: pos.y,
-      color,
-      dependents: new Map(),
-      spiral: 0,
-    });
+function createJotWithNode(
+  nodes /*: NodesBundle */,
+  figures /*: FiguresBundle */,
+  pos /*: Vector2 */,
+  color /*: string */
+) {
+  const { nodeId, node } = nodes.createNode({
+    x: pos.x,
+    y: pos.y,
+    color,
+    dependents: new Map(),
+    spiral: 0,
+  });
 
-    // Create a jot that controls the node
-    const { figureId, figure } = figures.createFigure({
-      type: "jot",
-      color,
-      x: pos.x,
-      y: pos.y,
-      controlsNodeId: nodeId,
-    });
+  // Create a jot that controls the node
+  const { figureId, figure } = figures.createFigure({
+    type: "jot",
+    color,
+    x: pos.x,
+    y: pos.y,
+    controlsNodeId: nodeId,
+  });
 
-    // Create lines from this node to all other nodes
-    nodes.nodes.forEach((otherNode, otherNodeId) => {
-      if (nodeId === otherNodeId) return;
-      createConnectedLine(figures, nodeId, node, otherNodeId, otherNode);
-    });
+  // Create lines from this node to all other nodes
+  nodes.nodes.forEach((otherNode, otherNodeId) => {
+    if (nodeId === otherNodeId) return;
+    createConnectedLine(figures, nodeId, node, otherNodeId, otherNode);
+  });
 
-    // Create the new node that all figures depend on for position updates
-    node.dependents.set(figureId, {
-      x: "x",
-      y: "y",
-      color: "color",
-    });
+  // Create the new node that all figures depend on for position updates
+  node.dependents.set(figureId, {
+    x: "x",
+    y: "y",
+    color: "color",
+  });
 
-    return { nodeId, node, figureId, figure };
-  };
+  return { nodeId, node, figureId, figure };
+}
 
 const createConnectedLine = (
   figures /*: FiguresBundle */,
@@ -232,4 +241,20 @@ function findJotsAtPosition(
     }
   });
   return matches;
+}
+
+function createDefaultJotWithNode(
+  nodes /*: NodesBundle */,
+  figures /*: FiguresBundle */,
+  pos /*: Vector2 */,
+  colorOverride /*: ?string */
+) /*: NodeAndFigure */ {
+  return createJotWithNode(
+    nodes,
+    figures,
+    pos,
+    colorOverride ||
+      nodes.getNearestNode(pos)?.color ||
+      getColorFromWorldCoord(pos)
+  );
 }
