@@ -11,14 +11,14 @@ const defaultMaxDrift = 3;
 /*::
 import type { Emitter } from "./events.js";
 
-export type DraggableEventTypes = {
+type DraggableEmitterEvents = {
   "start": (Omit<DraggableEventPayload, "didDrift">) => void,
   "end": (DraggableEventPayload) => void,
   "move": (DraggableEventPayload) => void,
   "longPress": ({ x: number, y: number}) => void,
 }
 
-export type DraggableEvents = Emitter<DraggableEventTypes>;
+export type DraggableEvents = Emitter<DraggableEmitterEvents>;
 
 export type DraggableOptions = {
   position?: Vector2,
@@ -67,7 +67,7 @@ export function makeDraggable({
   let longPressTimeout /*: TimeoutID */;
   let didDrift = false;
 
-  const events = createEvents/*:: <DraggableEventTypes> */();
+  const events = createEvents/*:: <DraggableEmitterEvents> */();
 
   const start = (event /*: PointerEvent */) => {
     const { target, clientX, clientY, pointerId, button } = event;

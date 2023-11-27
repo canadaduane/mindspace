@@ -42,6 +42,7 @@ function* Svg(
   let mostRecentlyActiveNodeId;
 
   const winSize = new Vector2(window.innerWidth, window.innerHeight);
+  // Consider https://github.com/msand/zoomable-svg/blob/master/index.js 
   const zoom = {
     scale: 1.0,
     world: new Box2(new Vector2(0, 0), new Vector2().copy(winSize)),
