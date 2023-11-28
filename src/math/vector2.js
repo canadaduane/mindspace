@@ -360,4 +360,10 @@ export class Vector2 {
 
     return this;
   }
+
+  transform(fn /*: ?(Vector2) => void */) /*: Vector2 */ {
+    fn?.(this);
+
+    return this;
+  }
 }

@@ -2,7 +2,6 @@
 
 import { createEvents } from "./events.js";
 import { Vector2 } from "./math/vector2.js";
-import { getScroll } from "./utils.js";
 
 // How far can the drag movement drift from the start position before
 // it registers as a "movement" and, e.g. cancels long-press?
@@ -21,10 +20,11 @@ type PointableEmitterEvents = {
 export type PointableEvents = Emitter<PointableEmitterEvents>;
 
 export type PointableOptions = {
-  position?: Vector2,
+  getWorldPosition?: () => Vector2,
   longPressMs?: number,
   maxDrift?: number,
   allowStart?: (params: Omit<PointableEventPayload, "didDrift">) => boolean,
+  screenToWorld?: (Vector2) => void
 }
 
 export type PointableBundle = {
@@ -48,21 +48,32 @@ export type PointableEventPayload = {
   offset: Vector2,
   didDrift: boolean
 }
+
+export type PointableState = {
+  state: "startSingle",
+  x: number,
+  y: number
+} | {
+  // state
+}
 */
 
 export function makePointable({
-  position = new Vector2(),
+  getWorldPosition,
   allowStart = () => true,
   longPressMs = 1200,
   maxDrift = defaultMaxDrift,
+  screenToWorld,
 } /*: PointableOptions */ = {}) /*: PointableBundle */ {
   let isDragging = false;
   let canceled = false;
 
+  const position = new Vector2();
   // pixel offset from center of object being dragged
   const offset = new Vector2();
-  const worldPos = new Vector2();
-  const initialWorldPos = new Vector2();
+  const initialPosition = new Vector2();
+  const p = new Vector2();
+  const q = new Vector2();
 
   let longPressTimeout /*: TimeoutID */;
   let didDrift = false;
@@ -70,30 +81,43 @@ export function makePointable({
   const events = createEvents/*:: <PointableEmitterEvents> */();
 
   const start = (event /*: PointerEvent */) => {
-    const { target, clientX, clientY, pointerId, button } = event;
-
-    if (button !== 0) return; // left button only
+    // left button only
+    if (event.button !== 0) return;
 
     event.stopPropagation();
 
-    worldPos.set(clientX, clientY).add(getScroll());
-    initialWorldPos.copy(worldPos);
+    const { target, clientX, clientY, pointerId } = event;
+
+    // Temp var to hold screen coords converted to world coords
+    p.set(clientX, clientY).transform(screenToWorld);
+
+    const prestartPos = getWorldPosition?.();
+    if (prestartPos) {
+      // Offset of the "grab point" on the thing being dragged
+      offset.copy(prestartPos).sub(p);
+    } else {
+      offset.set(0, 0);
+    }
+
+    // Update the position
+    position.copy(p);
+
+    // Keep a copy of initial start position for drift distance calculation
+    initialPosition.copy(position);
 
     didDrift = false;
 
+    const pressPosition = new Vector2().copy(position);
     longPressTimeout = setTimeout(() => {
       if (didDrift) return;
-      events.emit("longPress", { x: worldPos.x, y: worldPos.y });
+      events.emit("longPress", { x: pressPosition.x, y: pressPosition.y });
     }, longPressMs);
 
     canceled = false;
 
     isDragging = true;
 
-    // Offset of grab point on the dragged thing
-    offset.copy(position).sub(worldPos);
-
-    const startParams = { event, x: worldPos.x, y: worldPos.y, offset };
+    const startParams = { event, x: position.x, y: position.y, offset };
     if (allowStart(startParams)) {
       events.emit("start", startParams);
       // $FlowIgnore
@@ -108,14 +132,14 @@ export function makePointable({
 
     const { clientX, clientY } = event;
 
-    worldPos.set(clientX, clientY).add(getScroll());
+    position.set(clientX, clientY).add(offset).transform(screenToWorld);
 
     clearTimeout(longPressTimeout);
 
     events.emit("end", {
       event,
-      x: worldPos.x,
-      y: worldPos.y,
+      x: position.x,
+      y: position.y,
       offset,
       didDrift,
     });
@@ -129,19 +153,17 @@ export function makePointable({
 
     const { clientX, clientY } = event;
 
-    worldPos.set(clientX, clientY).add(getScroll());
+    position.set(clientX, clientY).add(offset).transform(screenToWorld);
 
-    const driftDistance = worldPos.distanceTo(initialWorldPos);
+    const driftDistance = position.distanceTo(initialPosition);
     if (driftDistance >= maxDrift) {
       didDrift = true;
     }
 
-    position.copy(worldPos).add(offset);
-
     events.emit("move", {
       event,
-      x: worldPos.x,
-      y: worldPos.y,
+      x: position.x,
+      y: position.y,
       offset,
       didDrift,
     });

@@ -39,9 +39,10 @@ export function* Jot(
   let content = "";
   let currentShape = shape;
   let animateClass = "";
+  let position = new Vector2(x, y)
 
-  const { handlers, events, position } = makePointable({
-    position: new Vector2(x, y),
+  const { handlers, events } = makePointable({
+    getWorldPosition: () => position
   });
 
   events.on("start", () => {
