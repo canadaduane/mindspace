@@ -288,19 +288,19 @@ export function handleRainbowDrag(
   let dragColor /*: ?string */;
   let tapFigureId /*: ?string */;
 
-  events.on("start", ({ x, y }, control) => {
+  events.on("dragStart", ({ position }, control) => {
     const winSize = new Vector2(window.innerWidth, window.innerHeight);
 
-    const side = closestSide(new Vector2(x, y), winSize);
+    const side = closestSide(position, winSize);
     if (side.distance < 40) {
-      dragColor = getColorFromScreenCoord(new Vector2(x, y), winSize);
+      dragColor = getColorFromScreenCoord(position, winSize);
 
       tapFigureId = graph.createFigure({
         type: "tap",
         tapState: "color",
         color: dragColor,
-        x,
-        y,
+        x: position.x,
+        y: position.y,
       }).figureId;
 
       refresh();
@@ -309,14 +309,14 @@ export function handleRainbowDrag(
     }
   });
 
-  events.on("end", ({ x, y }, control) => {
+  events.on("dragEnd", ({ position }, control) => {
     if (dragColor) {
       const jotColor = dragColor;
 
-      const jotFigureIds = graph.findJotsAtPosition(new Vector2(x, y));
+      const jotFigureIds = graph.findJotsAtPosition(position);
       if (jotFigureIds.length === 0) {
         if (tapFigureId) graph.deleteFigure(tapFigureId);
-        graph.createJotWithNode(new Vector2(x, y), jotColor);
+        graph.createJotWithNode(position, jotColor);
       } else {
         if (tapFigureId) {
           const figureId = tapFigureId;
@@ -344,10 +344,10 @@ export function handleRainbowDrag(
     }
   });
 
-  events.on("move", ({ x, y }, control) => {
+  events.on("dragMove", ({ position }, control) => {
     if (!tapFigureId) return;
 
-    graph.updateTap(tapFigureId, { x, y });
+    graph.updateTap(tapFigureId, { x: position.x, y: position.y });
 
     refresh();
   });

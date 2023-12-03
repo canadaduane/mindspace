@@ -39,27 +39,22 @@ export function* Jot(
   let content = "";
   let currentShape = shape;
   let animateClass = "";
-  let position = new Vector2(x, y)
+  let position = new Vector2(x, y);
 
   const { handlers, events } = makePointable({
-    getWorldPosition: () => position
+    getWorldPosition: () => position,
   });
 
-  events.on("start", () => {
-    didDrag = false;
+  events.on("tap", () => {
+    setTimeout(() => editEl?.focus(), 100);
+  });
 
+  events.on("dragStart", () => {
     dispatch(this, "controllingNode", { nodeId });
   });
 
-  events.on("end", () => {
-    if (!didDrag) {
-      setTimeout(() => editEl?.focus(), 100);
-    }
-  });
-
-  events.on("move", ({ x, y }) => {
-    didDrag = true;
-    dispatch(this, "nodeMoved", { nodeId, x, y });
+  events.on("dragMove", ({ position }) => {
+    dispatch(this, "nodeMoved", { nodeId, x: position.x, y: position.y });
   });
 
   const onKeyDown = (event /*: KeyboardEvent */) => {

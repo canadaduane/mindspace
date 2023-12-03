@@ -42,7 +42,7 @@ function* Svg(
   let mostRecentlyActiveNodeId;
 
   const winSize = new Vector2(window.innerWidth, window.innerHeight);
-  // Consider https://github.com/msand/zoomable-svg/blob/master/index.js 
+  // Consider https://github.com/msand/zoomable-svg/blob/master/index.js
   const zoom = {
     scale: 1.0,
     world: new Box2(new Vector2(0, 0), new Vector2().copy(winSize)),
@@ -230,14 +230,22 @@ function* Svg(
     this.refresh();
   };
 
-  const { handlers, events } = makePointable();
+  const { handlers, events } = makePointable({ longPress: true });
 
-  events.on("start", () => {
+  events.on("singleDown", () => {
     unselectSelectedLine();
   });
 
   handleRainbowDrag(events, graph, () => this.refresh());
 
+  events.on("taaap", ({ position }) => {
+    console.log({ position });
+
+    graph.createDefaultJotWithNode(position);
+    this.refresh();
+  });
+
+  /* 
   events.on("start", ({ x, y }, control) => {
     const doubleTapDistance = singleTapPos
       ? singleTapPos.distanceTo(new Vector2(x, y))
@@ -281,7 +289,9 @@ function* Svg(
 
     this.refresh();
   });
+  */
 
+  /* 
   events.on("end", ({ x, y }) => {
     if (isDoubleTap) {
       isDoubleTap = false;
@@ -299,7 +309,9 @@ function* Svg(
 
     this.refresh();
   });
+  */
 
+  /* 
   events.on("move", ({ x, y }) => {
     clearTimeout(singleClickTimeout);
 
@@ -316,6 +328,7 @@ function* Svg(
 
     this.refresh();
   });
+  */
 
   /** Helper Functions */
 
