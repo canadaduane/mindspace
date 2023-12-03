@@ -230,13 +230,23 @@ function* Svg(
     this.refresh();
   };
 
-  const { handlers, events } = makePointable({ longPress: true });
+  const { handlers, events } = makePointable({
+    longPress: true,
+    doublePress: true,
+  });
 
   events.on("singleDown", () => {
     unselectSelectedLine();
   });
 
   handleRainbowDrag(events, graph, () => this.refresh());
+
+  events.on("taptap", ({ position }) => {
+    console.log({ position });
+
+    graph.createDefaultJotWithNode(position);
+    this.refresh();
+  });
 
   events.on("taaap", ({ position }) => {
     console.log({ position });
