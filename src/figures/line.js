@@ -39,17 +39,17 @@ export function* Line(
   const dragPos = new Vector2(0, 0);
   const { events, handlers, cancel: cancelDrag } = makePointable();
 
-  events.on("start", () => {
+  events.on("down", () => {
     dispatch(this, "selectLine", { figureId });
   });
 
-  events.on("end", () => {
+  events.on("dragEnd", () => {
     isDragging = false;
   });
 
-  events.on("move", ({ x, y }) => {
+  events.on("dragMove", ({ position }) => {
     isDragging = true;
-    dragPos.set(x, y);
+    dragPos.copy(position);
     this.refresh();
   });
 
@@ -164,36 +164,32 @@ export function* Line(
 
     yield connected &&
       html`
-        <path d=${path}
+        <path
+          d=${path}
           onpointerdown=${handlers.start}
           onpointerup=${handlers.end}
           onpointercancel=${handlers.end}
           onpointermove=${handlers.move}
           ontouchstart=${handlers.touchStart}
           fill="none"
-          stroke=${
-            selected && !broken
-              ? "rgba(240, 240, 240, 0.1)"
-              : "rgba(0, 0, 0, 0.01)"
-          } 
+          stroke=${selected && !broken
+            ? "rgba(240, 240, 240, 0.1)"
+            : "rgba(0, 0, 0, 0.01)"}
           stroke-width=${(jotCircleRadius * 4) / 3}
         />
-        ${
-          line &&
-          !broken &&
-          svg`
+        ${line &&
+        !broken &&
+        svg`
             <path d=${path}
               style="pointer-events: none;"
               fill="none"
               stroke=${line.stroke}
               stroke-width=${line.strokeWidth}
             />
-          `
-        }
-        ${
-          line &&
-          broken &&
-          svg`
+          `}
+        ${line &&
+        broken &&
+        svg`
             <path d=${path}
               style="pointer-events: none;"
               fill="none"
@@ -203,12 +199,10 @@ export function* Line(
               stroke-dashoffset="0"
               pathLength="100"
             />
-          `
-        }
-        ${
-          line &&
-          broken &&
-          svg`
+          `}
+        ${line &&
+        broken &&
+        svg`
             <path d=${path}
               style="pointer-events: none;"
               fill="none"
@@ -218,19 +212,16 @@ export function* Line(
               stroke-dashoffset=${`${-50 - brokenRatio * 20}`}
               pathLength="100"
             />
-          `
-        }
-        ${
-          nearIndicator &&
-          svg`
+          `}
+        ${nearIndicator &&
+        svg`
             <path d=${path}
               style="pointer-events: none;"
               fill="none"
               stroke="rgba(${nearIndicator.stroke})"
               stroke-width=${nearIndicator.strokeWidth}
             />
-          `
-        } 
+          `}
       `;
   }
 }

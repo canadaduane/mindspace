@@ -84,6 +84,7 @@ export type PointableState = {
     | "longDown"
     | "doubleDown"
     | "singleDragging",
+  complete: boolean,
   event?: PointerEvent,
   initialPosition: Vector2,
   position: Vector2,
@@ -111,10 +112,10 @@ export function makePointable({
   screenToWorld,
 } /*: PointableOptions */ = {}) /*: PointableBundle */ {
   let isDragging = false;
-  let canceled = false;
 
   let state /*: PointableState */ = {
     state: "initial",
+    complete: true,
 
     // Initial position used for drift distance calculation
     initialPosition: new Vector2(),
@@ -132,6 +133,15 @@ export function makePointable({
   };
 
   const events = createEvents/*:: <PointableEmitterEvents> */();
+
+  const complete = () => {
+    state.complete = true;
+    state.state = "initial";
+
+    clearTimeout(state.longPressTimeoutID);
+    clearTimeout(state.doublePressSingleDownTimeoutID);
+    clearTimeout(state.doublePressSingleUpTimeoutID);
+  };
 
   const start = (event /*: PointerEvent */) => {
     // Left button only
@@ -161,8 +171,8 @@ export function makePointable({
       // Update the position
       state.position.copy(_eventPos).add(state.offset);
 
-      // Reset canceled flag
-      canceled = false;
+      // Reset completion flag
+      state.complete = false;
 
       // $FlowIgnore
       event.target.setPointerCapture(event.pointerId);
@@ -237,7 +247,7 @@ export function makePointable({
   };
 
   const end = (event /*: PointerEvent */) => {
-    if (canceled) return;
+    if (state.complete) return;
 
     state.event = event;
 
@@ -253,8 +263,7 @@ export function makePointable({
       events.emit("singleUp", state);
       events.emit("tap", state);
 
-      // Back to initial state
-      state.state = "initial";
+      complete();
     } else if (_state === "singleDownOrLongDown") {
       event.stopPropagation();
 
@@ -265,15 +274,13 @@ export function makePointable({
       events.emit("singleUp", state);
       events.emit("tap", state);
 
-      // Back to initial state
-      state.state = "initial";
+      complete();
     } else if (_state === "longDown") {
       event.stopPropagation();
 
       events.emit("longUp", state);
 
-      // Back to initial state after double tap
-      state.state = "initial";
+      complete();
     } else if (_state === "singleDownOrBeginDouble") {
       event.stopPropagation();
 
@@ -292,8 +299,7 @@ export function makePointable({
 
         state.doublePressSingleUpTimeoutID = undefined;
 
-        // Back to initial state
-        state.state = "initial";
+        complete();
       }, doublePressMs);
 
       // Not sure yet if this is a singleDown or doubleDown event
@@ -316,8 +322,7 @@ export function makePointable({
 
           state.doublePressSingleUpTimeoutID = undefined;
 
-          // Back to initial state
-          state.state = "initial";
+          complete();
         }, doublePressMs);
 
         state.state = "singleUpOrBeginDouble";
@@ -330,15 +335,13 @@ export function makePointable({
       events.emit("doubleDown", state);
       events.emit("taptap", state);
 
-      // Back to initial state after double tap
-      state.state = "initial";
+      complete();
     } else if (_state === "singleDragging") {
       event.stopPropagation();
 
       events.emit("dragEnd", state);
 
-      // Back to initial state after drag and release
-      state.state = "initial";
+      complete();
     } else {
       // unhandled state
       console.warn("unhandled state in `end`:", _state);
@@ -346,8 +349,7 @@ export function makePointable({
   };
 
   const move = (event /*: PointerEvent */) => {
-    if (canceled) return;
-    if (state.state === "initial") return;
+    if (state.complete || state.state === "initial") return;
 
     state.event = event;
 
@@ -406,10 +408,7 @@ export function makePointable({
     position: state.position,
     events,
     handlers: { start, end, move, touchStart },
-    cancel: () => {
-      canceled = true;
-      clearTimeout(state.longPressTimeoutID);
-    },
+    cancel: complete,
   };
 }
 
