@@ -152,7 +152,9 @@ export function makePointable({
     const _eventPos = getEventPosition(event, screenToWorld);
     const _state = state.state;
 
-    events.emit("down", state);
+    if (_state !== "initial") {
+      events.emit("down", state);
+    }
 
     if (_state === "initial") {
       event.stopPropagation();
@@ -176,6 +178,8 @@ export function makePointable({
 
       // $FlowIgnore
       event.target.setPointerCapture(event.pointerId);
+
+      events.emit("down", state);
 
       if (longPress && !doublePress) {
         // If we're configured to consider the possibility of long presses, then
@@ -255,6 +259,7 @@ export function makePointable({
     const _state = state.state;
 
     events.emit("up", state);
+    console.log("up", state);
 
     if (_state === "singleDown") {
       event.stopPropagation();

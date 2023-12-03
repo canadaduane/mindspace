@@ -3,7 +3,7 @@
 export const jotCircleRadius = 50;
 export const jotRectangleWidth = 160;
 export const jotRectangleHeight = 120;
-export const tapRadius = 25;
+export const tapRadius = 5;
 export const lineMaxDistance = 230;
 export const lineTransition = 50;
 export const scrollbarThickness = 30;

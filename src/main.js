@@ -202,33 +202,7 @@ function* Svg(
   });
 
   let tapFigureId /*: ?string */;
-  let singleClickTimeout /*: ?TimeoutID */;
-  let singleTapPos /*: ?Vector2 */;
-
-  const doubleTapMs = 500;
-  let isDoubleTap = false;
-
-  const removeTap = async (animate /*: boolean */ = false) => {
-    if (!tapFigureId) return;
-
-    if (animate) {
-      graph.updateTap(tapFigureId, { tapState: "destroying" });
-      this.refresh();
-    }
-
-    const tapFigureIdToRemove = tapFigureId;
-
-    // This Tap is done, no one can access it from here on
-    tapFigureId = undefined;
-
-    await new Promise((resolve) => setTimeout(resolve, tapAnimationMs));
-
-    if (tapFigureIdToRemove) {
-      graph.deleteFigure(tapFigureIdToRemove);
-    }
-
-    this.refresh();
-  };
+  let newJotFigureId /*: ?string */;
 
   const { handlers, events } = makePointable({
     longPress: true,
@@ -242,103 +216,41 @@ function* Svg(
   handleRainbowDrag(events, graph, () => this.refresh());
 
   events.on("taptap", ({ position }) => {
-    console.log({ position });
+    if (tapFigureId) {
+      graph.deleteFigure(tapFigureId);
+    }
 
-    graph.createDefaultJotWithNode(position);
+    newJotFigureId = graph.createDefaultJotWithNode(position).figureId;
     this.refresh();
   });
 
   events.on("taaap", ({ position }) => {
-    console.log({ position });
-
-    graph.createDefaultJotWithNode(position);
-    this.refresh();
-  });
-
-  /* 
-  events.on("start", ({ x, y }, control) => {
-    const doubleTapDistance = singleTapPos
-      ? singleTapPos.distanceTo(new Vector2(x, y))
-      : 0;
-
-    if (singleClickTimeout && !isDoubleTap && doubleTapDistance < 5) {
-      if (!tapFigureId) return;
-
-      isDoubleTap = true;
-
-      clearTimeout(singleClickTimeout);
-      singleClickTimeout = undefined;
-
-      if (!tapFigureId) return;
-
-      graph.updateTap(tapFigureId, { x, y, tapState: "creating" });
-
-      setTimeout(() => {
-        removeTap(false).then(() => {
-          graph.createDefaultJotWithNode(new Vector2(x, y));
-          this.refresh();
-        });
-      }, tapAnimationMs - 50);
-
-      this.refresh();
-    } else {
-      const createNewTap = () => {
-        tapFigureId = graph.createFigure({
-          type: "tap",
-          tapState: "create",
-          x,
-          y,
-        }).figureId;
-      };
-      if (tapFigureId) {
-        removeTap(false).then(createNewTap);
-      } else {
-        createNewTap();
-      }
-    }
-
-    this.refresh();
-  });
-  */
-
-  /* 
-  events.on("end", ({ x, y }) => {
-    if (isDoubleTap) {
-      isDoubleTap = false;
-      singleTapPos = undefined;
-      return;
-    }
-
-    singleTapPos = new Vector2(x, y);
-
-    // Clean up Tap figure if needed
-    singleClickTimeout = setTimeout(() => {
-      removeTap(true);
-      singleClickTimeout = undefined;
-    }, doubleTapMs);
-
-    this.refresh();
-  });
-  */
-
-  /* 
-  events.on("move", ({ x, y }) => {
-    clearTimeout(singleClickTimeout);
-
     if (tapFigureId) {
-      const figureId = nonNull(tapFigureId, "figureId is null");
-      const figure = graph.getFigure(figureId);
-
-      if (figure.tapState === "color") {
-        graph.updateTap(figureId, { x, y });
-      } else {
-        graph.updateTap(figureId, { x, y, tapState: "select" });
-      }
+      graph.deleteFigure(tapFigureId);
     }
 
+    newJotFigureId = graph.createDefaultJotWithNode(position).figureId;
     this.refresh();
   });
-  */
+
+  events.on("down", ({ state, position }) => {
+    if (state !== "initial") return;
+    tapFigureId = graph.createFigure({
+      type: "tap",
+      tapState: "creating",
+      color: "var(--defaultOrbFill)",
+      x: position.x,
+      y: position.y,
+    }).figureId;
+    this.refresh();
+  });
+
+  events.on("up", ({ state }) => {
+    if (!tapFigureId) return;
+
+    graph.deleteFigure(tapFigureId);
+    this.refresh();
+  });
 
   /** Helper Functions */
 

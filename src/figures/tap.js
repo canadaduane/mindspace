@@ -26,16 +26,13 @@ export function* Tap(
 
   for (const { x, y, color, tapState } of this) {
     const bgColor = getColorFromTapState(tapState, color);
-    const size = initialDot ? 5 : getSizeFromTapState(tapState);
     yield html`
       <div
-        class="tap"
+        class="tap ${tapState === "creating" ? "tap-creating" : ""}"
         style=${{
           "left": `${x}px`,
           "top": `${y}px`,
           "background-color": bgColor,
-          "width": `${size}px`,
-          "height": `${size}px`,
         }}
       />
     `;
@@ -47,10 +44,8 @@ function getColorFromTapState(
   color /*: string */
 ) /*: string */ {
   switch (tapState) {
-    case "create":
-      return "oklch(85% 0.2 140)";
     case "creating":
-      return "var(--defaultOrbFill)";
+      return color;
     case "color":
       return color;
     case "select":
@@ -64,10 +59,8 @@ function getColorFromTapState(
 
 function getSizeFromTapState(tapState /*: TapState */) {
   switch (tapState) {
-    case "create":
-      return tapRadius;
     case "creating":
-      return jotCircleRadius * 2;
+      return tapRadius;
     case "color":
       return tapRadius;
     case "select":
@@ -89,11 +82,8 @@ css`
     outline-width: 0px;
     outline-style: solid;
 
-    /* prettier-ignore */
-    transition:
-      width ${tapAnimationMs}ms ease-in-out,
-      height ${tapAnimationMs}ms ease-in-out,
-      background-color ${tapAnimationMs}ms ease-in-out;
+    width: ${tapRadius * 2}px;
+    height: ${tapRadius * 2}px;
 
     display: flex;
     justify-content: center;
@@ -101,5 +91,25 @@ css`
 
     overflow-y: auto;
     cursor: default;
+  }
+
+  .tap-creating {
+    width: ${jotCircleRadius * 2}px;
+    height: ${jotCircleRadius * 2}px;
+  }
+
+  .tap-creating {
+    animation: tap-creating 0.5s linear forwards;
+  }
+
+  @keyframes tap-creating {
+    0% {
+      width: ${tapRadius * 2}px;
+      height: ${tapRadius * 2}px;
+    }
+    100% {
+      width: ${jotCircleRadius * 2}px;
+      height: ${jotCircleRadius * 2}px;
+    }
   }
 `;

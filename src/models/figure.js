@@ -72,8 +72,7 @@ export type PopFigureConstructor = {
 }
 
 // A "tap" is a transient tap or double tap indicator
-export type TapState = 
-  "create" | "creating" | "color" | "select" | "delete" | "destroying";
+export type TapState = "creating" | "color" | "select" | "delete" | "destroying";
 export type TapFigure = {
   type: "tap";
   tapState: TapState;
