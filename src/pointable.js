@@ -76,8 +76,11 @@ export type PointableHandlers = {
 export type PointableState = {
   state:
     | "initial"
-    | "singleDown" | "singleDownOrBeginDouble" | "singleDownOrLongDown"
-    | "singleUpFinal" | "singleUpOrBeginDouble"
+    | "singleDown"
+      | "singleDownOrBeginDouble"
+      | "singleDownOrLongDown"
+      | "singleDownOrLongDownOrBeginDouble" 
+    | "singleUpOrBeginDouble"
     | "longDown"
     | "doubleDown"
     | "singleDragging",
@@ -85,9 +88,7 @@ export type PointableState = {
   initialPosition: Vector2,
   position: Vector2,
   offset: Vector2,
-
-  // initialDownTimestamp: number,
-  // initialUpTimestamp: number,
+  maxDrift: number,
 
   longPressTimeoutID?: TimeoutID,
   doublePressSingleDownTimeoutID?: TimeoutID,
@@ -105,7 +106,7 @@ export function makePointable({
   doublePressMs = 500,
   longPress = false,
   longPressMs = 500,
-  maxDrift = defaultMaxDrift,
+  maxDrift,
   getWorldPosition,
   screenToWorld,
 } /*: PointableOptions */ = {}) /*: PointableBundle */ {
@@ -126,6 +127,8 @@ export function makePointable({
 
     // Pixel offset from center of object being dragged
     offset: new Vector2(),
+
+    maxDrift: maxDrift ?? (doublePress || longPress ? defaultMaxDrift : 0),
   };
 
   const events = createEvents/*:: <PointableEmitterEvents> */();
@@ -156,7 +159,7 @@ export function makePointable({
       state.initialPosition.copy(_eventPos);
 
       // Update the position
-      state.position.copy(_eventPos);
+      state.position.copy(_eventPos).add(state.offset);
 
       // Reset canceled flag
       canceled = false;
@@ -200,7 +203,18 @@ export function makePointable({
         // Not sure yet if this is a singleDown or double press sequence yet
         state.state = "singleDownOrBeginDouble";
       } else if (longPress && doublePress) {
-        throw new Error("Not implemented: long press AND double press");
+        state.longPressTimeoutID = setTimeout(() => {
+          if (state.state !== "singleDownOrLongDownOrBeginDouble") {
+            console.warn("longDown ignored", state);
+            return;
+          }
+          state.state = "longDown";
+          state.longPressTimeoutID = undefined;
+          events.emit("longDown", state);
+          events.emit("taaap", state);
+        }, longPressMs);
+
+        state.state = "singleDownOrLongDownOrBeginDouble";
       } else {
         state.state = "singleDown";
         events.emit("singleDown", state);
@@ -211,7 +225,7 @@ export function makePointable({
       clearTimeout(state.doublePressSingleUpTimeoutID);
 
       // Update the position
-      state.position.copy(_eventPos);
+      state.position.copy(_eventPos).add(state.offset);
 
       events.emit("doubleDown", state);
 
@@ -244,8 +258,9 @@ export function makePointable({
     } else if (_state === "singleDownOrLongDown") {
       event.stopPropagation();
 
-      // If the longDown transition hasn't happened yet, then this is a single tap
       clearTimeout(state.longPressTimeoutID);
+
+      // If the longDown transition hasn't happened yet, then this is a single tap
       events.emit("singleDown", state);
       events.emit("singleUp", state);
       events.emit("tap", state);
@@ -283,6 +298,32 @@ export function makePointable({
 
       // Not sure yet if this is a singleDown or doubleDown event
       state.state = "singleUpOrBeginDouble";
+    } else if (_state === "singleDownOrLongDownOrBeginDouble") {
+      if (state.longPressTimeoutID) {
+        clearTimeout(state.longPressTimeoutID);
+        state.longPressTimeoutID = undefined;
+
+        state.doublePressSingleUpTimeoutID = setTimeout(() => {
+          if (state.state !== "singleUpOrBeginDouble") {
+            console.warn("tap ignored", state);
+            return;
+          }
+
+          // After the double-press timeout limit, this can't be a double-press
+          events.emit("singleDown", state);
+          events.emit("singleUp", state);
+          events.emit("tap", state);
+
+          state.doublePressSingleUpTimeoutID = undefined;
+
+          // Back to initial state
+          state.state = "initial";
+        }, doublePressMs);
+
+        state.state = "singleUpOrBeginDouble";
+      } else {
+        console.warn("longpress timeout");
+      }
     } else if (_state === "doubleDown") {
       event.stopPropagation();
 
@@ -306,6 +347,7 @@ export function makePointable({
 
   const move = (event /*: PointerEvent */) => {
     if (canceled) return;
+    if (state.state === "initial") return;
 
     state.event = event;
 
@@ -314,27 +356,42 @@ export function makePointable({
 
     events.emit("move", state);
 
-    if (_state === "singleDown") {
+    if (
+      _state === "singleDown" ||
+      _state === "singleDownOrBeginDouble" ||
+      _state === "singleDownOrLongDown" ||
+      _state === "singleDownOrLongDownOrBeginDouble"
+    ) {
       event.preventDefault();
 
-      state.position.copy(_eventPos);
+      state.position.copy(_eventPos).add(state.offset);
 
       const _driftDistance = _eventPos.distanceTo(state.initialPosition);
 
-      if (_driftDistance < maxDrift) {
+      if (_driftDistance < state.maxDrift) {
         events.emit("dragMoveOrDrift", state);
         events.emit("dragDrift", state);
       } else {
+        clearTimeout(state.longPressTimeoutID);
+        clearTimeout(state.doublePressSingleDownTimeoutID);
+        clearTimeout(state.doublePressSingleUpTimeoutID);
+
         state.state = "singleDragging";
         events.emit("dragStart", state);
       }
     } else if (_state === "singleDragging") {
       event.preventDefault();
 
-      state.position.copy(_eventPos);
+      state.position.copy(_eventPos).add(state.offset);
 
       events.emit("dragMoveOrDrift", state);
       events.emit("dragMove", state);
+    } else if (
+      _state === "longDown" ||
+      _state === "doubleDown" ||
+      _state === "singleUpOrBeginDouble"
+    ) {
+      // ignore
     } else {
       // unhandled state
       console.warn("unhandled state in `move`:", _state);
