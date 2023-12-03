@@ -204,8 +204,16 @@ function* Svg(
   let tapFigureId /*: ?string */;
   let newJotFigureId /*: ?string */;
 
+  const deleteTapFigure = () => {
+    if (!tapFigureId) return;
+
+    graph.deleteFigure(tapFigureId);
+    tapFigureId = null;
+  };
+
   const { handlers, events } = makePointable({
     longPress: true,
+    longPressMs: tapAnimationMs + 50,
     doublePress: true,
   });
 
@@ -216,18 +224,14 @@ function* Svg(
   handleRainbowDrag(events, graph, () => this.refresh());
 
   events.on("taptap", ({ position }) => {
-    if (tapFigureId) {
-      graph.deleteFigure(tapFigureId);
-    }
+    deleteTapFigure();
 
     newJotFigureId = graph.createDefaultJotWithNode(position).figureId;
     this.refresh();
   });
 
   events.on("taaap", ({ position }) => {
-    if (tapFigureId) {
-      graph.deleteFigure(tapFigureId);
-    }
+    deleteTapFigure();
 
     newJotFigureId = graph.createDefaultJotWithNode(position).figureId;
     this.refresh();
@@ -235,6 +239,7 @@ function* Svg(
 
   events.on("down", ({ state, position }) => {
     if (state !== "initial") return;
+
     tapFigureId = graph.createFigure({
       type: "tap",
       tapState: "creating",
@@ -246,10 +251,20 @@ function* Svg(
   });
 
   events.on("up", ({ state }) => {
+    deleteTapFigure();
+    this.refresh();
+  });
+
+  events.on("dragMove", ({ state }) => {
     if (!tapFigureId) return;
 
-    graph.deleteFigure(tapFigureId);
+    graph.updateTap(tapFigureId, { tapState: "destroying" });
     this.refresh();
+
+    setTimeout(() => {
+      deleteTapFigure();
+      this.refresh();
+    }, tapAnimationMs);
   });
 
   /** Helper Functions */

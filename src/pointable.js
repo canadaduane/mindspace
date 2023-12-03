@@ -259,7 +259,6 @@ export function makePointable({
     const _state = state.state;
 
     events.emit("up", state);
-    console.log("up", state);
 
     if (_state === "singleDown") {
       event.stopPropagation();

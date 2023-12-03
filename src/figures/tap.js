@@ -15,11 +15,11 @@ export function* Tap(
     tapState,
   } /*: { x: number, y: number, tapState: TapState } */
 ) /*: any */ {
-  let initialDot = true;
+  let initialDot = false;
 
   this.schedule(() => {
     setTimeout(() => {
-      initialDot = false;
+      initialDot = true;
       this.refresh();
     }, 10);
   });
@@ -28,7 +28,7 @@ export function* Tap(
     const bgColor = getColorFromTapState(tapState, color);
     yield html`
       <div
-        class="tap ${tapState === "creating" ? "tap-creating" : ""}"
+        class="tap tap-${initialDot && tapState}"
         style=${{
           "left": `${x}px`,
           "top": `${y}px`,
@@ -85,6 +85,11 @@ css`
     width: ${tapRadius * 2}px;
     height: ${tapRadius * 2}px;
 
+    /* prettier-ignore */
+    transition:
+      width ${tapAnimationMs}ms linear,
+      height ${tapAnimationMs}ms linear;
+
     display: flex;
     justify-content: center;
     align-items: center;
@@ -98,18 +103,8 @@ css`
     height: ${jotCircleRadius * 2}px;
   }
 
-  .tap-creating {
-    animation: tap-creating 0.5s linear forwards;
-  }
-
-  @keyframes tap-creating {
-    0% {
-      width: ${tapRadius * 2}px;
-      height: ${tapRadius * 2}px;
-    }
-    100% {
-      width: ${jotCircleRadius * 2}px;
-      height: ${jotCircleRadius * 2}px;
-    }
+  .tap-destroying {
+    width: 0px;
+    height: 0px;
   }
 `;
