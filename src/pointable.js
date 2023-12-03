@@ -15,6 +15,7 @@ type PointableEmitterEvents = {
   // e.g. a double tap has two down and two up events. 
   "down": (PointableEventPayload) => void,
   "up": (PointableEventPayload) => void,
+  "move": (PointableEventPayload) => void,
 
   "singleDown": (PointableEventPayload) => void,
   "singleUp": (PointableEventPayload) => void,
@@ -33,10 +34,6 @@ type PointableEmitterEvents = {
   "dragMove": (PointableEventPayload) => void,
   "dragMoveOrDrift": (PointableEventPayload) => void,
   "dragEnd": (PointableEventPayload) => void,
-
-  // "start": (Omit<PointableEventPayload, "didDrift">) => void,
-  // "end": (PointableEventPayload) => void,
-  // "longPress": ({ x: number, y: number}) => void,
 }
 
 type ScreenToWorldFn = (Vector2) => void;
@@ -137,239 +134,210 @@ export function makePointable({
     // Left button only
     if (event.button !== 0) return;
 
-    const _eventPos = getEventPosition(event, screenToWorld);
-
     state.event = event;
 
-    switch (state.state) {
-      case "initial": {
-        event.stopPropagation();
+    const _eventPos = getEventPosition(event, screenToWorld);
+    const _state = state.state;
 
-        // Store the initial pointer offset from center of the object
-        const prestartPos = getWorldPosition?.();
-        if (prestartPos) {
-          state.offset.copy(prestartPos).sub(_eventPos);
-        } else {
-          state.offset.set(0, 0);
-        }
+    events.emit("down", state);
 
-        // Keep a copy of initial start position for drift distance calculation
-        state.initialPosition.copy(_eventPos);
+    if (_state === "initial") {
+      event.stopPropagation();
 
-        // Update the position
-        state.position.copy(_eventPos);
+      // Store the initial pointer offset from center of the object
+      const prestartPos = getWorldPosition?.();
+      if (prestartPos) {
+        state.offset.copy(prestartPos).sub(_eventPos);
+      } else {
+        state.offset.set(0, 0);
+      }
 
-        // Reset canceled flag
-        canceled = false;
+      // Keep a copy of initial start position for drift distance calculation
+      state.initialPosition.copy(_eventPos);
 
-        // $FlowIgnore
-        event.target.setPointerCapture(event.pointerId);
+      // Update the position
+      state.position.copy(_eventPos);
 
-        events.emit("down", state);
+      // Reset canceled flag
+      canceled = false;
 
-        if (longPress && !doublePress) {
-          // If we're configured to consider the possibility of long presses, then
-          // this singleDown MAY be the beginning of a long press
+      // $FlowIgnore
+      event.target.setPointerCapture(event.pointerId);
 
-          state.longPressTimeoutID = setTimeout(() => {
-            if (state.state !== "singleDownOrLongDown") {
-              console.warn("longDown ignored", state);
-              return;
-            }
-            state.state = "longDown";
-            state.longPressTimeoutID = undefined;
-            events.emit("longDown", state);
-            events.emit("taaap", state);
-          }, longPressMs);
+      if (longPress && !doublePress) {
+        // If we're configured to consider the possibility of long presses, then
+        // this singleDown MAY be the beginning of a long press
 
-          // Not sure yet if this is a singleDown or longDown event
-          state.state = "singleDownOrLongDown";
-        } else if (doublePress && !longPress) {
-          // If we're configured to consider the possibility of double presses, then
-          // this singleDown MAY be the beginning of a double tap
+        state.longPressTimeoutID = setTimeout(() => {
+          if (state.state !== "singleDownOrLongDown") {
+            console.warn("longDown ignored", state);
+            return;
+          }
+          state.state = "longDown";
+          state.longPressTimeoutID = undefined;
+          events.emit("longDown", state);
+          events.emit("taaap", state);
+        }, longPressMs);
 
-          state.doublePressSingleDownTimeoutID = setTimeout(() => {
-            if (state.state !== "singleDownOrBeginDouble") {
-              console.warn("singleDown ignored", state);
-              return;
-            }
+        // Not sure yet if this is a singleDown or longDown event
+        state.state = "singleDownOrLongDown";
+      } else if (doublePress && !longPress) {
+        // If we're configured to consider the possibility of double presses, then
+        // this singleDown MAY be the beginning of a double tap
 
-            // After the double-press timeout limit, it's confirmed to be a singleDown event
-            state.state = "singleDown";
-            state.doublePressSingleDownTimeoutID = undefined;
-            events.emit("singleDown", state);
-          }, shortPressMs /* Note: max short press is usually shorter than doublePressMs */);
+        state.doublePressSingleDownTimeoutID = setTimeout(() => {
+          if (state.state !== "singleDownOrBeginDouble") {
+            console.warn("singleDown ignored", state);
+            return;
+          }
 
-          // Not sure yet if this is a singleDown or double press sequence yet
-          state.state = "singleDownOrBeginDouble";
-        } else if (longPress && doublePress) {
-          throw new Error("Not implemented: long press AND double press");
-        } else {
+          // After the double-press timeout limit, it's confirmed to be a singleDown event
           state.state = "singleDown";
+          state.doublePressSingleDownTimeoutID = undefined;
           events.emit("singleDown", state);
-        }
+        }, shortPressMs /* Note: max short press is usually shorter than doublePressMs */);
 
-        break;
+        // Not sure yet if this is a singleDown or double press sequence yet
+        state.state = "singleDownOrBeginDouble";
+      } else if (longPress && doublePress) {
+        throw new Error("Not implemented: long press AND double press");
+      } else {
+        state.state = "singleDown";
+        events.emit("singleDown", state);
       }
+    } else if (_state === "singleUpOrBeginDouble") {
+      event.stopPropagation();
 
-      case "singleUpOrBeginDouble": {
-        event.stopPropagation();
+      clearTimeout(state.doublePressSingleUpTimeoutID);
 
-        clearTimeout(state.doublePressSingleUpTimeoutID);
+      // Update the position
+      state.position.copy(_eventPos);
 
-        // Update the position
-        state.position.copy(_eventPos);
+      events.emit("doubleDown", state);
 
-        events.emit("doubleDown", state);
-
-        state.state = "doubleDown";
-
-        break;
-      }
-      default:
-        throw new Error(`unexpected pointable state: ${state.state}`);
+      state.state = "doubleDown";
+    } else {
+      // unhandled state
+      console.warn("unhandled state in `start`:", _state);
     }
   };
 
   const end = (event /*: PointerEvent */) => {
     if (canceled) return;
 
-    const _eventPos = getEventPosition(event, screenToWorld);
-
     state.event = event;
+
+    const _eventPos = getEventPosition(event, screenToWorld);
+    const _state = state.state;
 
     events.emit("up", state);
 
-    switch (state.state) {
-      case "singleDown": {
-        event.stopPropagation();
+    if (_state === "singleDown") {
+      event.stopPropagation();
 
-        // simple case of a single tap
-        events.emit("singleUp", state);
-        events.emit("tap", state);
+      // simple case of a single tap
+      events.emit("singleUp", state);
+      events.emit("tap", state);
 
-        // Back to initial state
-        state.state = "initial";
+      // Back to initial state
+      state.state = "initial";
+    } else if (_state === "singleDownOrLongDown") {
+      event.stopPropagation();
 
-        break;
-      }
+      // If the longDown transition hasn't happened yet, then this is a single tap
+      clearTimeout(state.longPressTimeoutID);
+      events.emit("singleDown", state);
+      events.emit("singleUp", state);
+      events.emit("tap", state);
 
-      case "singleDownOrLongDown": {
-        event.stopPropagation();
+      // Back to initial state
+      state.state = "initial";
+    } else if (_state === "longDown") {
+      event.stopPropagation();
 
-        // If the longDown transition hasn't happened yet, then this is a single tap
-        clearTimeout(state.longPressTimeoutID);
+      events.emit("longUp", state);
+
+      // Back to initial state after double tap
+      state.state = "initial";
+    } else if (_state === "singleDownOrBeginDouble") {
+      event.stopPropagation();
+
+      clearTimeout(state.doublePressSingleDownTimeoutID);
+
+      state.doublePressSingleUpTimeoutID = setTimeout(() => {
+        if (state.state !== "singleUpOrBeginDouble") {
+          console.warn("tap ignored", state);
+          return;
+        }
+
+        // After the double-press timeout limit, this can't be a double-press
         events.emit("singleDown", state);
         events.emit("singleUp", state);
         events.emit("tap", state);
 
+        state.doublePressSingleUpTimeoutID = undefined;
+
         // Back to initial state
         state.state = "initial";
+      }, doublePressMs);
 
-        break;
-      }
+      // Not sure yet if this is a singleDown or doubleDown event
+      state.state = "singleUpOrBeginDouble";
+    } else if (_state === "doubleDown") {
+      event.stopPropagation();
 
-      case "longDown": {
-        event.stopPropagation();
+      events.emit("doubleDown", state);
+      events.emit("taptap", state);
 
-        events.emit("longUp", state);
+      // Back to initial state after double tap
+      state.state = "initial";
+    } else if (_state === "singleDragging") {
+      event.stopPropagation();
 
-        // Back to initial state after double tap
-        state.state = "initial";
+      events.emit("dragEnd", state);
 
-        break;
-      }
-
-      case "singleDownOrBeginDouble": {
-        event.stopPropagation();
-
-        clearTimeout(state.doublePressSingleDownTimeoutID);
-
-        state.doublePressSingleUpTimeoutID = setTimeout(() => {
-          if (state.state !== "singleUpOrBeginDouble") {
-            console.warn("tap ignored", state);
-            return;
-          }
-
-          // After the double-press timeout limit, this can't be a double-press
-          events.emit("singleDown", state);
-          events.emit("singleUp", state);
-          events.emit("tap", state);
-
-          state.doublePressSingleUpTimeoutID = undefined;
-
-          // Back to initial state
-          state.state = "initial";
-        }, doublePressMs);
-
-        // Not sure yet if this is a singleDown or doubleDown event
-        state.state = "singleUpOrBeginDouble";
-
-        break;
-      }
-
-      case "doubleDown": {
-        event.stopPropagation();
-
-        events.emit("doubleDown", state);
-        events.emit("taptap", state);
-
-        // Back to initial state after double tap
-        state.state = "initial";
-
-        break;
-      }
-
-      case "singleDragging": {
-        event.stopPropagation();
-
-        events.emit("dragEnd", state);
-
-        // Back to initial state after drag and release
-        state.state = "initial";
-
-        break;
-      }
+      // Back to initial state after drag and release
+      state.state = "initial";
+    } else {
+      // unhandled state
+      console.warn("unhandled state in `end`:", _state);
     }
   };
 
   const move = (event /*: PointerEvent */) => {
     if (canceled) return;
-    // if (state.state === "initial") return;
-
-    const _eventPos = getEventPosition(event, screenToWorld);
 
     state.event = event;
 
-    switch (state.state) {
-      case "singleDown": {
-        event.preventDefault();
+    const _eventPos = getEventPosition(event, screenToWorld);
+    const _state = state.state;
 
-        state.position.copy(_eventPos);
+    events.emit("move", state);
 
-        const _driftDistance = _eventPos.distanceTo(state.initialPosition);
+    if (_state === "singleDown") {
+      event.preventDefault();
 
-        if (_driftDistance < maxDrift) {
-          events.emit("dragMoveOrDrift", state);
-          events.emit("dragDrift", state);
-        } else {
-          state.state = "singleDragging";
-          events.emit("dragStart", state);
-        }
+      state.position.copy(_eventPos);
 
-        break;
-      }
+      const _driftDistance = _eventPos.distanceTo(state.initialPosition);
 
-      case "singleDragging": {
-        event.preventDefault();
-
-        state.position.copy(_eventPos);
-
+      if (_driftDistance < maxDrift) {
         events.emit("dragMoveOrDrift", state);
-        events.emit("dragMove", state);
-
-        break;
+        events.emit("dragDrift", state);
+      } else {
+        state.state = "singleDragging";
+        events.emit("dragStart", state);
       }
+    } else if (_state === "singleDragging") {
+      event.preventDefault();
+
+      state.position.copy(_eventPos);
+
+      events.emit("dragMoveOrDrift", state);
+      events.emit("dragMove", state);
+    } else {
+      // unhandled state
+      console.warn("unhandled state in `move`:", _state);
     }
 
     event.preventDefault();
