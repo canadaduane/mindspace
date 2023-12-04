@@ -152,7 +152,30 @@ function* Svg(
 
   this.addEventListener("deleteLine", ({ detail: { figureId } }) => {
     unselectSelectedLine();
-    graph.updateLine(figureId, { lineType: "deleted" });
+    const line = graph.updateLine(figureId, { lineType: "deleted" });
+
+    const node1 = graph.getNode(line.connectedNodeId1);
+    const node2 = graph.getNode(line.connectedNodeId2);
+    [node1, node2].forEach((node) => {
+      const count = [...node.dependents.keys()].reduce((sum, depFigureId) => {
+        const depFigure = graph.getFigure(depFigureId);
+        if (depFigure.type === "line" && depFigure.lineType !== "deleted") {
+          return sum + 1;
+        } else {
+          return sum;
+        }
+      }, 0);
+
+      if (count > 0) return;
+
+      node.dependents.forEach((attrs, depFigureId) => {
+        const depFigure = graph.getFigure(depFigureId);
+        if (depFigure.type === "line" && depFigure.lineType === "deleted") {
+          depFigure.lineType = "short";
+        }
+      });
+    });
+
     this.refresh();
   });
 
