@@ -238,6 +238,7 @@ function* Svg(
     longPress: true,
     longPressMs: tapAnimationMs + 50,
     doublePress: true,
+    longDrag: true,
   });
 
   events.on("singleDown", () => {

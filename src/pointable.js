@@ -7,6 +7,8 @@ import { Vector2 } from "./math/vector2.js";
 // it registers as a "movement" and, e.g. cancels long-press?
 const defaultMaxDrift = 3;
 
+const debug = false;
+
 /*::
 import type { Emitter } from "./events.js";
 
@@ -52,6 +54,9 @@ export type PointableOptions = {
   longPress?: boolean,
   // Min milliseconds to consider a singleDown a long press
   longPressMs?: number,
+ 
+  // Whether or not to allow dragging after a long press 
+  longDrag?: boolean,
 
   maxDrift?: number,
 
@@ -83,7 +88,7 @@ export type PointableState = {
     | "singleUpOrBeginDouble"
     | "longDown"
     | "doubleDown"
-    | "singleDragging",
+    | "dragging",
   complete: boolean,
   event?: PointerEvent,
   initialPosition: Vector2,
@@ -107,21 +112,17 @@ export function makePointable({
   doublePressMs = 500,
   longPress = false,
   longPressMs = 500,
+  longDrag = false,
   maxDrift,
   getWorldPosition,
   screenToWorld,
 } /*: PointableOptions */ = {}) /*: PointableBundle */ {
-  let isDragging = false;
-
   let state /*: PointableState */ = {
     state: "initial",
     complete: true,
 
     // Initial position used for drift distance calculation
     initialPosition: new Vector2(),
-
-    // initialDownTimestamp: performance.now(),
-    // initialUpTimestamp: performance.now(),
 
     // Current position of object being pointed/dragged in world coords
     position: new Vector2(),
@@ -141,6 +142,8 @@ export function makePointable({
     clearTimeout(state.longPressTimeoutID);
     clearTimeout(state.doublePressSingleDownTimeoutID);
     clearTimeout(state.doublePressSingleUpTimeoutID);
+
+    if (debug) console.log("complete");
   };
 
   const start = (event /*: PointerEvent */) => {
@@ -180,6 +183,7 @@ export function makePointable({
       event.target.setPointerCapture(event.pointerId);
 
       events.emit("down", state);
+      if (debug) console.log("down", state);
 
       if (longPress && !doublePress) {
         // If we're configured to consider the possibility of long presses, then
@@ -259,6 +263,7 @@ export function makePointable({
     const _state = state.state;
 
     events.emit("up", state);
+    if (debug) console.log("up", state);
 
     if (_state === "singleDown") {
       event.stopPropagation();
@@ -340,7 +345,7 @@ export function makePointable({
       events.emit("taptap", state);
 
       complete();
-    } else if (_state === "singleDragging") {
+    } else if (_state === "dragging") {
       event.stopPropagation();
 
       events.emit("dragEnd", state);
@@ -361,6 +366,7 @@ export function makePointable({
     const _state = state.state;
 
     events.emit("move", state);
+    if (debug) console.log("move", state);
 
     if (
       _state === "singleDown" ||
@@ -382,21 +388,28 @@ export function makePointable({
         clearTimeout(state.doublePressSingleDownTimeoutID);
         clearTimeout(state.doublePressSingleUpTimeoutID);
 
-        state.state = "singleDragging";
+        state.state = "dragging";
         events.emit("dragStart", state);
       }
-    } else if (_state === "singleDragging") {
+    } else if (_state === "dragging") {
       event.preventDefault();
 
       state.position.copy(_eventPos).add(state.offset);
 
       events.emit("dragMoveOrDrift", state);
       events.emit("dragMove", state);
-    } else if (
-      _state === "longDown" ||
-      _state === "doubleDown" ||
-      _state === "singleUpOrBeginDouble"
-    ) {
+    } else if (_state === "longDown" && longDrag) {
+      event.preventDefault();
+
+      state.position.copy(_eventPos).add(state.offset);
+
+      clearTimeout(state.longPressTimeoutID);
+      clearTimeout(state.doublePressSingleDownTimeoutID);
+      clearTimeout(state.doublePressSingleUpTimeoutID);
+
+      state.state = "dragging";
+      events.emit("dragStart", state);
+    } else if (_state === "doubleDown" || _state === "singleUpOrBeginDouble") {
       // ignore
     } else {
       // unhandled state

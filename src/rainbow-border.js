@@ -12,6 +12,7 @@ import { getColorFromScreenCoord } from "./color.js";
 import type { Side } from "./utils.js";
 import type { PointableEvents } from "./pointable.js";
 import type { Graph } from "./models/graph.js";
+import type { Control } from "./events.js";
 
 export type RainbowFocus = {
   side: Side["side"],
@@ -288,6 +289,30 @@ export function handleRainbowDrag(
   let dragColor /*: ?string */;
   let tapFigureId /*: ?string */;
 
+  const borderStopPropagation = (
+    position /*: Vector2 */,
+    control /*: Control */
+  ) => {
+    const winSize = new Vector2(window.innerWidth, window.innerHeight);
+
+    const side = closestSide(position, winSize);
+    if (side.distance < 40) {
+      control.stop();
+    }
+  };
+
+  events.on("down", ({ position }, control) => {
+    borderStopPropagation(position, control);
+  });
+
+  events.on("taptap", ({ position }, control) => {
+    borderStopPropagation(position, control);
+  });
+
+  events.on("taaap", ({ position }, control) => {
+    borderStopPropagation(position, control);
+  });
+
   events.on("dragStart", ({ position }, control) => {
     const winSize = new Vector2(window.innerWidth, window.innerHeight);
 
@@ -315,16 +340,21 @@ export function handleRainbowDrag(
 
       const jotFigureIds = graph.findJotsAtPosition(position);
       if (jotFigureIds.length === 0) {
-        if (tapFigureId) graph.deleteFigure(tapFigureId);
+        if (tapFigureId) {
+          graph.deleteFigure(tapFigureId);
+          tapFigureId = null;
+        }
         graph.createJotWithNode(position, jotColor);
       } else {
         if (tapFigureId) {
-          const figureId = tapFigureId;
-
-          graph.updateTap(figureId, { tapState: "destroying" });
+          graph.updateTap(tapFigureId, { tapState: "destroying" });
 
           setTimeout(() => {
-            graph.deleteFigure(figureId);
+            if (!tapFigureId) return;
+
+            graph.deleteFigure(tapFigureId);
+            tapFigureId = null;
+
             refresh();
           }, tapAnimationMs);
         }

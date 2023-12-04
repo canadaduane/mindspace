@@ -11,7 +11,7 @@ type EventsMap = {
 
 type Unsubscribe = () => void;
 
-type Control = { stop: () => void };
+export type Control = { stop: () => void };
 
 type CallbackControl<Events, K> = 
   (...[...Parameters<Events[K]>, Control]) => void;
