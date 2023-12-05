@@ -1,5 +1,6 @@
 // @flow
 
+import * as EasyEmojis from "easy-emojis";
 import { Vector2 } from "../math/vector2.js";
 import { css } from "../styles.js";
 import { dispatch, html, isFirefox } from "../utils.js";
@@ -9,6 +10,10 @@ import {
   jotRectangleWidth,
   jotRectangleHeight,
 } from "../constants.js";
+import ReplaceKeywords from "../replace-keywords.js";
+
+// TODO: Lazy load emojis
+// let EasyEmojis = import("easy-emojis");
 
 const circleToPillTextLength = 3;
 const pillToRectangleTextLength = 16;
@@ -40,6 +45,7 @@ export function* Jot(
   let currentShape = shape;
   let animateClass = "";
   let position = new Vector2(x, y);
+  let keywordReplacer;
 
   const { handlers, events } = makePointable({
     getWorldPosition: () => position,
@@ -96,7 +102,19 @@ export function* Jot(
     }
   };
 
-  this.schedule(() => setTimeout(() => editEl?.focus(), 50));
+  this.schedule(() => {
+    editEl.innerText = "\n";
+    keywordReplacer = new ReplaceKeywords(editEl, {
+      transformations: [
+        {
+          query: /:[^:]+:/,
+          value: (word, query) => EasyEmojis.getEmojiByShortName(word),
+          appendSpace: false,
+        },
+      ],
+    });
+    setTimeout(() => editEl?.focus(), 50);
+  });
 
   const onFocus = (event /*: FocusEvent */) => {
     dispatch(this, "nodeActive", { nodeId });

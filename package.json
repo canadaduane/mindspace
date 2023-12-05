@@ -4,7 +4,7 @@
   "description": "An experiment in spatial notes",
   "scripts": {
     "dev": "echo 'Open http://localhost:8080/src/ (note trailing slash)' && sirv --no-clear --dev",
-    "build": "esbuild --bundle src/main.js --format=esm --minify --external:colorjs.io >dist/main.js",
+    "build": "esbuild --bundle src/main.js --format=esm --minify --external:easy-emojis >dist/main.js",
     "typecheck": "flow --show-all-errors"
   },
   "keywords": [],
