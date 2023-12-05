@@ -1,7 +1,7 @@
 // @flow
 
 import { renderer } from "@b9g/crank/dom";
-import { html, closestSide, hasTagName, nonNull } from "./utils.js";
+import { html, closestSide, hasTagName, nonNull, dispatch } from "./utils.js";
 import { Vector2 } from "./math/vector2.js";
 import { Box2 } from "./math/box2.js";
 import {
@@ -125,6 +125,14 @@ function* Svg(
     const node = graph.getNode(nodeId);
     node.x = x;
     node.y = y;
+
+    const position = new Vector2(x, y);
+    const side = closestSide(position, winSize);
+    // Dip jots into the rainbow border to colorize them
+    if (side.distance < 40) {
+      node.color = getColorFromScreenCoord(position, winSize);
+    }
+
     this.refresh();
   });
 
@@ -279,8 +287,20 @@ function* Svg(
     this.refresh();
   });
 
-  events.on("dragMove", ({ state }) => {
-    if (!tapFigureId) return;
+  events.on("dragMove", ({ state, position }) => {
+    if (!tapFigureId) {
+      if (newJotFigureId) {
+        const figure = graph.getFigure(newJotFigureId);
+        if (figure.type === "jot") {
+          dispatch(this, "nodeMoved", {
+            nodeId: figure.controlsNodeId,
+            x: position.x,
+            y: position.y,
+          });
+        }
+      }
+      return;
+    }
 
     graph.updateTap(tapFigureId, { tapState: "destroying" });
     this.refresh();
