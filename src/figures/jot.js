@@ -29,7 +29,7 @@ export function* Jot(
   /*:: this: any, */ {
     figureId,
     controlsNodeId: nodeId,
-    shape,
+    shape = "circle",
     x = 0,
     y = 0,
   } /*: JotParams */
@@ -78,7 +78,7 @@ export function* Jot(
     }
 
     // $FlowIgnore
-    content = event.target.innerText.trim();
+    content = event.target.innerText;
 
     let newShape;
     if (content.length <= circleToPillTextLength) {
