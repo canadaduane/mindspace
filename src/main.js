@@ -307,6 +307,7 @@ function* Svg(
 
     setTimeout(() => {
       deleteTapFigure();
+      newJotFigureId = undefined;
       this.refresh();
     }, tapAnimationMs);
   });
