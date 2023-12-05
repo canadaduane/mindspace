@@ -103,7 +103,6 @@ export function* Jot(
   };
 
   this.schedule(() => {
-    editEl.innerText = "\n";
     keywordReplacer = new ReplaceKeywords(editEl, {
       transformations: [
         {
