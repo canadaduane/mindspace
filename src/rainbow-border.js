@@ -380,5 +380,7 @@ export function handleRainbowDrag(
     graph.updateTap(tapFigureId, { x: position.x, y: position.y });
 
     refresh();
+
+    control.stop();
   });
 }
