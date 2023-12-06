@@ -133,7 +133,6 @@ export function* Jot(
         onpointerup=${handlers.end}
         onpointercancel=${handlers.end}
         onpointermove=${handlers.move}
-        ontouchstart=${handlers.touchStart}
         class="jot ${"jot--" + shapeClasses.join("-")}"
         style=${{
           "left": `${position.x}px`,
