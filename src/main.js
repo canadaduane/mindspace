@@ -255,6 +255,10 @@ function* Svg(
 
   handleRainbowDrag(events, graph, () => this.refresh());
 
+  events.on("tap", ({ position }) => {
+    document.documentElement?.focus();
+  });
+
   events.on("taptap", ({ position }) => {
     deleteTapFigure();
 
@@ -279,6 +283,7 @@ function* Svg(
       x: position.x,
       y: position.y,
     }).figureId;
+
     this.refresh();
   });
 
