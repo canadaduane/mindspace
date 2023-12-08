@@ -29,7 +29,7 @@ import type { Graph } from "./models/graph.js";
 import type { RainbowFocus } from "./rainbow-border.js";
 */
 
-function* Svg(
+function* Main(
   /*:: this:  any, */
   {
     nodes: initNodes = [],
@@ -392,6 +392,6 @@ function* Svg(
   }
 }
 
-renderer.render(html`<${Svg} />`, document.body);
+renderer.render(html`<${Main} />`, document.body);
 
 renderer.render(html`${[...styles]}`, document.getElementById("styles"));
