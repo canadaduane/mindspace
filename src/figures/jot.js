@@ -12,9 +12,6 @@ import {
 } from "../constants.js";
 import ReplaceKeywords from "../replace-keywords.js";
 
-// TODO: Lazy load emojis
-// let EasyEmojis = import("easy-emojis");
-
 const circleToPillTextLength = 3;
 const pillToRectangleTextLength = 16;
 

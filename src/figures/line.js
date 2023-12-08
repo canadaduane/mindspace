@@ -172,8 +172,6 @@ export function* Line(
       path = `M${p1.x} ${p1.y} L${p2.x} ${p2.y}`;
     }
 
-    console.log({ nearIndicator });
-
     yield connected &&
       html`
         <path
