@@ -1,7 +1,15 @@
 // @flow
 
 import { renderer } from "@b9g/crank/dom";
-import { html, closestSide, hasTagName, nonNull, dispatch } from "./utils.js";
+import {
+  html,
+  closestSide,
+  hasTagName,
+  nonNull,
+  dispatch,
+  parse,
+  debounce,
+} from "./utils.js";
 import { Vector2 } from "./math/vector2.js";
 import { Box2 } from "./math/box2.js";
 import {
@@ -21,7 +29,6 @@ import {
   getRainbowFocus,
   handleRainbowDrag,
 } from "./rainbow-border.js";
-import { parse } from "./utils.js";
 
 /*::
 import type { Node, NodeConstructor } from "./models/node.js";
@@ -38,12 +45,19 @@ function* Main(
   } /*: { nodes: NodeConstructor[], figures: FigureConstructor[] } */
 ) {
   let graph = makeGraph({ nodes: initNodes, figures: initFigures });
+
   window.buildGraphFromString = (input /*: string */) => {
     const data = parse(input);
     graph = makeGraph({ nodes: data.nodes, figures: data.figures });
     this.refresh();
   };
+
   window.graph = graph;
+
+  const save = debounce(() => {
+    console.log("Saving graph");
+    localStorage.setItem("graph", graph.toString());
+  }, 1000);
 
   let mostRecentlyActiveNodeId;
 
@@ -116,6 +130,10 @@ function* Main(
   window.addEventListener("pointermove", pointermove);
 
   document.body?.addEventListener("keydown", keydown);
+
+  this.addEventListener("saveGraph", () => {
+    save();
+  });
 
   this.addEventListener("controllingNode", ({ detail: { nodeId } }) => {
     controlledNodeId = nodeId;
@@ -398,6 +416,14 @@ function* Main(
   }
 }
 
-renderer.render(html`<${Main} />`, document.body);
+const input = localStorage.getItem("graph");
+const data /*: { nodes: any[], figures: any[] } */ = parse(
+  input ?? `{"nodes":[],"figures":[]}`
+);
+
+renderer.render(
+  html`<${Main} nodes=${data.nodes} figures=${data.figures} />`,
+  document.body
+);
 
 renderer.render(html`${[...styles]}`, document.getElementById("styles"));

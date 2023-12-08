@@ -97,6 +97,8 @@ export function* Jot(
       dispatch(this, "setJotShape", { figureId, shape: newShape });
       this.refresh();
     }
+
+    dispatch(this, "saveGraph");
   };
 
   this.schedule(() => {

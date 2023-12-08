@@ -159,3 +159,21 @@ export function stringify(input /*: any */) /*: string */ {
   }
   return JSON.stringify(input, replacer, 2);
 }
+
+export function debounce /*:: <F: (...args: Array<any>) => mixed> */(
+  func /*: F */,
+  wait /*: number */
+) /*: F */ {
+  let timeoutId /*: TimeoutID | null */ = null;
+
+  // $FlowFixMe: Flow can't know this matches F
+  return function (...args /*: Array<any> */) {
+    const later = () => {
+      timeoutId = null;
+      func(...args);
+    };
+
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(later, wait);
+  };
+}
