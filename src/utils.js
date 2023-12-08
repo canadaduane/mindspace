@@ -2,6 +2,7 @@
 import { jsx } from "@b9g/crank/standalone";
 import { nanoid } from "nanoid";
 import { Vector2 } from "./math/vector2.js";
+import { Box2 } from "./math/box2.js";
 
 // Export jsx as both html and svg so that we get lit-html syntax highlighting
 export const html = jsx;
@@ -129,4 +130,32 @@ export function getScroll() /*: Vector2 */ {
   );
 
   return scrollPos;
+}
+
+export function parse(input /*: string */) /*: any */ {
+  function reviver(key /*: string */, value /*: any */) {
+    if (typeof value === "object" && value !== null) {
+      if (value.dataType === "Map") {
+        return new Map(value.value);
+      }
+    }
+    return value;
+  }
+  return JSON.parse(input, reviver);
+}
+
+export function stringify(input /*: any */) /*: string */ {
+  function replacer(key /*: string */, value /*: any */) {
+    if (value instanceof Map) {
+      return {
+        dataType: "Map",
+        value: Array.from(value.entries()), // or with spread: value: [...value]
+      };
+    } else if (value instanceof Box2) {
+      return undefined;
+    } else {
+      return value;
+    }
+  }
+  return JSON.stringify(input, replacer, 2);
 }

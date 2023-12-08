@@ -21,6 +21,7 @@ import {
   getRainbowFocus,
   handleRainbowDrag,
 } from "./rainbow-border.js";
+import { parse } from "./utils.js";
 
 /*::
 import type { Node, NodeConstructor } from "./models/node.js";
@@ -37,6 +38,11 @@ function* Main(
   } /*: { nodes: NodeConstructor[], figures: FigureConstructor[] } */
 ) {
   let graph = makeGraph({ nodes: initNodes, figures: initFigures });
+  window.buildGraphFromString = (input /*: string */) => {
+    const data = parse(input);
+    graph = makeGraph({ nodes: data.nodes, figures: data.figures });
+    this.refresh();
+  };
   window.graph = graph;
 
   let mostRecentlyActiveNodeId;

@@ -13,6 +13,7 @@ import {
   jotRectangleHeight,
 } from "../constants.js";
 import { getColorFromWorldCoord } from "../color.js";
+import { stringify } from "../utils.js";
 
 /*::
 import { type NodeConstructor, type Node, type NodesBundle } from './node.js'
@@ -44,6 +45,7 @@ export type Graph = {
   createDefaultJotWithNode: (pos: Vector2, colorOverride: ?string) => NodeAndFigure;
 
   debug: () => void;
+  toString: () => string;
 };
 
 type RemoveNodeWithDependentsFn = ( nodeId: string ) => boolean;
@@ -82,6 +84,18 @@ export function makeGraph(
     debug: () => {
       console.log("nodes", nodes.nodes);
       console.log("figures", figures.figures);
+    },
+
+    toString: () => {
+      const ns = [...nodes.nodes.entries()].map(([nodeId, node]) => ({
+        ...node,
+        nodeId,
+      }));
+      const fs = [...figures.figures.entries()].map(([figureId, figure]) => ({
+        ...figure,
+        figureId,
+      }));
+      return stringify({ nodes: ns, figures: fs });
     },
   };
 }
