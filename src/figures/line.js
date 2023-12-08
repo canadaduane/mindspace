@@ -1,6 +1,5 @@
 // @flow
 
-import Color from "colorjs.io";
 import { Vector2 } from "../math/vector2.js";
 import {
   distanceFromPointToLine,
@@ -13,10 +12,23 @@ import {
 } from "../constants.js";
 import { dispatch, html, svg, squash } from "../utils.js";
 import { makePointable } from "../pointable.js";
+import { lerp } from "../math/utils.js";
 
 const opacityThreshold = 0.001;
-const defaultStroke = "rgba(240, 240, 240, 1)";
-const warnColor = "rgba(240, 60, 30, 1)";
+const defaultColorLch = [0.6522, 0, 29.25];
+const warnColorLch = [0.6522, 0.3344, 29.25];
+
+function mix(
+  c1 /*: [number, number, number] */,
+  c2 /*: [number, number, number] */,
+  ratio /*: number */
+) {
+  return [
+    lerp(c1[0], c2[0], ratio),
+    lerp(c1[1], c2[1], ratio),
+    lerp(c1[2], c2[2], ratio),
+  ];
+}
 
 /*::
 import type { LineType } from "../models/figure.js";
@@ -83,14 +95,11 @@ export function* Line(
     if (type === "strong") {
       let strokeWidth = 7;
 
-      const stroke = new Color(defaultStroke).mix(
-        warnColor,
-        1 - strokeWidth / 7,
-        {
-          space: "oklab",
-          outputSpace: "oklab",
-        }
-      );
+      const stroke = `oklch(${mix(
+        defaultColorLch,
+        warnColorLch,
+        1 - strokeWidth / 7
+      ).join(" ")})`;
 
       line = {
         opacity: 1,
@@ -132,10 +141,11 @@ export function* Line(
       const rate = broken
         ? 0.99
         : squash(Math.min(perpDist, maxDist) / maxDist, 30);
-      line.stroke = new Color(defaultStroke).mix(warnColor, rate, {
-        space: "oklab",
-        outputSpace: "oklab",
-      });
+
+      const m = mix(defaultColorLch, warnColorLch, rate);
+      // line.stroke = `oklch(${m.join(",")})`;
+      line.stroke = `oklch(${m[0] * 100}% ${m[1]} ${m[2]})`;
+      console.log({ r: rate, m, c: line.stroke });
 
       if (rate >= 1) {
         // isDragging = false;
@@ -161,6 +171,8 @@ export function* Line(
     } else {
       path = `M${p1.x} ${p1.y} L${p2.x} ${p2.y}`;
     }
+
+    console.log({ nearIndicator });
 
     yield connected &&
       html`
@@ -211,15 +223,6 @@ export function* Line(
               stroke-dasharray="100 100"
               stroke-dashoffset=${`${-50 - brokenRatio * 20}`}
               pathLength="100"
-            />
-          `}
-        ${nearIndicator &&
-        svg`
-            <path d=${path}
-              style="pointer-events: none;"
-              fill="none"
-              stroke="rgba(${nearIndicator.stroke})"
-              stroke-width=${nearIndicator.strokeWidth}
             />
           `}
       `;

@@ -26,7 +26,7 @@ https://github.com/canadaduane/mindspace/assets/129/74c83b99-19a2-4366-ad0c-264a
 
 ## Tech stack
 
-Mindspace uses [Crank.js](https://crank.js.org/) and [colorjs.io](https://colorjs.io/). It's otherwise built using plain html and javascript--no build tools or compile step.
+Mindspace uses [Crank.js](https://crank.js.org/) and Flow using type annotations in multiline JS comments. It's otherwise built using plain html and javascript--no build tools or compile step.
 
 ### How to run it locally
 

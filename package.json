@@ -13,7 +13,6 @@
   "dependencies": {
     "@b9g/crank": "0.5.4",
     "@fontsource/yantramanav": "5.0.15",
-    "colorjs.io": "0.4.5",
     "nanoid": "5.0.2"
   },
   "devDependencies": {

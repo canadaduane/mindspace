@@ -1,5 +1,4 @@
 /* @flow */
-import Color from "colorjs.io";
 import { Vector2 } from "./math/vector2.js";
 import { getScroll } from "./utils.js";
 
