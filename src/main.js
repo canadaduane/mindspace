@@ -29,6 +29,7 @@ import {
   getRainbowFocus,
   handleRainbowDrag,
 } from "./rainbow-border.js";
+import { generateRandomFragment } from "./random-names.js";
 
 /*::
 import type { Node, NodeConstructor } from "./models/node.js";
@@ -55,8 +56,8 @@ function* Main(
   window.graph = graph;
 
   const save = debounce(() => {
-    console.log("Saving graph");
-    localStorage.setItem("graph", graph.toString());
+    const graphKey = window.location.hash;
+    localStorage.setItem(graphKey, graph.toString());
   }, 1000);
 
   let mostRecentlyActiveNodeId;
@@ -424,14 +425,23 @@ function* Main(
   }
 }
 
-const input = localStorage.getItem("graph");
-const data /*: { nodes: any[], figures: any[] } */ = parse(
-  input ?? `{"nodes":[],"figures":[]}`
-);
+document.addEventListener("DOMContentLoaded", (event) => {
+  if (!window.location.hash) {
+    const randomFragment = generateRandomFragment();
+    window.location.hash = randomFragment;
+  }
 
-renderer.render(
-  html`<${Main} nodes=${data.nodes} figures=${data.figures} />`,
-  document.body
-);
+  const graphKey = window.location.hash;
+
+  const input = localStorage.getItem(graphKey);
+  const data /*: { nodes: any[], figures: any[] } */ = parse(
+    input ?? `{"nodes":[],"figures":[]}`
+  );
+
+  renderer.render(
+    html`<${Main} nodes=${data.nodes} figures=${data.figures} />`,
+    document.body
+  );
+});
 
 renderer.render(html`${[...styles]}`, document.getElementById("styles"));
