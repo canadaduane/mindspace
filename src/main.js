@@ -211,6 +211,11 @@ function* Main(
     this.refresh();
   });
 
+  this.addEventListener("setJotText", ({ detail: { figureId, text } }) => {
+    const figure = graph.updateJot(figureId, { text });
+    save();
+  });
+
   this.addEventListener("setJotShape", ({ detail: { figureId, shape } }) => {
     graph.updateJot(figureId, { shape });
     this.refresh();

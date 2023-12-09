@@ -24,6 +24,7 @@ type JotParams = {
   shape: JotShape,
   x: number,
   y: number,
+  text: string,
   focus: boolean,
 }
 */
@@ -35,6 +36,7 @@ export function* Jot(
     shape = "circle",
     x = 0,
     y = 0,
+    text = "",
     focus = false,
   } /*: JotParams */
 ) /*: any */ {
@@ -60,6 +62,10 @@ export function* Jot(
 
   events.on("dragMove", ({ position }) => {
     dispatch(this, "nodeMoved", { nodeId, x: position.x, y: position.y });
+  });
+
+  events.on("dragEnd", () => {
+    dispatch(this, "saveGraph");
   });
 
   const onKeyDown = (event /*: KeyboardEvent */) => {
@@ -100,7 +106,7 @@ export function* Jot(
       this.refresh();
     }
 
-    dispatch(this, "saveGraph");
+    dispatch(this, "setJotText", { figureId, text: content });
   };
 
   this.schedule(() => {
