@@ -425,12 +425,7 @@ function* Main(
   }
 }
 
-document.addEventListener("DOMContentLoaded", (event) => {
-  if (!window.location.hash) {
-    const randomFragment = generateRandomFragment();
-    window.location.hash = randomFragment;
-  }
-
+function loadAndRender() {
   const graphKey = window.location.hash;
 
   const input = localStorage.getItem(graphKey);
@@ -438,10 +433,19 @@ document.addEventListener("DOMContentLoaded", (event) => {
     input ?? `{"nodes":[],"figures":[]}`
   );
 
+  renderer.render(null, document.body);
   renderer.render(
     html`<${Main} nodes=${data.nodes} figures=${data.figures} />`,
     document.body
   );
-});
+}
+
+if (!window.location.hash) {
+  const randomFragment = generateRandomFragment();
+  window.location.hash = randomFragment;
+}
+
+document.addEventListener("DOMContentLoaded", loadAndRender);
+window.addEventListener("hashchange", loadAndRender);
 
 renderer.render(html`${[...styles]}`, document.getElementById("styles"));
