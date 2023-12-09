@@ -384,7 +384,10 @@ function* Main(
   try {
     while (true) {
       graph.applyNodesToFigures();
-      const { svgFigures, htmlFigures } = figuresMapToComponents(graph.figures);
+      const { svgFigures, htmlFigures } = figuresMapToComponents(
+        graph.figures,
+        newJotFigureId
+      );
 
       const { width: w, height: h } = winSize;
       yield html`<!-- begin -->

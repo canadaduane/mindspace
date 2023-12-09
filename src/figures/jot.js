@@ -24,6 +24,7 @@ type JotParams = {
   shape: JotShape,
   x: number,
   y: number,
+  focus: boolean,
 }
 */
 
@@ -34,6 +35,7 @@ export function* Jot(
     shape = "circle",
     x = 0,
     y = 0,
+    focus = false,
   } /*: JotParams */
 ) /*: any */ {
   let editEl;
@@ -111,7 +113,12 @@ export function* Jot(
         },
       ],
     });
-    setTimeout(() => editEl?.focus(), 50);
+
+    editEl.innerHTML = text;
+
+    if (focus) {
+      setTimeout(() => editEl?.focus(), 50);
+    }
   });
 
   const onFocus = (event /*: FocusEvent */) => {

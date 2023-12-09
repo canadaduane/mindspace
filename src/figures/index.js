@@ -22,16 +22,25 @@ const directory /*: Record<Figure["type"], ["html" | "svg", any]> */ = {
  * htmlFigures and svgFigures.
  */
 export function figuresMapToComponents(
-  figures /*: FiguresMap */
+  figures /*: FiguresMap */,
+  focusFigureId /*: ?string */
 ) /*: { htmlFigures: any[], svgFigures: any[] } */ {
   const htmlFigures /*: any[] */ = [];
   const svgFigures /*: any[] */ = [];
   figures.forEach((figure, figureId) => {
     const [namespace, Component] = directory[figure.type];
-    if (!Component) throw new Error(`unhandled HTML figure type: ${figure.type}`);
+    if (!Component)
+      throw new Error(`unhandled HTML figure type: ${figure.type}`);
 
     const list = namespace === "svg" ? svgFigures : htmlFigures;
-    list.push(createElement(Component, { $key: figureId, figureId, ...figure }));
+    list.push(
+      createElement(Component, {
+        $key: figureId,
+        figureId,
+        focus: figureId === focusFigureId,
+        ...figure,
+      })
+    );
   });
   return { htmlFigures, svgFigures };
 }
