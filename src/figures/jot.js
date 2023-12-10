@@ -44,7 +44,7 @@ export function* Jot(
   let didDrag = false;
   let content = "";
   let currentShape = shape;
-  let animateClass = "";
+  let animateClass;
   let position = new Vector2(x, y);
   let keywordReplacer;
 
@@ -137,7 +137,11 @@ export function* Jot(
 
     const shapeClasses = [];
     if (shake) shapeClasses.push("shake");
-    shapeClasses.push(animateClass);
+    if (animateClass) {
+      shapeClasses.push(animateClass);
+    } else {
+      shapeClasses.push(shape);
+    }
 
     yield html`<!-- jot -->
       <div
@@ -214,7 +218,24 @@ function styles() {
       white-space: nowrap;
     }
 
-    .jot--shake- {
+    .jot--pill,
+    .jot--shake-pill {
+      border-radius: ${jotCircleRadius * 2}px;
+      width: ${jotRectangleWidth}px;
+      height: ${jotCircleRadius * 2}px;
+    }
+
+    .jot--rectangle,
+    .jot--shake-rectangle {
+      border-radius: 9px;
+      width: ${jotRectangleWidth}px;
+      height: ${jotRectangleHeight}px;
+    }
+
+    .jot--shake-,
+    .jot--shake-circle,
+    .jot--shake-pill,
+    .jot--shake-rectangle {
       /* prettier-ignore */
       animation:
         jot--shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;

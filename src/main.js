@@ -210,6 +210,7 @@ function* Main(
     });
 
     this.refresh();
+    save();
   });
 
   this.addEventListener("setJotText", ({ detail: { figureId, text } }) => {
@@ -255,11 +256,15 @@ function* Main(
         });
       }, 1000);
     }
+
+    save();
   });
 
   this.addEventListener("createNode", ({ detail: { nodeId } }) => {
     createNodeAroundNode(nodeId);
     this.refresh();
+
+    save();
   });
 
   let tapFigureId /*: ?string */;
