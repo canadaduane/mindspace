@@ -80,7 +80,7 @@ export function* Jot(
 
   const onKey = (event /*: KeyboardEvent */) => {
     if (event.key === "Backspace" || event.key === "Delete") {
-      if (content.length === 0) {
+      if (content === "" || content === "\n") {
         dispatch(this, "destroyNode", { nodeId });
         return;
       }
