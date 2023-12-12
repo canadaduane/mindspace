@@ -159,11 +159,15 @@ function* Main(
     }
 
     this.refresh();
+
+    // jot explicitly emits saveGraph, so we don't need to save here
   });
 
   this.addEventListener("destroyNode", ({ detail: { nodeId } }) => {
     if (graph.deleteNodeWithDependents(nodeId)) {
       this.refresh();
+
+      save();
     }
   });
 
@@ -175,6 +179,8 @@ function* Main(
     } else if (graph.deleteFigure(figureId)) {
       this.refresh();
     }
+
+    save();
   });
 
   this.addEventListener("selectLine", ({ detail: { figureId } }) => {
