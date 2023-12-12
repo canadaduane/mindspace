@@ -58,7 +58,7 @@ function* Main(
   const save = debounce(() => {
     const graphKey = window.location.hash;
     localStorage.setItem(graphKey, graph.toString());
-  }, 1000);
+  }, 150);
 
   let mostRecentlyActiveNodeId;
 
