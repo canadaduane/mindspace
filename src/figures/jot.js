@@ -42,7 +42,7 @@ export function* Jot(
 ) /*: any */ {
   let editEl;
   let didDrag = false;
-  let content = "";
+  let content = text;
   let currentShape = shape;
   let animateClass;
   let position = new Vector2(x, y);
@@ -120,7 +120,7 @@ export function* Jot(
       ],
     });
 
-    editEl.innerHTML = text;
+    editEl.innerText = text;
 
     if (focus) {
       setTimeout(() => editEl?.focus(), 50);
