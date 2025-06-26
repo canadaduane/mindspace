@@ -11,7 +11,7 @@
   "author": "Duane Johnson <duane.johnson@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@b9g/crank": "0.5.4",
+    "@b9g/crank": "0.6.1",
     "@fontsource/yantramanav": "5.0.15",
     "easy-emojis": "^1.0.4",
     "nanoid": "5.0.2"
